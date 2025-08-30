@@ -1,0 +1,22 @@
+{
+  "name": "theglamstore.ng",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn workspace backend start:dev\" \"yarn workspace frontend dev\"",
+    "build": "yarn workspaces run build",
+    "lint": "yarn workspaces run lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "start": "yarn workspace backend start:prod",
+    "postinstall": "echo 'Run: yarn dev (backend:3000, frontend:5173)'"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.8"
+  }
+}

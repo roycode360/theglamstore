@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+:root {
+  --bg: 255 255 255;
+  --fg: 17 24 39;
+  --muted: 107 114 128;
+  --card: 255 255 255;
+  --border: 229 231 235;
+  --accent: 17 24 39;
+  /* Brand palette: #e3b094 */
+  --brand-50: 249 238 233; /* #f9eee9 */
+  --brand-100: 245 228 218; /* #f5e4da */
+  --brand-200: 240 213 198; /* #f0d5c6 */
+  --brand-300: 234 198 178; /* #eac6b2 */
+  --brand-400: 231 188 165; /* #e7bca5 */
+  --brand-500: 227 176 148; /* #e3b094 */
+  --brand-600: 211 158 130; /* #d39e82 */
+  --brand-700: 186 132 105; /* #ba8469 */
+  --brand-800: 152 106 84; /* #986a54 */
+  --brand-900: 122 85 68; /* #7a5544 */
+}
+
+[data-theme='dark'] {
+  --bg: 17 24 39;
+  --fg: 243 244 246;
+  --muted: 156 163 175;
+  --card: 31 41 55;
+  --border: 55 65 81;
+  --accent: 243 244 246;
+  /* Slightly tuned for dark mode contrast */
+  --brand-50: 44 36 31;
+  --brand-100: 57 47 39;
+  --brand-200: 77 62 50;
+  --brand-300: 98 78 63;
+  --brand-400: 121 95 77;
+  --brand-500: 227 176 148;
+  --brand-600: 210 159 133;
+  --brand-700: 190 141 118;
+  --brand-800: 169 124 103;
+  --brand-900: 150 110 93;
+}
+
+.theme-bg {
+  background-color: rgb(var(--bg));
+}
+.theme-fg {
+  color: rgb(var(--fg));
+}
+.theme-card {
+  background-color: rgb(var(--card));
+}
+.theme-border {
+  border-color: rgb(var(--border));
+}
+.theme-accent {
+  color: rgb(var(--accent));
+}
+
+/* Brand utilities */
+.text-brand {
+  color: rgb(var(--brand-700));
+}
+.bg-brand {
+  background-color: rgb(var(--brand-700));
+}
+.bg-brand-50 {
+  background-color: rgb(var(--brand-50));
+}
+.border-brand {
+  border-color: rgb(var(--brand-700));
+}
+.btn-primary {
+  background-color: rgb(var(--brand-700));
+  color: #fff;
+}
+.btn-primary:hover {
+  background-color: rgb(var(--brand-800));
+}
+.focus-brand:focus {
+  outline: none;
+  border-color: rgb(var(--brand-700));
+  box-shadow: 0 0 0 4px rgb(var(--brand-600) / 0.15);
+}
+
+/* Extended brand utilities */
+.btn-ghost {
+  background-color: transparent;
+  color: rgb(var(--brand-700));
+  border: 1px solid rgb(var(--brand-200));
+}
+.btn-ghost:hover {
+  background-color: rgb(var(--brand-50));
+}
+
+/* Additional brand utilities for cart functionality */
+.bg-brand-100 {
+  background-color: rgb(var(--brand-100));
+}
+.bg-brand-800 {
+  background-color: rgb(var(--brand-800));
+}
+.text-brand-800 {
+  color: rgb(var(--brand-800));
+}
+.hover\:bg-brand-700:hover {
+  background-color: rgb(var(--brand-700));
+}
+.hover\:text-brand-700:hover {
+  color: rgb(var(--brand-700));
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgb(var(--brand-200));
+  background-color: rgb(var(--brand-50));
+  color: rgb(var(--brand-800));
+  border-radius: 9999px;
+  font-size: 12px;
+  padding: 2px 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgb(var(--brand-200));
+  background-color: rgb(var(--brand-50));
+  color: rgb(var(--brand-800));
+  border-radius: 9999px;
+  font-size: 12px;
+  padding: 4px 10px;
+}
+
+.thumb {
+  position: relative;
+}
+.thumb.dragging {
+  outline: 2px dashed rgb(var(--brand-600));
+  outline-offset: 2px;
+}
+
+.table-head {
+  background: linear-gradient(0deg, rgb(var(--brand-50)) 0%, #fff 100%);
+}
