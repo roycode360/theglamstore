@@ -7,11 +7,11 @@ interface ToastProps {
   onClose: () => void;
 }
 
-export const Toast: React.FC<ToastProps> = ({ 
-  message, 
-  type, 
-  duration = 4000, 
-  onClose 
+export const Toast: React.FC<ToastProps> = ({
+  message,
+  type,
+  duration = 4000,
+  onClose,
 }) => {
   const [isVisible, setIsVisible] = useState(true);
 
@@ -25,8 +25,9 @@ export const Toast: React.FC<ToastProps> = ({
   }, [duration, onClose]);
 
   const getToastStyles = () => {
-    const baseStyles = "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 px-6 py-4 rounded-lg shadow-xl transition-all duration-300 max-w-sm text-center";
-    
+    const baseStyles =
+      'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 px-6 py-4 rounded-lg shadow-xl transition-all duration-300 max-w-sm text-center';
+
     switch (type) {
       case 'success':
         return `${baseStyles} bg-green-50 border border-green-200 text-green-800`;
@@ -41,14 +42,34 @@ export const Toast: React.FC<ToastProps> = ({
     switch (type) {
       case 'success':
         return (
-          <svg className="w-5 h-5 text-green-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+          <svg
+            className="mx-auto mb-2 h-5 w-5 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         );
       case 'error':
         return (
-          <svg className="w-5 h-5 text-red-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          <svg
+            className="mx-auto mb-2 h-5 w-5 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         );
       default:
@@ -57,9 +78,11 @@ export const Toast: React.FC<ToastProps> = ({
   };
 
   return (
-    <div className={`${getToastStyles()} ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
+    <div
+      className={`${getToastStyles()} ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+    >
       {getIcon()}
-      <div className="font-medium text-sm">{message}</div>
+      <div className="text-sm font-medium">{message}</div>
     </div>
   );
 };
@@ -68,7 +91,9 @@ interface ToastContextType {
   showToast: (message: string, type: 'success' | 'error') => void;
 }
 
-const ToastContext = React.createContext<ToastContextType | undefined>(undefined);
+const ToastContext = React.createContext<ToastContextType | undefined>(
+  undefined,
+);
 
 export const useToast = () => {
   const context = React.useContext(ToastContext);
@@ -83,25 +108,27 @@ interface ToastProviderProps {
 }
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
-  const [toasts, setToasts] = useState<Array<{
-    id: string;
-    message: string;
-    type: 'success' | 'error';
-  }>>([]);
+  const [toasts, setToasts] = useState<
+    Array<{
+      id: string;
+      message: string;
+      type: 'success' | 'error';
+    }>
+  >([]);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     const id = Math.random().toString(36).substr(2, 9);
-    setToasts(prev => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type }]);
   };
 
   const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   };
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      {toasts.map(toast => (
+      {toasts.map((toast) => (
         <Toast
           key={toast.id}
           message={toast.message}

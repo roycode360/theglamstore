@@ -86,7 +86,7 @@ export default function ProductDetails() {
   if (!p) {
     return (
       <div
-        className="theme-border flex items-center justify-center rounded-lg border bg-white py-16 text-sm"
+        className="flex items-center justify-center py-16 text-sm bg-white border rounded-lg theme-border"
         style={{ color: 'rgb(var(--muted))' }}
       >
         Product not found
@@ -95,8 +95,6 @@ export default function ProductDetails() {
   }
 
   // colorOptions already computed above
-
-
 
   const handleAddToCart = async () => {
     if (!activeSize || activeColorIdx === null) {
@@ -124,7 +122,7 @@ export default function ProductDetails() {
       <section className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {/* Images */}
         <div>
-          <div className="mb-3 flex gap-2">
+          <div className="flex gap-2 mb-3">
             {(p.images ?? []).slice(0, 4).map((src: string, i: number) => (
               <button
                 key={i}
@@ -134,7 +132,7 @@ export default function ProductDetails() {
                 aria-label={`Image ${i + 1}`}
               >
                 {src && (
-                  <img src={src} className="h-full w-full object-cover" />
+                  <img src={src} className="object-cover w-full h-full" />
                 )}
               </button>
             ))}
@@ -143,7 +141,7 @@ export default function ProductDetails() {
             {p.images?.[activeImg] && (
               <img
                 src={p.images[activeImg]}
-                className="h-full w-full object-cover"
+                className="object-cover w-full h-full"
               />
             )}
           </div>
@@ -171,7 +169,7 @@ export default function ProductDetails() {
             )}
           </div>
           <p
-            className="max-w-prose text-sm"
+            className="text-sm max-w-prose"
             style={{ color: 'rgb(var(--muted))' }}
           >
             {p.description ||
@@ -224,10 +222,10 @@ export default function ProductDetails() {
 
           {/* Quantity + CTA */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="theme-border inline-flex items-center rounded-md border">
+            <div className="inline-flex items-center border rounded-md theme-border">
               <button
                 onClick={() => setQty((n) => Math.max(1, n - 1))}
-                className="h-10 w-10"
+                className="w-10 h-10"
                 aria-label="Decrease quantity"
               >
                 −
@@ -235,7 +233,7 @@ export default function ProductDetails() {
               <div className="w-12 text-center">{qty}</div>
               <button
                 onClick={() => setQty((n) => n + 1)}
-                className="h-10 w-10"
+                className="w-10 h-10"
                 aria-label="Increase quantity"
               >
                 +
@@ -248,7 +246,7 @@ export default function ProductDetails() {
               Add to Cart
             </button>
             <button
-              className="theme-border rounded-md border px-3 py-2"
+              className="px-3 py-2 border rounded-md theme-border"
               aria-label="Wishlist"
               title="Wishlist"
             >
@@ -259,7 +257,7 @@ export default function ProductDetails() {
       </section>
 
       {/* Accordions */}
-      <section className="theme-border divide-y rounded-md border bg-white">
+      <section className="bg-white border divide-y rounded-md theme-border">
         {[
           {
             k: 'Full Description',
@@ -273,7 +271,7 @@ export default function ProductDetails() {
           { k: 'Returns', d: '30-day return policy.' },
         ].map((item) => (
           <details key={item.k} className="group">
-            <summary className="flex cursor-pointer items-center justify-between px-4 py-3">
+            <summary className="flex items-center justify-between px-4 py-3 cursor-pointer">
               <span className="font-medium">{item.k}</span>
               <span className="opacity-60">▾</span>
             </summary>
@@ -302,17 +300,17 @@ export default function ProductDetails() {
             <Link
               key={s.id}
               to={`/ProductDetails?id=${s.id}`}
-              className="theme-border rounded-lg border bg-white"
+              className="bg-white border rounded-lg theme-border"
             >
               <div className="aspect-[4/3] w-full overflow-hidden rounded-t-lg bg-gray-100">
                 {s.images?.[0] && (
                   <img
                     src={s.images[0]}
-                    className="h-full w-full object-cover"
+                    className="object-cover w-full h-full"
                   />
                 )}
               </div>
-              <div className="space-y-1 p-3">
+              <div className="p-3 space-y-1">
                 <div className="font-medium">{s.name}</div>
                 <div className="text-xs" style={{ color: 'rgb(var(--muted))' }}>
                   {s.brand || 'LUXE COLLECTION'}
