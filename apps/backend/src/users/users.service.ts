@@ -2,14 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserDocument, UserModel } from './schemas/user.schema';
-
-// Narrow type used for Lean results
-export type UserLean = {
-  _id: string;
-  email: string;
-  role: 'customer' | 'admin';
-  refreshTokenHash?: string | null;
-};
+import { User } from './schemas/user.schema';
 
 @Injectable()
 export class UsersService {
@@ -17,12 +10,12 @@ export class UsersService {
     @InjectModel(UserModel.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async findByEmail(email: string): Promise<UserLean | null> {
-    return this.userModel.findOne({ email }).lean<UserLean | null>();
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userModel.findOne({ email }).lean<User | null>();
   }
 
   async findById(id: string): Promise<
-    | (UserLean & {
+    | (User & {
         emailVerified?: boolean;
         createdAt?: Date;
         updatedAt?: Date;
@@ -30,7 +23,7 @@ export class UsersService {
     | null
   > {
     return this.userModel.findById(id).lean<
-      | (UserLean & {
+      | (User & {
           emailVerified?: boolean;
           createdAt?: Date;
           updatedAt?: Date;
@@ -39,16 +32,13 @@ export class UsersService {
     >();
   }
 
-  async createUser(
-    email: string,
-    role: 'customer' | 'admin',
-  ): Promise<UserLean> {
+  async createUser(email: string, role: 'customer' | 'admin'): Promise<User> {
     const created = await this.userModel.create({
       email,
       role,
       emailVerified: false,
     });
-    return created.toObject() as unknown as UserLean;
+    return created.toObject() as unknown as User;
   }
 
   async setRefreshTokenHash(userId: string, hash: string | null) {

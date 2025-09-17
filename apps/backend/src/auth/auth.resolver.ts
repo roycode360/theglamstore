@@ -1,22 +1,13 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginResponse } from './auth.types';
 import { CurrentUser } from './current-user.decorator';
 import { UsersService } from '../users/users.service';
 import { User } from '../users/schemas/user.schema';
-import { GqlAuthGuard } from './gql-auth.guard';
-import { AccountRole } from 'src/types';
+import { AccountRole, AuthUser } from 'src/types';
 import { isPublic } from './decorators';
-
-type MeUser = {
-  id: string;
-  email: string;
-  role: 'customer' | 'admin';
-  emailVerified: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
-};
+import { UseGuards } from '@nestjs/common';
+import { GqlAuthGuard } from './gql-auth.guard';
 
 @Resolver()
 export class AuthResolver {
@@ -31,20 +22,22 @@ export class AuthResolver {
     return this.auth.loginWithAuth0(auth0Token);
   }
 
-  @Query(() => User, { nullable: true })
+  @Query(() => User)
   @UseGuards(GqlAuthGuard)
-  async me(@CurrentUser() user: { id: string } | null): Promise<MeUser | null> {
+  async me(@CurrentUser() user: AuthUser | null): Promise<User | null> {
     if (!user) return null;
-    const found = await this.users.findById(user.id);
-    if (!found) return null;
-    const role: AccountRole = found.role;
+
+    const existingUser = await this.users.findById(user.id);
+
+    if (!existingUser) return null;
+
     return {
-      id: String(found._id ?? ''),
-      email: String(found.email ?? ''),
-      role,
-      emailVerified: Boolean(found.emailVerified),
-      createdAt: found.createdAt,
-      updatedAt: found.updatedAt,
+      _id: String(existingUser._id ?? ''),
+      email: String(existingUser.email ?? ''),
+      role: existingUser.role as AccountRole,
+      emailVerified: Boolean(existingUser.emailVerified),
+      createdAt: existingUser.createdAt,
+      updatedAt: existingUser.updatedAt,
     };
   }
 }

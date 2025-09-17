@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 
 interface ToastProps {
   message: string;
-  type: 'success' | 'error';
+  type: 'success' | 'error' | 'info' | 'warning';
+  title?: string;
   duration?: number;
   onClose: () => void;
 }
@@ -10,7 +11,8 @@ interface ToastProps {
 export const Toast: React.FC<ToastProps> = ({
   message,
   type,
-  duration = 4000,
+  title,
+  duration = 3000,
   onClose,
 }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -18,7 +20,7 @@ export const Toast: React.FC<ToastProps> = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onClose, 300);
+      setTimeout(onClose, 300); // Wait for fade out animation
     }, duration);
 
     return () => clearTimeout(timer);
@@ -26,16 +28,9 @@ export const Toast: React.FC<ToastProps> = ({
 
   const getToastStyles = () => {
     const baseStyles =
-      'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 px-6 py-4 rounded-lg shadow-xl transition-all duration-300 max-w-sm text-center';
+      'theme-card theme-border w-auto max-w-[92vw] rounded-md border p-4 shadow-lg shadow-black/5 transition-all duration-300';
 
-    switch (type) {
-      case 'success':
-        return `${baseStyles} bg-green-50 border border-green-200 text-green-800`;
-      case 'error':
-        return `${baseStyles} bg-red-50 border border-red-200 text-red-800`;
-      default:
-        return `${baseStyles} bg-gray-50 border border-gray-200 text-gray-800`;
-    }
+    return baseStyles;
   };
 
   const getIcon = () => {
@@ -43,52 +38,105 @@ export const Toast: React.FC<ToastProps> = ({
       case 'success':
         return (
           <svg
-            className="mx-auto mb-2 h-5 w-5 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+            className="h-5 w-5 text-green-600"
+            viewBox="0 0 20 20"
+            fill="currentColor"
           >
             <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M5 13l4 4L19 7"
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
             />
           </svg>
         );
       case 'error':
         return (
-          <svg
-            className="mx-auto mb-2 h-5 w-5 text-red-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-red-600 ring-1 ring-red-200 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-900/40">
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+        );
+      case 'info':
+        return (
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-600 ring-1 ring-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-900/40">
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+        );
+      case 'warning':
+        return (
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-50 text-amber-600 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:ring-amber-900/40">
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l6.518 11.59c.75 1.335-.213 2.99-1.742 2.99H3.48c-1.53 0-2.492-1.655-1.743-2.99L8.257 3.1zM11 14a1 1 0 10-2 0 1 1 0 002 0zm-1-2a1 1 0 01-1-1V8a1 1 0 112 0v3a1 1 0 01-1 1z" />
+            </svg>
+          </span>
         );
       default:
-        return null;
+        return (
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 text-neutral-600 ring-1 ring-neutral-200 dark:bg-neutral-800/50 dark:text-neutral-300 dark:ring-neutral-800">
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </span>
+        );
+    }
+  };
+
+  const getTitle = () => {
+    if (title) return title;
+    switch (type) {
+      case 'success':
+        return 'Success!';
+      case 'error':
+        return 'Error!';
+      case 'info':
+        return 'Info';
+      case 'warning':
+        return 'Heads up';
+      default:
+        return 'Notification';
     }
   };
 
   return (
     <div
-      className={`${getToastStyles()} ${isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'}`}
+      role="status"
+      aria-live="polite"
+      className={`${getToastStyles()} ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'}`}
     >
-      {getIcon()}
-      <div className="text-sm font-medium">{message}</div>
+      <div className="animate-toast-in flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h3 className="theme-fg text-[14px] font-semibold">{getTitle()}</h3>
+          <p className="theme-fg/90 mt-1 text-[12px] leading-relaxed md:text-[13px]">
+            {message}
+          </p>
+        </div>
+        <div className="mt-1 flex-shrink-0">{getIcon()}</div>
+      </div>
     </div>
   );
 };
 
 interface ToastContextType {
-  showToast: (message: string, type: 'success' | 'error') => void;
+  showToast: (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'warning',
+    options?: { title?: string; duration?: number },
+  ) => void;
 }
 
 const ToastContext = React.createContext<ToastContextType | undefined>(
@@ -112,13 +160,22 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     Array<{
       id: string;
       message: string;
-      type: 'success' | 'error';
+      type: 'success' | 'error' | 'info' | 'warning';
+      title?: string;
+      duration?: number;
     }>
   >([]);
 
-  const showToast = (message: string, type: 'success' | 'error') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'warning',
+    options?: { title?: string; duration?: number },
+  ) => {
     const id = Math.random().toString(36).substr(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
+    setToasts((prev) => [
+      ...prev,
+      { id, message, type, title: options?.title, duration: options?.duration },
+    ]);
   };
 
   const removeToast = (id: string) => {
@@ -128,14 +185,45 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          message={toast.message}
-          type={toast.type}
-          onClose={() => removeToast(toast.id)}
-        />
-      ))}
+      <div className="pointer-events-none fixed bottom-5 right-5 z-50 flex max-h-[calc(100vh-2.5rem)] w-auto max-w-[92vw] flex-col gap-3 overflow-y-auto">
+        {toasts.map((toast) => (
+          <div key={toast.id} className="pointer-events-auto">
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              title={toast.title}
+              duration={toast.duration}
+              onClose={() => removeToast(toast.id)}
+            />
+          </div>
+        ))}
+      </div>
+      {/* Global window event to trigger toasts without importing hook */}
+      <ToastEventBridge
+        onShow={(msg, type, options) => showToast(msg, type as any, options)}
+      />
     </ToastContext.Provider>
   );
 };
+
+// Event bridge component
+function ToastEventBridge({
+  onShow,
+}: {
+  onShow: (
+    message: string,
+    type: 'success' | 'error' | 'info' | 'warning',
+    options?: { title?: string; duration?: number },
+  ) => void;
+}) {
+  useEffect(() => {
+    const handler = (e: any) => {
+      const { message, type, title, duration } = e.detail || {};
+      if (!message || !type) return;
+      onShow(message, type, { title, duration });
+    };
+    window.addEventListener('toast:show', handler);
+    return () => window.removeEventListener('toast:show', handler);
+  }, [onShow]);
+  return null;
+}

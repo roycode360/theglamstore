@@ -16,7 +16,7 @@ export default function AdminCategoriesPage() {
   const LIST_CATEGORIES = gql`
     query ListCategories {
       listCategories {
-        id
+        _id
         name
         slug
         description
@@ -30,7 +30,7 @@ export default function AdminCategoriesPage() {
   const CREATE_CATEGORY = gql`
     mutation CreateCategory($input: CreateCategoryInput!) {
       createCategory(input: $input) {
-        id
+        _id
         name
         slug
         description
@@ -41,10 +41,11 @@ export default function AdminCategoriesPage() {
       }
     }
   `;
+
   const UPDATE_CATEGORY = gql`
     mutation UpdateCategory($id: ID!, $input: UpdateCategoryInput!) {
       updateCategory(id: $id, input: $input) {
-        id
+        _id
         name
         slug
         description
@@ -80,7 +81,7 @@ export default function AdminCategoriesPage() {
       if (editing) {
         await updateCat({
           variables: {
-            id: editing.id,
+            id: editing._id,
             input: {
               name: cat.name,
               slug: cat.slug,
@@ -129,10 +130,10 @@ export default function AdminCategoriesPage() {
   }
 
   return (
-    <div className="p-6 border rounded-lg theme-card theme-border">
-      <div className="flex items-center justify-between mb-4">
+    <div className="theme-card theme-border rounded-lg border p-6">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-brand">Categories</span>
+          <span className="text-brand font-semibold">Categories</span>
           <span className="border-brand text-brand bg-brand-50 rounded-full border px-2 py-0.5 text-xs">
             {filtered.length}
           </span>
@@ -142,20 +143,20 @@ export default function AdminCategoriesPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search categories..."
-            className="w-64 text-sm focus-brand h-9"
+            className="focus-brand h-9 w-64 text-sm"
           />
           <button
             onClick={() => {
               setEditing(null);
               setModalOpen(true);
             }}
-            className="px-3 text-sm rounded-md btn-primary h-9"
+            className="btn-primary h-9 rounded-md px-3 text-sm"
           >
             + Add Category
           </button>
         </div>
       </div>
-      <div className="overflow-hidden border rounded-md theme-border">
+      <div className="theme-border overflow-hidden rounded-md border">
         {loading ? (
           <div className="py-10">
             <Spinner label="Loading categories" />
@@ -171,16 +172,16 @@ export default function AdminCategoriesPage() {
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y theme-border">
+            <tbody className="theme-border divide-y">
               {filtered.map((c) => (
-                <tr key={c.id}>
+                <tr key={c._id}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 overflow-hidden bg-gray-100 border rounded theme-border">
+                      <div className="theme-border h-10 w-10 overflow-hidden rounded border bg-gray-100">
                         {c.image && (
                           <img
                             src={c.image}
-                            className="object-cover w-full h-full"
+                            className="h-full w-full object-cover"
                           />
                         )}
                       </div>
@@ -201,7 +202,7 @@ export default function AdminCategoriesPage() {
                     </code>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center justify-center w-6 h-6 text-xs border rounded-full theme-border">
+                    <span className="theme-border inline-flex h-6 w-6 items-center justify-center rounded-full border text-xs">
                       {c.sortOrder}
                     </span>
                   </td>
@@ -219,15 +220,15 @@ export default function AdminCategoriesPage() {
                           setEditing(c);
                           setModalOpen(true);
                         }}
-                        className="flex items-center justify-center w-8 h-8 bg-white border rounded theme-border hover:bg-brand-50 text-brand"
+                        className="theme-border hover:bg-brand-50 text-brand flex h-8 w-8 items-center justify-center rounded border bg-white"
                         aria-label="edit"
                         title="Edit"
                       >
                         ✎
                       </button>
                       <button
-                        onClick={() => setToDelete(c.id)}
-                        className="flex items-center justify-center w-8 h-8 bg-white border rounded theme-border hover:bg-brand-50 text-brand"
+                        onClick={() => setToDelete(c._id)}
+                        className="theme-border hover:bg-brand-50 text-brand flex h-8 w-8 items-center justify-center rounded border bg-white"
                         aria-label="delete"
                         title="Delete"
                       >

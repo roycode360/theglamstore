@@ -8,7 +8,7 @@ import { useToast } from '../../components/ui/Toast';
 import { uploadToCloudinary } from '../../utils/cloudinary';
 
 export type Category = {
-  id: string;
+  _id: string;
   name: string;
   slug: string;
   description?: string;
@@ -46,12 +46,12 @@ export default function CategoryModal({
 
   const parentOptions = useMemo(() => {
     const selectable = categories
-      .filter((c) => c.id !== (initial?.id ?? ''))
+      .filter((c) => c._id !== (initial?._id ?? ''))
       .slice()
       .sort((a, b) => a.name.localeCompare(b.name))
-      .map((c) => ({ value: c.id, label: c.name }));
+      .map((c) => ({ value: c._id, label: c.name }));
     return [{ value: '', label: 'None (Top Level)' }, ...selectable];
-  }, [categories, initial?.id]);
+  }, [categories, initial?._id]);
 
   useEffect(() => {
     if (!open) return;
@@ -82,7 +82,7 @@ export default function CategoryModal({
     e.preventDefault();
     if (saving) return;
     const cat: Category = {
-      id: initial?.id ?? Math.random().toString(36).slice(2),
+      _id: initial?._id ?? Math.random().toString(36).slice(2),
       name,
       slug,
       description: description || undefined,
@@ -97,7 +97,7 @@ export default function CategoryModal({
       onClose();
     } catch (err: any) {
       const msg = err?.message || 'Failed to save category';
-              showToast(msg, 'error');
+      showToast(msg, 'error');
     } finally {
       setSaving(false);
     }
@@ -107,13 +107,13 @@ export default function CategoryModal({
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="theme-border theme-card relative my-10 max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg border p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div className="text-lg font-semibold">
             {isEdit ? 'Edit Category' : 'Add New Category'}
           </div>
           <button
             onClick={onClose}
-            className="theme-border flex h-8 w-8 items-center justify-center rounded border"
+            className="flex items-center justify-center w-8 h-8 border rounded theme-border"
             aria-label="close"
           >
             ×
@@ -127,13 +127,13 @@ export default function CategoryModal({
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="mt-1 w-full"
+                className="w-full mt-1"
                 required
               />
             </label>
             <label className="block text-sm">
               <div className="font-medium">URL Slug</div>
-              <div className="mt-1 flex gap-2">
+              <div className="flex gap-2 mt-1">
                 <Input
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
@@ -143,7 +143,7 @@ export default function CategoryModal({
                 <button
                   type="button"
                   onClick={() => setSlug(generateSlug(name))}
-                  className="theme-border shrink-0 rounded-md border bg-white px-3 py-2 text-sm hover:bg-gray-50"
+                  className="px-3 py-2 text-sm bg-white border rounded-md theme-border shrink-0 hover:bg-gray-50"
                 >
                   Generate
                 </button>
@@ -154,7 +154,7 @@ export default function CategoryModal({
               <Input
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="mt-1 w-full"
+                className="w-full mt-1"
               />
             </label>
             <label className="block text-sm">
@@ -175,13 +175,13 @@ export default function CategoryModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="mt-1 w-full"
+              className="w-full mt-1"
             />
           </label>
 
           <label className="block text-sm">
             <div className="font-medium">Image</div>
-            <div className="mt-1 flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-1">
               <Input
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
@@ -190,7 +190,7 @@ export default function CategoryModal({
               />
               <button
                 type="button"
-                className="btn-primary rounded px-3 py-2"
+                className="px-3 py-2 rounded btn-primary"
                 onClick={() => {
                   if (!imageUrl) return;
                   setImage(imageUrl);
@@ -199,7 +199,7 @@ export default function CategoryModal({
               >
                 Add
               </button>
-              <label className="btn-ghost cursor-pointer rounded px-3 py-2">
+              <label className="px-3 py-2 rounded cursor-pointer btn-ghost">
                 {uploadingImg ? 'Uploading…' : 'Upload'}
                 <input
                   type="file"
@@ -214,7 +214,7 @@ export default function CategoryModal({
                       setImage(secure_url);
                       showToast('Image uploaded', 'success');
                     } catch (err) {
-                                              showToast('Image upload failed', 'error');
+                      showToast('Image upload failed', 'error');
                     } finally {
                       setUploadingImg(false);
                       e.currentTarget.value = '';
@@ -228,12 +228,12 @@ export default function CategoryModal({
                 <div className="relative inline-block">
                   <img
                     src={image}
-                    className="theme-border h-16 w-16 rounded border object-cover"
+                    className="object-cover w-16 h-16 border rounded theme-border"
                   />
                   <button
                     type="button"
                     onClick={() => setImage('')}
-                    className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-red-500 text-xs text-white"
+                    className="absolute w-6 h-6 text-xs text-white bg-red-500 rounded-full -right-2 -top-2"
                     aria-label="remove image"
                     title="Remove"
                   >
@@ -256,11 +256,11 @@ export default function CategoryModal({
             <button
               type="button"
               onClick={onClose}
-              className="btn-ghost rounded px-4 py-2"
+              className="px-4 py-2 rounded btn-ghost"
             >
               Cancel
             </button>
-            <button className="btn-primary rounded px-4 py-2" disabled={saving}>
+            <button className="px-4 py-2 rounded btn-primary" disabled={saving}>
               {saving
                 ? 'Saving...'
                 : isEdit

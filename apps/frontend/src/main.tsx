@@ -5,16 +5,21 @@ import {
   InMemoryCache,
   ApolloProvider,
   HttpLink,
+  from,
 } from '@apollo/client';
+import { onError } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
-import RootLayout from './routes/RootLayout';
+import RootLayout from './components/layout/AppLayout';
 import HomePage from './routes/HomePage';
 import ProductCategories from './routes/ProductCategories';
 import ProductDetails from './routes/ProductDetails';
 import CartPage from './routes/CartPage';
-import AdminLayout from './routes/admin/AdminLayout';
+import CheckoutPage from './routes/CheckoutPage';
+import OrderConfirmation from './routes/OrderConfirmation';
+import AdminLayout from './components/layout/AdminLayout';
+import DashboardPage from './routes/admin/DashboardPage';
 import AdminDashboard from './routes/admin/AdminDashboard';
 import ProductsPage from './routes/ProductsPage';
 import OrdersPage from './routes/admin/OrdersPage';
@@ -28,6 +33,16 @@ import RequireAuth from './routes/RequireAuth';
 import NotAuthorized from './routes/NotAuthorized';
 import { Auth0Provider } from '@auth0/auth0-react';
 import { AccessToken } from './enums/access-token';
+import { Header } from './components/layout/Header';
+import AppLayout from './components/layout/AppLayout';
+import MainLayout from './components/layout/MainLayout';
+import { AuthProvider } from './contexts/AuthContext';
+import { CheckoutProvider } from './contexts/CheckoutContext';
+import CustomerOrdersPage from './routes/account/CustomerOrdersPage';
+import CustomerOrderDetailsPage from './routes/account/CustomerOrderDetailsPage';
+import CustomerService from './routes/CustomerService';
+import WishlistPage from './routes/account/WishlistPage';
+import { WishlistProvider } from './contexts/WishlistContext';
 
 const httpLink = new HttpLink({
   uri: import.meta.env.VITE_GRAPHQL_URL,
@@ -45,8 +60,36 @@ const authLink = setContext((_, { headers }) => {
   };
 });
 
+// Global error interceptor: logout on unauthenticated/forbidden and toast
+let sessionHandled = false; // avoid duplicate toasts per page load
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  const hasToken = !!localStorage.getItem(AccessToken.KEY);
+  if (!hasToken) return; // only react if user previously had a token
+
+  const gqlUnauth = (graphQLErrors || []).some((err) => {
+    const code = (err?.extensions as any)?.code;
+    const msg = (err?.message || '').toLowerCase();
+    return (
+      code === 'UNAUTHENTICATED' ||
+      code === 'FORBIDDEN' ||
+      msg.includes('unauthenticated') ||
+      msg.includes('forbidden')
+    );
+  });
+
+  const netStatus =
+    (networkError as any)?.statusCode || (networkError as any)?.status;
+  const netUnauth = netStatus === 401 || netStatus === 403;
+
+  if ((gqlUnauth || netUnauth) && !sessionHandled) {
+    sessionHandled = true;
+    localStorage.removeItem(AccessToken.KEY);
+    window.dispatchEvent(new CustomEvent('app:session-expired'));
+  }
+});
+
 const client = new ApolloClient({
-  link: authLink.concat(httpLink),
+  link: from([errorLink, authLink.concat(httpLink)]),
   cache: new InMemoryCache(),
   defaultOptions: {
     watchQuery: {
@@ -60,51 +103,111 @@ const client = new ApolloClient({
 
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <RootLayout />,
-    children: [
-      { index: true, element: <HomePage /> },
-      { path: 'categories', element: <ProductCategories /> },
-      { path: 'ProductDetails', element: <ProductDetails /> },
-      { path: 'products', element: <ProductsPage /> },
-      { path: 'cart', element: <CartPage /> },
-      { path: 'not-authorized', element: <NotAuthorized /> },
-    ],
-  },
-  {
-    path: '/admin',
-    element: <RequireAuth roles={['admin']} />,
+    element: <MainLayout />,
     children: [
       {
-        element: <AdminLayout />,
+        path: '/',
+        element: <AppLayout />,
         children: [
-          { index: true, element: <AdminDashboard /> },
-          { path: 'categories', element: <AdminCategoriesPage /> },
-          { path: 'orders', element: <OrdersPage /> },
-          { path: 'customers', element: <CustomersPage /> },
-          { path: 'settings', element: <SettingsPage /> },
+          { index: true, element: <HomePage /> },
+          { path: 'categories', element: <ProductCategories /> },
+          { path: 'ProductDetails', element: <ProductDetails /> },
+          { path: 'products', element: <ProductsPage /> },
+          { path: 'cart', element: <CartPage /> },
+          { path: 'checkout', element: <CheckoutPage /> },
+          { path: 'checkout/confirmation', element: <OrderConfirmation /> },
+          { path: 'not-authorized', element: <NotAuthorized /> },
+          { path: 'customer-service', element: <CustomerService /> },
+        ],
+      },
+      {
+        path: '/admin',
+        element: <RequireAuth roles={['admin']} />,
+        children: [
+          {
+            element: <AdminLayout />,
+            children: [
+              { index: true, element: <DashboardPage /> },
+              { path: 'dashboard', element: <DashboardPage /> },
+              { path: 'products', element: <AdminDashboard /> },
+              { path: 'categories', element: <AdminCategoriesPage /> },
+              { path: 'orders', element: <OrdersPage /> },
+              { path: 'customers', element: <CustomersPage /> },
+              { path: 'settings', element: <SettingsPage /> },
+            ],
+          },
+        ],
+      },
+      {
+        path: '/orders',
+        element: <RequireAuth roles={['customer', 'admin']} />,
+        children: [
+          {
+            element: <AppLayout />, // keep site header/footer
+            children: [
+              { index: true, element: <CustomerOrdersPage /> },
+              { path: ':id', element: <CustomerOrderDetailsPage /> },
+            ],
+          },
+        ],
+      },
+      {
+        path: '/account',
+        element: <RequireAuth roles={['customer', 'admin']} />,
+        children: [
+          {
+            element: <AppLayout />,
+            children: [{ path: 'wishlist', element: <WishlistPage /> }],
+          },
         ],
       },
     ],
   },
 ]);
 
+// Wire session-expired toast listener
+function SessionExpiredListener() {
+  React.useEffect(() => {
+    function onExpired() {
+      // Lazy import to avoid circular import
+      const evt = new CustomEvent('toast:show', {
+        detail: {
+          message: 'Your session has expired. Please sign in again.',
+          type: 'warning',
+          title: 'Session expired',
+        },
+      });
+      window.dispatchEvent(evt);
+    }
+    window.addEventListener('app:session-expired', onExpired);
+    return () => window.removeEventListener('app:session-expired', onExpired);
+  }, []);
+  return null;
+}
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ApolloProvider client={client}>
       <ThemeProvider>
         <ToastProvider>
-          <CartProvider>
-            <Auth0Provider
-              domain={import.meta.env.VITE_AUTH0_DOMAIN}
-              clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
-              authorizationParams={{
-                redirect_uri: import.meta.env.VITE_WEB_APP_ORIGIN,
-              }}
-            >
-              <RouterProvider router={router} />
-            </Auth0Provider>
-          </CartProvider>
+          <SessionExpiredListener />
+          <Auth0Provider
+            domain={import.meta.env.VITE_AUTH0_DOMAIN}
+            clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
+            authorizationParams={{
+              redirect_uri: import.meta.env.VITE_WEB_APP_ORIGIN,
+            }}
+          >
+            <AuthProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <CheckoutProvider>
+                    <RouterProvider router={router} />
+                  </CheckoutProvider>
+                </WishlistProvider>
+              </CartProvider>
+            </AuthProvider>
+          </Auth0Provider>
         </ToastProvider>
       </ThemeProvider>
     </ApolloProvider>

@@ -1,5 +1,19 @@
 import { gql } from '@apollo/client';
 
+export const LOGIN_WITH_AUTH0 = gql`
+  mutation LoginWithAuth0($auth0Token: String!) {
+    loginWithAuth0(auth0Token: $auth0Token) {
+      accessToken
+      refreshToken
+      user {
+        id
+        email
+        role
+      }
+    }
+  }
+`;
+
 export const LOGOUT = gql`
   mutation Logout {
     logout
@@ -9,7 +23,7 @@ export const LOGOUT = gql`
 export const ME = gql`
   query Me {
     me {
-      id
+      _id
       email
       role
       emailVerified

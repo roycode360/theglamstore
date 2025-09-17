@@ -3,19 +3,20 @@ import { gql } from '@apollo/client';
 export const GET_CART_ITEMS = gql`
   query GetCartItems {
     getCartItems {
-      id
+      _id
       quantity
       selectedSize
       selectedColor
       createdAt
-      productId {
-        id
+      product {
+        _id
         name
         brand
         price
         salePrice
         images
         description
+        stockQuantity
       }
     }
   }
@@ -30,12 +31,11 @@ export const GET_CART_ITEM_COUNT = gql`
 export const ADD_TO_CART = gql`
   mutation AddToCart($input: AddToCartInput!) {
     addToCart(input: $input) {
-      id
+      # id
       quantity
       selectedSize
       selectedColor
-      productId {
-        id
+      product {
         name
         brand
         price
@@ -49,12 +49,12 @@ export const ADD_TO_CART = gql`
 export const UPDATE_CART_ITEM = gql`
   mutation UpdateCartItem($input: UpdateCartItemInput!) {
     updateCartItem(input: $input) {
-      id
+      _id
       quantity
       selectedSize
       selectedColor
-      productId {
-        id
+      product {
+        _id
         name
         brand
         price

@@ -18,7 +18,7 @@ export class UserModel {
 @ObjectType()
 export class User {
   @Field(() => ID)
-  id!: string;
+  _id!: string;
 
   @Field()
   email!: string;

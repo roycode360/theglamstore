@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Field, ObjectType, ID, Int } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 
 export type CartItemDocument = CartItem & Document;
 
@@ -8,23 +8,26 @@ export type CartItemDocument = CartItem & Document;
 @Schema({ timestamps: true })
 export class CartItem {
   @Field(() => ID)
+  _id: string;
+
+  @Field()
   @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
   userId: Types.ObjectId;
 
-  @Field(() => ID)
-  @Prop({ required: true, type: Types.ObjectId, ref: 'Product' })
+  @Field()
+  @Prop({ required: true, type: Types.ObjectId, ref: 'ProductModel' })
   productId: Types.ObjectId;
 
-  @Field(() => Int)
+  @Field()
   @Prop({ required: true, min: 1 })
   quantity: number;
 
   @Field()
-  @Prop({ required: true })
+  @Prop({ required: false })
   selectedSize: string;
 
   @Field()
-  @Prop({ required: true })
+  @Prop({ required: false })
   selectedColor: string;
 
   @Field()

@@ -1,5 +1,6 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ProductModal from './ProductModal';
 import Input from '../../components/ui/Input';
 import { formatCurrency } from '../../utils/currency';
@@ -7,6 +8,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import Select from '../../components/ui/Select';
 import Checkbox from '../../components/ui/Checkbox';
 import Spinner from '../../components/ui/Spinner';
+import { TProduct } from 'src/types';
 
 const LIST_PRODUCTS = gql`
   query ListProductsPage(
@@ -22,6 +24,7 @@ const LIST_PRODUCTS = gql`
     listProductsPage(
       page: $page
       pageSize: $pageSize
+
       search: $search
       category: $category
       active: $active
@@ -30,15 +33,21 @@ const LIST_PRODUCTS = gql`
       sortDir: $sortDir
     ) {
       items {
-        id
+        _id
+        slug
         name
+        sku
         brand
+        description
+        sizes
+        colors
         category
         price
         salePrice
         stockQuantity
         images
         active
+        featured
       }
       total
       page
@@ -50,7 +59,7 @@ const LIST_PRODUCTS = gql`
 const LIST_CATEGORIES = gql`
   query ListCategories {
     listCategories {
-      id
+      _id
       name
       slug
       active
@@ -64,6 +73,7 @@ const DELETE_PRODUCT = gql`
 `;
 
 export default function AdminDashboard() {
+  const [params, setParams] = useSearchParams();
   const [page, setPage] = useState(1);
   const pageSize = 10;
   const [categoryFilter, setCategoryFilter] = useState<string>('');
@@ -87,15 +97,29 @@ export default function AdminDashboard() {
   const { data: catsData } = useQuery(LIST_CATEGORIES);
   const [remove] = useMutation(DELETE_PRODUCT);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<any | null>(null);
+  const [editing, setEditing] = useState<TProduct | null>(null);
   const [toDeleteId, setToDeleteId] = useState<string | null>(null);
   const pageData = data?.listProductsPage;
   const products = pageData?.items ?? [];
+  // Open edit modal when navigated with ?productId=
+  useEffect(() => {
+    const pid = params.get('productId');
+    if (!pid) return;
+    const match = products.find((p: any) => String(p._id) === pid);
+    if (match) {
+      setEditing(match as TProduct);
+      setModalOpen(true);
+    } else {
+      // Fallback: pass minimal product so ProductModal fetches full details itself
+      setEditing({ _id: pid } as unknown as TProduct);
+      setModalOpen(true);
+    }
+  }, [params, products]);
   const fmt = (n: number) => formatCurrency(n);
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
     if (!t) return products;
-    return products.filter((p: any) =>
+    return products.filter((p: TProduct) =>
       [p.name, p.brand, p.category]
         .filter(Boolean)
         .join(' ')
@@ -217,8 +241,8 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="theme-border divide-y">
-                  {filtered.map((p: any) => (
-                    <tr key={p.id}>
+                  {filtered.map((p: TProduct, i: number) => (
+                    <tr key={i}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="theme-border h-10 w-10 overflow-hidden rounded border bg-gray-100">
@@ -241,9 +265,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="badge capitalize">
-                          {p.category || 'uncategorized'}
-                        </span>
+                        <span className="badge capitalize">{p.category}</span>
                       </td>
                       <td className="px-4 py-3 font-semibold">
                         {fmt(p.salePrice ?? p.price)}
@@ -287,7 +309,7 @@ export default function AdminDashboard() {
                             ✎
                           </button>
                           <button
-                            onClick={() => onDelete(p.id)}
+                            onClick={() => onDelete(p._id)}
                             className="theme-border hover:bg-brand-50 text-brand flex h-8 w-8 items-center justify-center rounded border bg-white"
                             aria-label="delete"
                             title="Delete"
@@ -342,7 +364,12 @@ export default function AdminDashboard() {
       </div>
       <ProductModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          const next = new URLSearchParams(params);
+          next.delete('productId');
+          setParams(next, { replace: true });
+        }}
         initial={editing}
         onSaved={() => refetch()}
       />

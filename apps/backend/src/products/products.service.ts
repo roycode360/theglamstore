@@ -37,13 +37,27 @@ export class ProductsService {
     return docs.map(this.mapDocToGraphQL);
   }
 
+  async listFeatured(): Promise<Product[]> {
+    const docs = await this.productModel
+      .find({ featured: true, active: { $ne: false } })
+      .sort({ createdAt: -1 })
+      .limit(24)
+      .lean();
+    return docs.map(this.mapDocToGraphQL);
+  }
+
   async listPage(
     page: number,
     pageSize: number,
     opts?: {
       search?: string;
       category?: string;
+      brand?: string;
+      minPrice?: number;
+      maxPrice?: number;
       active?: boolean;
+      inStockOnly?: boolean;
+      onSaleOnly?: boolean;
       outOfStock?: boolean;
       sortBy?: string;
       sortDir?: string;
@@ -63,10 +77,35 @@ export class ProductsService {
       const pattern = `^${escaped.replace(/[-\s]+/g, '[-\\s]+')}$`;
       filter.category = new RegExp(pattern, 'i');
     }
+    if (opts?.brand) {
+      const raw = String(opts.brand).trim();
+      const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const pattern = `^${escaped.replace(/[-\s]+/g, '[-\\s]+')}$`;
+      filter.brand = new RegExp(pattern, 'i');
+    }
+    if (
+      typeof opts?.minPrice === 'number' ||
+      typeof opts?.maxPrice === 'number'
+    ) {
+      const priceCond: Record<string, unknown> = {};
+      if (typeof opts?.minPrice === 'number') priceCond.$gte = opts.minPrice;
+      if (typeof opts?.maxPrice === 'number') priceCond.$lte = opts.maxPrice;
+      filter.$or = [
+        ...(Array.isArray(filter.$or) ? filter.$or : []),
+        { salePrice: { $exists: true, ...priceCond } },
+        { price: { $exists: true, ...priceCond } },
+      ];
+    }
     if (typeof opts?.active === 'boolean') filter.active = opts.active;
-    if (opts?.outOfStock) {
-      const existingOr = Array.isArray(filter.$or) ? filter.$or : [];
-      filter.$or = [...existingOr, { stockQuantity: { $lte: 0 } }];
+    // Availability should be an AND condition, not OR with other filters
+    if (opts?.inStockOnly) {
+      (filter as any).stockQuantity = { $gt: 0 };
+    } else if (opts?.outOfStock) {
+      (filter as any).stockQuantity = { $lte: 0 };
+    }
+    // On sale can also be an AND, so combine directly
+    if (opts?.onSaleOnly) {
+      (filter as any).salePrice = { $ne: null };
     }
 
     const sort: Record<string, 1 | -1> = {};
@@ -114,7 +153,7 @@ export class ProductsService {
   }
 
   private mapDocToGraphQL = (doc: ProductDocLike): Product => ({
-    id: String(doc._id),
+    _id: String(doc._id),
     name: doc.name ?? '',
     slug: doc.slug ?? '',
     brand: doc.brand ?? undefined,

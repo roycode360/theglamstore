@@ -5,7 +5,7 @@ import Spinner from '../components/ui/Spinner';
 const LIST_CATEGORIES = gql`
   query ListCategoriesPage {
     listCategories {
-      id
+      _id
       name
       slug
       image
@@ -17,7 +17,7 @@ const LIST_CATEGORIES = gql`
 export default function ProductCategories() {
   const { data, loading } = useQuery(LIST_CATEGORIES);
   const categories = (data?.listCategories ?? []) as Array<{
-    id: string;
+    _id: string;
     name: string;
     slug: string;
     image?: string | null;
@@ -31,7 +31,7 @@ export default function ProductCategories() {
           Explore Our Collections
         </h1>
         <p
-          className="max-w-2xl mx-auto mt-2 text-sm"
+          className="mx-auto mt-2 max-w-2xl text-sm"
           style={{ color: 'rgb(var(--muted))' }}
         >
           Find your style within our curated categories, each with its own story
@@ -47,15 +47,15 @@ export default function ProductCategories() {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {categories.map((c) => (
             <Link
-              key={c.id}
+              key={c._id}
               to={`/products?category=${c.slug}`}
-              className="relative overflow-hidden group rounded-2xl"
+              className="group relative overflow-hidden rounded-2xl"
             >
               <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl bg-gray-100">
                 {c.image && (
                   <img
                     src={c.image}
-                    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 )}
               </div>

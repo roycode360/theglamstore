@@ -43,6 +43,7 @@ export class GqlAuthGuard implements CanActivate {
       req.user = {
         id: String(payload.sub),
         role: payload.role,
+        email: payload.email,
       };
 
       return true;

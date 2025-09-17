@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
+import type { Request } from 'express';
 
-function cookieExtractor(req: any) {
-  const token = req?.cookies?.refresh_token;
-  return token || null;
+type RequestWithCookies = Omit<Request, 'cookies'> & {
+  cookies?: Record<string, string | undefined>;
+};
+
+function cookieExtractor(req: RequestWithCookies): string | null {
+  const token = req.cookies?.refresh_token;
+  return token ?? null;
 }
 
 @Injectable()
@@ -21,7 +26,10 @@ export class JwtRefreshStrategy extends PassportStrategy(
     });
   }
 
-  async validate(req: any, payload: any) {
-    return { ...payload, refreshToken: req?.cookies?.refresh_token };
+  validate(
+    req: RequestWithCookies,
+    payload: Record<string, unknown>,
+  ): Record<string, unknown> & { refreshToken: string | null } {
+    return { ...payload, refreshToken: req.cookies?.refresh_token ?? null };
   }
 }

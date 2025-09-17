@@ -15,20 +15,21 @@ type AuthUser {
   role: String!
 }
 
-type CartItem {
+type CartItemType {
+  _id: String!
   createdAt: DateTime!
-  productId: ID!
+  product: Product
   quantity: Int!
   selectedColor: String!
-  selectedSize: String!
+  selectedSize: String
   updatedAt: DateTime!
   userId: ID!
 }
 
 type Category {
+  _id: ID!
   active: Boolean!
   description: String
-  id: ID!
   image: String
   name: String!
   parentId: String
@@ -75,27 +76,71 @@ type LoginResponse {
 }
 
 type Mutation {
-  addToCart(input: AddToCartInput!): CartItem!
+  addToCart(input: AddToCartInput!): CartItemType!
+  addToWishlist(productId: String!, selectedColor: String, selectedSize: String): Boolean!
   clearCart: Boolean!
+  createBankTransferOrder(payload: String!): Boolean!
   createCategory(input: CreateCategoryInput!): Category!
   createProduct(input: CreateProductInput!): Product!
   deleteCategory(id: ID!): Boolean!
+  deleteOrder(id: String!): Boolean!
   deleteProduct(id: ID!): Boolean!
   loginWithAuth0(auth0Token: String!): LoginResponse!
   removeFromCart(input: RemoveFromCartInput!): Boolean!
-  updateCartItem(input: UpdateCartItemInput!): CartItem!
+  removeFromWishlist(productId: String!, selectedColor: String, selectedSize: String): Boolean!
+  sendContactMessage(email: String!, message: String!, name: String!, subject: String): Boolean!
+  updateCartItem(input: UpdateCartItemInput!): CartItemType!
   updateCategory(id: ID!, input: UpdateCategoryInput!): Category
+  updateOrderStatus(id: String!, status: String!): Order
   updateProduct(id: ID!, input: UpdateProductInput!): Product
 }
 
+type Order {
+  _id: ID!
+  address1: String!
+  city: String!
+  createdAt: DateTime!
+  email: String!
+  firstName: String!
+  items: [OrderItem!]!
+  lastName: String!
+  paymentMethod: String!
+  phone: String
+  state: String!
+  status: String!
+  subtotal: Float!
+  tax: Float!
+  total: Float!
+  transferProofUrl: String
+  updatedAt: DateTime!
+}
+
+type OrderItem {
+  image: String
+  name: String
+  price: Float
+  productId: String!
+  quantity: Float
+  selectedColor: String
+  selectedSize: String
+}
+
+type OrderPage {
+  items: [Order!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+  totalPages: Float!
+}
+
 type Product {
+  _id: ID!
   active: Boolean!
   brand: String
   category: String!
   colors: [String!]!
   description: String
   featured: Boolean!
-  id: ID!
   images: [String!]!
   name: String!
   price: Float!
@@ -116,13 +161,18 @@ type ProductPage {
 
 type Query {
   getCartItemCount: Float!
-  getCartItems: [CartItem!]!
+  getCartItems: [CartItemType!]!
+  getOrder(id: String!): Order
   getProduct(id: ID!): Product
   health: String!
   listCategories: [Category!]!
+  listFeaturedProducts: [Product!]!
+  listOrders: [Order!]!
+  listOrdersPage(page: Int!, pageSize: Int!, status: String): OrderPage!
   listProducts: [Product!]!
-  listProductsPage(active: Boolean, category: String, outOfStock: Boolean, page: Int, pageSize: Int, search: String, sortBy: String, sortDir: String): ProductPage!
-  me: User
+  listProductsPage(active: Boolean, brand: String, category: String, inStockOnly: Boolean, maxPrice: Float, minPrice: Float, onSaleOnly: Boolean, outOfStock: Boolean, page: Int, pageSize: Int, search: String, sortBy: String, sortDir: String): ProductPage!
+  listWishlist: [Product!]!
+  me: User!
 }
 
 input RemoveFromCartInput {
@@ -162,10 +212,10 @@ input UpdateProductInput {
 }
 
 type User {
+  _id: ID!
   createdAt: DateTime
   email: String!
   emailVerified: Boolean!
-  id: ID!
   role: String!
   updatedAt: DateTime
 }

@@ -3,12 +3,13 @@ import { Request } from 'express';
 export type AccountRole = 'admin' | 'customer';
 
 export interface GqlContext extends Request {
-  req: Request & { user?: { id: string; role: AccountRole } };
+  req: Request & { user?: { id: string; role: AccountRole; email: string } };
 }
 
 export interface JwtPayload {
   sub: string;
   role: AccountRole;
+  email: string;
   iat?: number;
   exp?: number;
 }
@@ -16,7 +17,9 @@ export interface JwtPayload {
 export type AuthUser = {
   id: string;
   email: string;
-  passwordHash: string;
   role: 'customer' | 'admin';
-  refreshTokenHash?: string | null;
 };
+
+export interface GqlContext {
+  req: Request & { user?: AuthUser };
+}

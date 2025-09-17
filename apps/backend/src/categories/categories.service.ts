@@ -51,7 +51,7 @@ export class CategoriesService {
     parentId?: string | null;
     active?: boolean;
   }): Category => ({
-    id: String(doc._id),
+    _id: String(doc._id),
     name: doc.name ?? '',
     slug: doc.slug ?? '',
     description: doc.description ?? undefined,

@@ -34,6 +34,6 @@ import { APP_GUARD, Reflector } from '@nestjs/core';
       inject: [JwtService, Reflector],
     },
   ],
-  exports: [AuthService, JwtModule],
+  exports: [AuthService, JwtModule, EmailService],
 })
 export class AuthModule {}

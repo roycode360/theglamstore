@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import type { GqlContext } from 'src/types';
 
 // --- Step 1: Define a decorator for roles ---
 export const ROLES_KEY = 'roles';
@@ -29,7 +30,7 @@ export class RolesGuard implements CanActivate {
 
     // Step 3: Switch to GraphQL context
     const gqlContext = GqlExecutionContext.create(context);
-    const req = gqlContext.getContext().req; // <- This is the same req object that JwtAuthGuard attaches user to
+    const { req } = gqlContext.getContext<GqlContext>(); // <- This is the same req object that JwtAuthGuard attaches user to
 
     // Step 4: Extract user role from request
     const user = req.user;

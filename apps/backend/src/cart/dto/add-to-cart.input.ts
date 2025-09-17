@@ -1,5 +1,12 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsNotEmpty, IsNumber, IsPositive, IsString, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Min,
+} from 'class-validator';
 
 @InputType()
 export class AddToCartInput {
@@ -15,12 +22,12 @@ export class AddToCartInput {
   quantity: number;
 
   @Field()
-  @IsNotEmpty()
   @IsString()
+  @IsOptional()
   selectedSize: string;
 
   @Field()
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   selectedColor: string;
 }

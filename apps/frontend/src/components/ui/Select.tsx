@@ -8,12 +8,16 @@ export default function Select({
   options,
   className = '',
   placeholder = 'Select',
+  buttonClassName = '',
+  disabled = false,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: SelectOption[];
   className?: string;
   placeholder?: string;
+  buttonClassName?: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
@@ -44,8 +48,13 @@ export default function Select({
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        aria-disabled={disabled}
+        onClick={() => {
+          if (disabled) return;
+          setOpen((v) => !v);
+        }}
         onKeyDown={(e) => {
+          if (disabled) return;
           if (e.key === 'ArrowDown') {
             e.preventDefault();
             setOpen(true);
@@ -68,7 +77,7 @@ export default function Select({
             setOpen(false);
           }
         }}
-        className="theme-border w-full rounded border bg-white px-3 py-2 pr-10 text-left focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+        className={`theme-border w-full rounded border px-3 py-2 pr-10 text-left focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10 ${buttonClassName} ${disabled ? 'pointer-events-none opacity-50' : ''}`}
       >
         <span className="capitalize">
           {options.find((o) => o.value === value)?.label ?? placeholder}
@@ -93,7 +102,7 @@ export default function Select({
       {open && (
         <div
           role="listbox"
-          className="theme-border absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border bg-white shadow-lg"
+          className="theme-border absolute z-50 mt-1 max-h-56 w-full overflow-auto rounded-md border bg-white shadow-lg"
         >
           {options.map((o, idx) => (
             <div

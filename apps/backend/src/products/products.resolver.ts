@@ -26,7 +26,14 @@ export class ProductsResolver {
     @Args('pageSize', { type: () => Int, nullable: true }) pageSize = 10,
     @Args('search', { type: () => String, nullable: true }) search?: string,
     @Args('category', { type: () => String, nullable: true }) category?: string,
+    @Args('brand', { type: () => String, nullable: true }) brand?: string,
+    @Args('minPrice', { type: () => Number, nullable: true }) minPrice?: number,
+    @Args('maxPrice', { type: () => Number, nullable: true }) maxPrice?: number,
     @Args('active', { type: () => Boolean, nullable: true }) active?: boolean,
+    @Args('inStockOnly', { type: () => Boolean, nullable: true })
+    inStockOnly?: boolean,
+    @Args('onSaleOnly', { type: () => Boolean, nullable: true })
+    onSaleOnly?: boolean,
     @Args('outOfStock', { type: () => Boolean, nullable: true })
     outOfStock?: boolean,
     @Args('sortBy', { type: () => String, nullable: true }) sortBy?: string,
@@ -35,11 +42,22 @@ export class ProductsResolver {
     return this.products.listPage(page, pageSize, {
       search,
       category,
+      brand,
+      minPrice,
+      maxPrice,
       active,
+      inStockOnly,
+      onSaleOnly,
       outOfStock,
       sortBy,
       sortDir,
     });
+  }
+
+  @isPublic()
+  @Query(() => [Product])
+  async listFeaturedProducts(): Promise<Product[]> {
+    return this.products.listFeatured();
   }
 
   @isPublic()

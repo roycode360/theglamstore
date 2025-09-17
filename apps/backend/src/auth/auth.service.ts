@@ -18,7 +18,11 @@ export class AuthService {
     accessToken: string;
     refreshToken: string;
   }> {
-    const payload: JwtPayload = { sub: user.id, role: user.role };
+    const payload: JwtPayload = {
+      sub: user.id,
+      role: user.role,
+      email: user.email,
+    };
     const accessToken = await this.jwt.signAsync(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
       expiresIn: process.env.JWT_ACCESS_EXPIRES_IN,
@@ -72,7 +76,7 @@ export class AuthService {
 
     const { accessToken, refreshToken } = await this.generateTokensForUser({
       id: String(user._id),
-      email,
+      email: email,
       role: user.role,
     } as AuthUser);
 
@@ -85,7 +89,7 @@ export class AuthService {
       refreshToken,
       user: {
         id: String(user._id),
-        email,
+        email: email,
         role: user.role,
       },
     };

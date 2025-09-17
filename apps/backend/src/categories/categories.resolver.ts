@@ -18,7 +18,7 @@ export class CategoriesResolver {
     return this.svc.list();
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin')
   @Mutation(() => Category)
   async createCategory(
@@ -27,7 +27,7 @@ export class CategoriesResolver {
     return this.svc.create(input);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin')
   @Mutation(() => Category, { nullable: true })
   async updateCategory(
@@ -37,7 +37,7 @@ export class CategoriesResolver {
     return this.svc.update(id, input);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(RolesGuard)
   @Roles('admin')
   @Mutation(() => Boolean)
   async deleteCategory(
