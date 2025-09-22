@@ -136,15 +136,17 @@ export default function AdminDashboard() {
     <>
       <div className="space-y-6">
         <div>
-          <h1 className="theme-fg text-2xl font-semibold">Admin Dashboard</h1>
+          <h1 className="text-2xl font-semibold theme-fg">
+            Products Management
+          </h1>
           <p className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
-            Manage your fashion store content
+            Manage your product catalog, inventory, and pricing
           </p>
         </div>
-        <div className="theme-card theme-border rounded-lg border p-6">
-          <div className="mb-4 flex items-center justify-between">
+        <div className="px-2 py-6 border rounded-lg theme-card theme-border">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-brand font-semibold">Products</span>
+              <span className="font-semibold text-brand">Products</span>
               <span className="border-brand text-brand bg-brand-50 rounded-full border px-2 py-0.5 text-xs">
                 {filtered.length}
               </span>
@@ -157,7 +159,7 @@ export default function AdminDashboard() {
                   setPage(1);
                 }}
                 placeholder="Search products..."
-                className="focus-brand h-9 w-64 text-sm"
+                className="w-64 text-sm focus-brand h-9"
               />
               <div className="w-48">
                 <Select
@@ -217,7 +219,7 @@ export default function AdminDashboard() {
                   setEditing(null);
                   setModalOpen(true);
                 }}
-                className="btn-primary h-9 rounded-md px-3 text-sm"
+                className="px-3 text-sm rounded-md btn-primary h-9"
               >
                 + Add Product
               </button>
@@ -228,81 +230,206 @@ export default function AdminDashboard() {
               <Spinner label="Loading products" />
             </div>
           ) : (
-            <div className="theme-border overflow-hidden rounded-md border">
-              <table className="w-full text-sm">
-                <thead className="table-head">
-                  <tr className="text-left">
-                    <th className="px-4 py-3">Product</th>
-                    <th className="px-4 py-3">Category</th>
-                    <th className="px-4 py-3">Price</th>
-                    <th className="px-4 py-3">Stock</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="theme-border divide-y">
-                  {filtered.map((p: TProduct, i: number) => (
-                    <tr key={i}>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="theme-border h-10 w-10 overflow-hidden rounded border bg-gray-100">
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <div className="overflow-hidden border rounded-md theme-border">
+                  <table className="w-full text-sm">
+                    <thead className="table-head">
+                      <tr className="text-left">
+                        <th className="px-4 py-3">Product</th>
+                        <th className="px-4 py-3">Category</th>
+                        <th className="px-4 py-3">Price</th>
+                        <th className="px-4 py-3">Stock</th>
+                        <th className="px-4 py-3">Status</th>
+                        <th className="px-4 py-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y theme-border">
+                      {filtered.map((p: TProduct, i: number) => (
+                        <tr key={i}>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 overflow-hidden bg-gray-100 border rounded theme-border">
+                                {p.images?.[0] && (
+                                  <img
+                                    src={p.images[0]}
+                                    className="object-cover w-full h-full"
+                                  />
+                                )}
+                              </div>
+                              <div>
+                                <div className="font-medium">{p.name}</div>
+                                <div
+                                  className="text-xs"
+                                  style={{ color: 'rgb(var(--muted))' }}
+                                >
+                                  {p.brand || '—'}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="capitalize badge">
+                              {p.category}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 font-semibold">
+                            {fmt(p.salePrice ?? p.price)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {p.stockQuantity && p.stockQuantity > 0 ? (
+                              <span style={{ color: 'rgb(var(--muted))' }}>
+                                {p.stockQuantity}
+                              </span>
+                            ) : (
+                              <span
+                                className="badge"
+                                style={{
+                                  color: '#b91c1c',
+                                  borderColor: '#fecaca',
+                                  backgroundColor: '#fee2e2',
+                                }}
+                              >
+                                Out of stock
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`theme-border rounded-full border px-2 py-1 text-xs ${p.active ? '' : ''}`}
+                            >
+                              {p.active ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => {
+                                  setEditing(p);
+                                  setModalOpen(true);
+                                }}
+                                className="flex items-center justify-center w-8 h-8 bg-white border rounded theme-border hover:bg-brand-50 text-brand"
+                                aria-label="edit"
+                                title="Edit"
+                              >
+                                ✎
+                              </button>
+                              <button
+                                onClick={() => onDelete(p._id)}
+                                className="flex items-center justify-center w-8 h-8 bg-white border rounded theme-border hover:bg-brand-50 text-brand"
+                                aria-label="delete"
+                                title="Delete"
+                              >
+                                🗑
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                      {filtered.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={6}
+                            className="py-10 text-center"
+                            style={{ color: 'rgb(var(--muted))' }}
+                          >
+                            No results
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden">
+                {filtered.length === 0 ? (
+                  <div
+                    className="py-10 text-sm text-center"
+                    style={{ color: 'rgb(var(--muted))' }}
+                  >
+                    No results
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filtered.map((p: TProduct, i: number) => (
+                      <div
+                        key={i}
+                        className="p-4 border rounded-lg theme-border"
+                      >
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 border rounded theme-border">
                             {p.images?.[0] && (
                               <img
                                 src={p.images[0]}
-                                className="h-full w-full object-cover"
+                                className="object-cover w-full h-full"
                               />
                             )}
                           </div>
-                          <div>
-                            <div className="font-medium">{p.name}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="mb-1 text-sm font-medium">
+                              {p.name}
+                            </div>
                             <div
-                              className="text-xs"
+                              className="mb-2 text-xs"
                               style={{ color: 'rgb(var(--muted))' }}
                             >
                               {p.brand || '—'}
                             </div>
+                            <span className="text-xs capitalize badge">
+                              {p.category}
+                            </span>
+                          </div>
+                          <span
+                            className={`theme-border rounded-full border px-2 py-1 text-xs ${p.active ? '' : ''}`}
+                          >
+                            {p.active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <div>
+                            <div className="mb-1 text-xs text-gray-500">
+                              Price
+                            </div>
+                            <div className="text-sm font-semibold">
+                              {fmt(p.salePrice ?? p.price)}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="mb-1 text-xs text-gray-500">
+                              Stock
+                            </div>
+                            <div className="text-sm">
+                              {p.stockQuantity && p.stockQuantity > 0 ? (
+                                <span style={{ color: 'rgb(var(--muted))' }}>
+                                  {p.stockQuantity}
+                                </span>
+                              ) : (
+                                <span
+                                  className="text-xs badge"
+                                  style={{
+                                    color: '#b91c1c',
+                                    borderColor: '#fecaca',
+                                    backgroundColor: '#fee2e2',
+                                  }}
+                                >
+                                  Out of stock
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="badge capitalize">{p.category}</span>
-                      </td>
-                      <td className="px-4 py-3 font-semibold">
-                        {fmt(p.salePrice ?? p.price)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {p.stockQuantity && p.stockQuantity > 0 ? (
-                          <span style={{ color: 'rgb(var(--muted))' }}>
-                            {p.stockQuantity}
-                          </span>
-                        ) : (
-                          <span
-                            className="badge"
-                            style={{
-                              color: '#b91c1c',
-                              borderColor: '#fecaca',
-                              backgroundColor: '#fee2e2',
-                            }}
-                          >
-                            Out of stock
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`theme-border rounded-full border px-2 py-1 text-xs ${p.active ? '' : ''}`}
-                        >
-                          {p.active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
+
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => {
                               setEditing(p);
                               setModalOpen(true);
                             }}
-                            className="theme-border hover:bg-brand-50 text-brand flex h-8 w-8 items-center justify-center rounded border bg-white"
+                            className="flex items-center justify-center w-8 h-8 bg-white border rounded theme-border hover:bg-brand-50 text-brand"
                             aria-label="edit"
                             title="Edit"
                           >
@@ -310,32 +437,21 @@ export default function AdminDashboard() {
                           </button>
                           <button
                             onClick={() => onDelete(p._id)}
-                            className="theme-border hover:bg-brand-50 text-brand flex h-8 w-8 items-center justify-center rounded border bg-white"
+                            className="flex items-center justify-center w-8 h-8 bg-white border rounded theme-border hover:bg-brand-50 text-brand"
                             aria-label="delete"
                             title="Delete"
                           >
                             🗑
                           </button>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {filtered.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="py-10 text-center"
-                        style={{ color: 'rgb(var(--muted))' }}
-                      >
-                        No results
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
           )}
-          <div className="mt-4 flex items-center justify-between">
+          <div className="flex items-center justify-between mt-4">
             <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
               Page {pageData?.page ?? 1} of {pageData?.totalPages ?? 1}
             </div>
@@ -343,7 +459,7 @@ export default function AdminDashboard() {
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="btn-ghost h-9 rounded-md px-3 text-sm disabled:opacity-50"
+                className="px-3 text-sm rounded-md btn-ghost h-9 disabled:opacity-50"
               >
                 Previous
               </button>
@@ -354,7 +470,7 @@ export default function AdminDashboard() {
                     pageData ? Math.min(pageData.totalPages, p + 1) : p + 1,
                   )
                 }
-                className="btn-primary h-9 rounded-md px-3 text-sm disabled:opacity-50"
+                className="px-3 text-sm rounded-md btn-primary h-9 disabled:opacity-50"
               >
                 Next
               </button>

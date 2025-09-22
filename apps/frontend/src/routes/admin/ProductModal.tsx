@@ -191,14 +191,14 @@ export default function ProductModal({
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="theme-border theme-card relative my-10 max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg border p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
+      <div className="theme-border theme-card relative mx-2 my-10 max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg border p-6 shadow-xl">
+        <div className="flex items-center justify-between mb-4">
           <div className="text-lg font-semibold">
             {isEdit ? 'Edit Product' : 'Add Product'}
           </div>
           <button
             onClick={onClose}
-            className="theme-border flex h-8 w-8 items-center justify-center rounded border"
+            className="flex items-center justify-center w-8 h-8 border rounded theme-border"
             aria-label="close"
           >
             ×
@@ -206,10 +206,10 @@ export default function ProductModal({
         </div>
         {isEdit && initial?._id && productLoading && !fullData?.getProduct && (
           <div
-            className="mb-3 flex items-center gap-2 text-sm"
+            className="flex items-center gap-2 mb-3 text-sm"
             style={{ color: 'rgb(var(--muted))' }}
           >
-            <span className="border-brand h-3 w-3 animate-spin rounded-full border-2 border-t-transparent" />
+            <span className="w-3 h-3 border-2 rounded-full border-brand animate-spin border-t-transparent" />
             <span>Prefilling product details…</span>
           </div>
         )}
@@ -227,7 +227,7 @@ export default function ProductModal({
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="mt-1 w-full"
+                  className="w-full mt-1"
                   required
                 />
               </label>
@@ -246,7 +246,7 @@ export default function ProductModal({
               </label>
               <label className="block text-sm">
                 <div className="font-medium">URL Slug</div>
-                <div className="mt-1 flex gap-2">
+                <div className="flex gap-2 mt-1">
                   <Input
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
@@ -256,7 +256,7 @@ export default function ProductModal({
                   <button
                     type="button"
                     onClick={() => setSlug(generateSlug(name))}
-                    className="theme-border shrink-0 rounded-md border bg-white px-3 py-2 text-sm hover:bg-gray-50"
+                    className="px-3 py-2 text-sm bg-white border rounded-md theme-border shrink-0 hover:bg-gray-50"
                   >
                     Generate
                   </button>
@@ -264,7 +264,7 @@ export default function ProductModal({
               </label>
               <label className="block text-sm">
                 <div className="font-medium">SKU</div>
-                <div className="mt-1 flex gap-2">
+                <div className="flex gap-2 mt-1">
                   <Input
                     value={sku}
                     onChange={(e) => setSku(e.target.value)}
@@ -279,7 +279,7 @@ export default function ProductModal({
                         }),
                       )
                     }
-                    className="theme-border shrink-0 rounded-md border bg-white px-3 py-2 text-sm hover:bg-gray-50"
+                    className="px-3 py-2 text-sm bg-white border rounded-md theme-border shrink-0 hover:bg-gray-50"
                   >
                     Generate
                   </button>
@@ -290,7 +290,7 @@ export default function ProductModal({
                 <Input
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
-                  className="mt-1 w-full"
+                  className="w-full mt-1"
                 />
               </label>
               <label className="block text-sm">
@@ -298,7 +298,7 @@ export default function ProductModal({
                 <Input
                   value={stockQuantity}
                   onChange={(e) => setStockQuantity(e.target.value)}
-                  className="mt-1 w-full"
+                  className="w-full mt-1"
                 />
               </label>
               <label className="block text-sm">
@@ -306,7 +306,7 @@ export default function ProductModal({
                 <Input
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="mt-1 w-full"
+                  className="w-full mt-1"
                   required
                 />
               </label>
@@ -315,7 +315,7 @@ export default function ProductModal({
                 <Input
                   value={salePrice}
                   onChange={(e) => setSalePrice(e.target.value)}
-                  className="mt-1 w-full"
+                  className="w-full mt-1"
                 />
               </label>
             </div>
@@ -326,7 +326,7 @@ export default function ProductModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
-                className="mt-1 w-full"
+                className="w-full mt-1"
               />
             </label>
 
@@ -348,11 +348,11 @@ export default function ProductModal({
                         setImageUrl('');
                       }
                     }}
-                    className="btn-primary rounded px-3 py-2"
+                    className="px-3 py-2 rounded btn-primary"
                   >
                     Add
                   </button>
-                  <label className="btn-ghost cursor-pointer rounded px-3 py-2">
+                  <label className="px-3 py-2 rounded cursor-pointer btn-ghost">
                     {uploading ? 'Uploading…' : 'Upload'}
                     <input
                       type="file"
@@ -390,11 +390,11 @@ export default function ProductModal({
                     />
                   </label>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {images.map((src, i) => (
                     <div
                       key={i}
-                      className="thumb relative"
+                      className="relative thumb"
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.setData('text/plain', String(i));
@@ -417,14 +417,14 @@ export default function ProductModal({
                     >
                       <img
                         src={src}
-                        className="theme-border h-16 w-16 rounded border object-cover"
+                        className="object-cover w-16 h-16 border rounded theme-border"
                       />
                       <button
                         type="button"
                         onClick={() =>
                           setImages(images.filter((_, idx) => idx !== i))
                         }
-                        className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-red-500 text-xs text-white"
+                        className="absolute w-6 h-6 text-xs text-white bg-red-500 rounded-full -right-2 -top-2"
                       >
                         ×
                       </button>
@@ -450,16 +450,16 @@ export default function ProductModal({
                         setSizeInput('');
                       }
                     }}
-                    className="btn-primary rounded px-3 py-2"
+                    className="px-3 py-2 rounded btn-primary"
                   >
                     Add
                   </button>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {sizes.map((s, i) => (
                     <span
                       key={i}
-                      className="theme-border rounded-full border px-2 text-sm font-semibold"
+                      className="px-2 text-sm font-semibold border rounded-full theme-border"
                     >
                       {s}{' '}
                       <button
@@ -489,7 +489,7 @@ export default function ProductModal({
                     type="color"
                     value={colorHex}
                     onChange={(e) => setColorHex(e.target.value)}
-                    className="theme-border h-10 w-12 rounded border"
+                    className="w-12 h-10 border rounded theme-border"
                   />
                   <button
                     type="button"
@@ -500,12 +500,12 @@ export default function ProductModal({
                       setColors([...colors, value]);
                       setColorInput('');
                     }}
-                    className="btn-primary rounded px-3 py-2"
+                    className="px-3 py-2 rounded btn-primary"
                   >
                     Add
                   </button>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {colors.map((c, i) => {
                     const [label, hex] = c.includes('|')
                       ? (c.split('|') as [string, string])
@@ -513,10 +513,10 @@ export default function ProductModal({
                     return (
                       <span
                         key={i}
-                        className="theme-border inline-flex items-center gap-2 rounded-full border px-2 text-sm"
+                        className="inline-flex items-center gap-2 px-2 text-sm border rounded-full theme-border"
                       >
                         <span
-                          className="inline-block h-3 w-3 rounded-full border"
+                          className="inline-block w-3 h-3 border rounded-full"
                           style={{ backgroundColor: hex }}
                         />{' '}
                         {label}
@@ -553,11 +553,11 @@ export default function ProductModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="btn-ghost rounded px-4 py-2"
+                className="px-4 py-2 rounded btn-ghost"
               >
                 Cancel
               </button>
-              <button className="btn-primary rounded px-4 py-2">
+              <button className="px-4 py-2 rounded btn-primary">
                 {isEdit ? 'Update Product' : 'Create Product'}
               </button>
             </div>

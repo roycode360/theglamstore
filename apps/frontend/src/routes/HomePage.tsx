@@ -101,7 +101,7 @@ export default function HomePage() {
           className="absolute inset-0"
           style={{
             backgroundImage:
-              'url(https://images.unsplash.com/photo-1520975916090-3105956dac38?q=80&w=2000&auto=format&fit=crop)',
+              'url(https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&h=1200&q=80)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'brightness(0.7)',

@@ -14,7 +14,8 @@ export default function WishlistPage() {
         </div>
         <Link
           to="/products"
-          className="theme-border text-brand hover:bg-brand-50 inline-flex h-9 items-center gap-2 rounded-md border bg-white px-3 text-sm"
+          className="theme-border text-brand hover:bg-brand-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-white transition-colors sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
+          title="Continue Shopping"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -28,7 +29,7 @@ export default function WishlistPage() {
               clipRule="evenodd"
             />
           </svg>
-          <span>Continue Shopping</span>
+          <span className="hidden sm:inline">Continue Shopping</span>
         </Link>
       </div>
 

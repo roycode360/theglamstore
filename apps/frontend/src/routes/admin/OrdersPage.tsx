@@ -165,120 +165,296 @@ export default function OrdersPage() {
           <Spinner label="Loading orders" />
         </div>
       ) : (
-        <div className="overflow-visible border rounded-md theme-border">
-          <table className="w-full text-sm">
-            <thead className="table-head">
-              <tr className="text-left">
-                <th className="px-4 py-3">Order ID</th>
-                <th className="px-4 py-3">Customer</th>
-                <th className="px-4 py-3">Total</th>
-                <th className="px-4 py-3">Payment</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y theme-border">
-              {orders.map((o) => (
-                <tr key={o._id}>
-                  <td className="px-4 py-3 font-mono text-xs">{o._id}</td>
-                  <td className="px-4 py-3">
-                    {o.firstName} {o.lastName}
-                    <div
-                      className="text-xs"
-                      style={{ color: 'rgb(var(--muted))' }}
-                    >
-                      {o.email}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 font-semibold">
-                    ₦{Number(o.total).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3 capitalize">
-                    {o.paymentMethod?.replace('_', ' ')}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="relative">
-                      <Select
-                        value={o.status}
-                        onChange={async (newStatus) => {
-                          try {
-                            setUpdatingId(o._id);
-                            await updateStatus({
-                              variables: { id: o._id, status: newStatus },
-                              optimisticResponse: {
-                                updateOrderStatus: {
-                                  __typename: 'Order',
-                                  _id: o._id,
-                                  status: newStatus,
-                                  updatedAt: new Date().toISOString(),
-                                },
-                              },
-                              update(cache) {
-                                try {
-                                  cache.updateQuery(
-                                    {
-                                      query: LIST_ORDERS_PAGE,
-                                      variables: {
-                                        page,
-                                        pageSize,
-                                        status: statusFilter || null,
-                                      },
-                                    },
-                                    (existing: any) => {
-                                      if (!existing?.listOrdersPage?.items)
-                                        return existing;
-                                      return {
-                                        ...existing,
-                                        listOrdersPage: {
-                                          ...existing.listOrdersPage,
-                                          items:
-                                            existing.listOrdersPage.items.map(
-                                              (row: any) =>
-                                                row._id === o._id
-                                                  ? {
-                                                      ...row,
-                                                      status: newStatus,
-                                                    }
-                                                  : row,
-                                            ),
-                                        },
-                                      };
-                                    },
-                                  );
-                                } catch {}
-                              },
-                            });
-                            showToast('Order status updated', 'success');
-                          } catch (err) {
-                            showToast('Failed to update status', 'error');
-                          } finally {
-                            setUpdatingId(null);
-                          }
-                        }}
-                        options={[
-                          { value: 'pending', label: 'Pending' },
-                          { value: 'confirmed', label: 'Confirmed' },
-                          { value: 'processing', label: 'Processing' },
-                          { value: 'shipped', label: 'Shipped' },
-                          { value: 'delivered', label: 'Delivered' },
-                          { value: 'cancelled', label: 'Cancelled' },
-                        ]}
-                        disabled={updatingId === o._id}
-                        buttonClassName={`${statusClasses[o.status] ?? 'theme-border text-brand-800 bg-yellow-50'} px-2 py-1 text-xs`}
-                        className="min-w-[160px]"
-                      />
-                      {updatingId === o._id && (
-                        <div className="absolute inset-y-0 flex items-center right-2">
-                          <span className="w-3 h-3 border-2 rounded-full border-brand animate-spin border-t-transparent" />
+        <>
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
+            <div className="overflow-visible border rounded-md theme-border">
+              <table className="w-full text-sm">
+                <thead className="table-head">
+                  <tr className="text-left">
+                    <th className="px-4 py-3">Order ID</th>
+                    <th className="px-4 py-3">Customer</th>
+                    <th className="px-4 py-3">Total</th>
+                    <th className="px-4 py-3">Payment</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3">Date</th>
+                    <th className="px-4 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y theme-border">
+                  {orders.map((o) => (
+                    <tr key={o._id}>
+                      <td className="px-4 py-3 font-mono text-xs">{o._id}</td>
+                      <td className="px-4 py-3">
+                        {o.firstName} {o.lastName}
+                        <div
+                          className="text-xs"
+                          style={{ color: 'rgb(var(--muted))' }}
+                        >
+                          {o.email}
                         </div>
-                      )}
+                      </td>
+                      <td className="px-4 py-3 font-semibold">
+                        ₦{Number(o.total).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 capitalize">
+                        {o.paymentMethod?.replace('_', ' ')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="relative">
+                          <Select
+                            value={o.status}
+                            onChange={async (newStatus) => {
+                              try {
+                                setUpdatingId(o._id);
+                                await updateStatus({
+                                  variables: { id: o._id, status: newStatus },
+                                  optimisticResponse: {
+                                    updateOrderStatus: {
+                                      __typename: 'Order',
+                                      _id: o._id,
+                                      status: newStatus,
+                                      updatedAt: new Date().toISOString(),
+                                    },
+                                  },
+                                  update(cache) {
+                                    try {
+                                      cache.updateQuery(
+                                        {
+                                          query: LIST_ORDERS_PAGE,
+                                          variables: {
+                                            page,
+                                            pageSize,
+                                            status: statusFilter || null,
+                                          },
+                                        },
+                                        (existing: any) => {
+                                          if (!existing?.listOrdersPage?.items)
+                                            return existing;
+                                          return {
+                                            ...existing,
+                                            listOrdersPage: {
+                                              ...existing.listOrdersPage,
+                                              items:
+                                                existing.listOrdersPage.items.map(
+                                                  (row: any) =>
+                                                    row._id === o._id
+                                                      ? {
+                                                          ...row,
+                                                          status: newStatus,
+                                                        }
+                                                      : row,
+                                                ),
+                                            },
+                                          };
+                                        },
+                                      );
+                                    } catch {}
+                                  },
+                                });
+                                showToast('Order status updated', 'success');
+                              } catch (err) {
+                                showToast('Failed to update status', 'error');
+                              } finally {
+                                setUpdatingId(null);
+                              }
+                            }}
+                            options={[
+                              { value: 'pending', label: 'Pending' },
+                              { value: 'confirmed', label: 'Confirmed' },
+                              { value: 'processing', label: 'Processing' },
+                              { value: 'shipped', label: 'Shipped' },
+                              { value: 'delivered', label: 'Delivered' },
+                              { value: 'cancelled', label: 'Cancelled' },
+                            ]}
+                            disabled={updatingId === o._id}
+                            buttonClassName={`${statusClasses[o.status] ?? 'theme-border text-brand-800 bg-yellow-50'} px-2 py-1 text-xs`}
+                            className="min-w-[160px]"
+                          />
+                          {updatingId === o._id && (
+                            <div className="absolute inset-y-0 flex items-center right-2">
+                              <span className="w-3 h-3 border-2 rounded-full border-brand animate-spin border-t-transparent" />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-xs">
+                        {new Date(o.createdAt).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end">
+                          <button
+                            className="w-20 h-8 text-xs border rounded-md theme-border"
+                            onClick={() => {
+                              setSelectedId(o._id);
+                              fetchOrder({ variables: { id: o._id } });
+                              const next = new URLSearchParams(searchParams);
+                              next.set('id', o._id);
+                              setSearchParams(next, { replace: true });
+                            }}
+                          >
+                            View
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {orders.length === 0 && (
+                    <tr>
+                      <td
+                        className="py-10 text-sm text-center"
+                        colSpan={7}
+                        style={{ color: 'rgb(var(--muted))' }}
+                      >
+                        No orders
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden">
+            {orders.length === 0 ? (
+              <div
+                className="py-10 text-sm text-center"
+                style={{ color: 'rgb(var(--muted))' }}
+              >
+                No orders
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {orders.map((o) => (
+                  <div
+                    key={o._id}
+                    className="p-4 border rounded-lg theme-border"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="mb-1 font-mono text-xs text-gray-500">
+                          Order ID
+                        </div>
+                        <div className="font-mono text-sm truncate">
+                          {o._id}
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <Select
+                          value={o.status}
+                          onChange={async (newStatus) => {
+                            try {
+                              setUpdatingId(o._id);
+                              await updateStatus({
+                                variables: { id: o._id, status: newStatus },
+                                optimisticResponse: {
+                                  updateOrderStatus: {
+                                    __typename: 'Order',
+                                    _id: o._id,
+                                    status: newStatus,
+                                    updatedAt: new Date().toISOString(),
+                                  },
+                                },
+                                update(cache) {
+                                  try {
+                                    cache.updateQuery(
+                                      {
+                                        query: LIST_ORDERS_PAGE,
+                                        variables: {
+                                          page,
+                                          pageSize,
+                                          status: statusFilter || null,
+                                        },
+                                      },
+                                      (existing: any) => {
+                                        if (!existing?.listOrdersPage?.items)
+                                          return existing;
+                                        return {
+                                          ...existing,
+                                          listOrdersPage: {
+                                            ...existing.listOrdersPage,
+                                            items:
+                                              existing.listOrdersPage.items.map(
+                                                (row: any) =>
+                                                  row._id === o._id
+                                                    ? {
+                                                        ...row,
+                                                        status: newStatus,
+                                                      }
+                                                    : row,
+                                              ),
+                                          },
+                                        };
+                                      },
+                                    );
+                                  } catch {}
+                                },
+                              });
+                              showToast('Order status updated', 'success');
+                            } catch (err) {
+                              showToast('Failed to update status', 'error');
+                            } finally {
+                              setUpdatingId(null);
+                            }
+                          }}
+                          options={[
+                            { value: 'pending', label: 'Pending' },
+                            { value: 'confirmed', label: 'Confirmed' },
+                            { value: 'processing', label: 'Processing' },
+                            { value: 'shipped', label: 'Shipped' },
+                            { value: 'delivered', label: 'Delivered' },
+                            { value: 'cancelled', label: 'Cancelled' },
+                          ]}
+                          disabled={updatingId === o._id}
+                          buttonClassName={`${statusClasses[o.status] ?? 'theme-border text-brand-800 bg-yellow-50'} px-2 py-1 text-xs`}
+                          className="min-w-[120px]"
+                        />
+                        {updatingId === o._id && (
+                          <div className="absolute inset-y-0 flex items-center right-2">
+                            <span className="w-3 h-3 border-2 rounded-full border-brand animate-spin border-t-transparent" />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-xs">
-                    {new Date(o.createdAt).toLocaleString()}
-                  </td>
-                  <td className="px-4 py-3">
+
+                    <div className="mb-3">
+                      <div className="mb-1 text-xs text-gray-500">Customer</div>
+                      <div className="text-sm font-medium">
+                        {o.firstName} {o.lastName}
+                      </div>
+                      <div
+                        className="text-xs"
+                        style={{ color: 'rgb(var(--muted))' }}
+                      >
+                        {o.email}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div>
+                        <div className="mb-1 text-xs text-gray-500">Total</div>
+                        <div className="text-sm font-semibold">
+                          ₦{Number(o.total).toLocaleString()}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="mb-1 text-xs text-gray-500">
+                          Payment
+                        </div>
+                        <div className="text-sm capitalize">
+                          {o.paymentMethod?.replace('_', ' ')}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mb-3">
+                      <div className="mb-1 text-xs text-gray-500">Date</div>
+                      <div className="text-sm">
+                        {new Date(o.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+
                     <div className="flex justify-end">
                       <button
                         className="w-20 h-8 text-xs border rounded-md theme-border"
@@ -293,50 +469,41 @@ export default function OrdersPage() {
                         View
                       </button>
                     </div>
-                  </td>
-                </tr>
-              ))}
-              {orders.length === 0 && (
-                <tr>
-                  <td
-                    className="py-10 text-sm text-center"
-                    colSpan={7}
-                    style={{ color: 'rgb(var(--muted))' }}
-                  >
-                    No orders
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-          <div className="flex items-center justify-between p-3">
-            <div className="text-xs" style={{ color: 'rgb(var(--muted))' }}>
-              Page {page} of {totalPages}
-            </div>
-            <div className="flex gap-2">
-              <button
-                className="px-3 text-sm rounded-md btn-ghost h-9"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page <= 1}
-              >
-                Previous
-              </button>
-              <button
-                className="px-3 text-sm rounded-md btn-primary h-9"
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                disabled={page >= totalPages}
-              >
-                Next
-              </button>
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        </>
       )}
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between p-3">
+        <div className="text-xs" style={{ color: 'rgb(var(--muted))' }}>
+          Page {page} of {totalPages}
+        </div>
+        <div className="flex gap-2">
+          <button
+            className="px-3 text-sm rounded-md btn-ghost h-9"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+          >
+            Previous
+          </button>
+          <button
+            className="px-3 text-sm rounded-md btn-primary h-9"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       {selectedId && (
         <div
           ref={detailsRef}
-          className="p-6 border rounded-lg theme-card theme-border"
+          className="px-2 py-6 border rounded-lg theme-card theme-border"
         >
           <div className="flex items-center justify-between mb-3">
             <div className="text-lg font-semibold">Order Details</div>
@@ -438,71 +605,153 @@ export default function OrdersPage() {
 
               <div className="mt-6">
                 <div className="mb-2 font-medium">Items</div>
-                <div className="overflow-hidden border rounded-md theme-border">
-                  <table className="w-full text-sm">
-                    <thead className="table-head">
-                      <tr className="text-left">
-                        <th className="px-4 py-3">Product</th>
-                        <th className="px-4 py-3">Options</th>
-                        <th className="px-4 py-3">Qty</th>
-                        <th className="px-4 py-3">Price</th>
-                        <th className="px-4 py-3">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y theme-border">
-                      {orderData.getOrder.items?.map((it: any, idx: number) => (
-                        <tr key={idx}>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 overflow-hidden bg-gray-100 rounded">
-                                {it.image && (
-                                  <img
-                                    src={it.image}
-                                    className="object-cover w-full h-full"
-                                  />
-                                )}
-                              </div>
-                              <div>
-                                <div className="font-medium">{it.name}</div>
-                                <div
-                                  className="text-xs"
-                                  style={{ color: 'rgb(var(--muted))' }}
-                                >
-                                  ID: {it.productId}
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block">
+                  <div className="overflow-hidden border rounded-md theme-border">
+                    <table className="w-full text-sm">
+                      <thead className="table-head">
+                        <tr className="text-left">
+                          <th className="px-4 py-3">Product</th>
+                          <th className="px-4 py-3">Options</th>
+                          <th className="px-4 py-3">Qty</th>
+                          <th className="px-4 py-3">Price</th>
+                          <th className="px-4 py-3">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y theme-border">
+                        {orderData.getOrder.items?.map(
+                          (it: any, idx: number) => (
+                            <tr key={idx}>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 overflow-hidden bg-gray-100 rounded">
+                                    {it.image && (
+                                      <img
+                                        src={it.image}
+                                        className="object-cover w-full h-full"
+                                      />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{it.name}</div>
+                                    <div
+                                      className="text-xs"
+                                      style={{ color: 'rgb(var(--muted))' }}
+                                    >
+                                      ID: {it.productId}
+                                    </div>
+                                  </div>
                                 </div>
+                              </td>
+                              <td className="px-4 py-3 text-xs">
+                                Size: {it.selectedSize || '—'} · Color:{' '}
+                                {it.selectedColor || '—'}
+                              </td>
+                              <td className="px-4 py-3">{it.quantity}</td>
+                              <td className="px-4 py-3">
+                                ₦{Number(it.price ?? 0).toLocaleString()}
+                              </td>
+                              <td className="px-4 py-3 font-semibold">
+                                ₦
+                                {Number(
+                                  (it.price ?? 0) * (it.quantity ?? 0),
+                                ).toLocaleString()}
+                              </td>
+                            </tr>
+                          ),
+                        )}
+                        {(!orderData.getOrder.items ||
+                          orderData.getOrder.items.length === 0) && (
+                          <tr>
+                            <td
+                              className="py-6 text-sm text-center"
+                              colSpan={5}
+                              style={{ color: 'rgb(var(--muted))' }}
+                            >
+                              No items
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden">
+                  {!orderData.getOrder.items ||
+                  orderData.getOrder.items.length === 0 ? (
+                    <div
+                      className="py-6 text-sm text-center"
+                      style={{ color: 'rgb(var(--muted))' }}
+                    >
+                      No items
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {orderData.getOrder.items.map((it: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className="px-2 py-4 border rounded-lg theme-border"
+                        >
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 rounded">
+                              {it.image && (
+                                <img
+                                  src={it.image}
+                                  className="object-cover w-full h-full"
+                                />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="mb-1 text-sm font-medium">
+                                {it.name}
+                              </div>
+                              <div
+                                className="mb-2 text-xs"
+                                style={{ color: 'rgb(var(--muted))' }}
+                              >
+                                ID: {it.productId}
+                              </div>
+                              <div className="text-xs text-gray-600">
+                                Size: {it.selectedSize || '—'} · Color:{' '}
+                                {it.selectedColor || '—'}
                               </div>
                             </div>
-                          </td>
-                          <td className="px-4 py-3 text-xs">
-                            Size: {it.selectedSize || '—'} · Color:{' '}
-                            {it.selectedColor || '—'}
-                          </td>
-                          <td className="px-4 py-3">{it.quantity}</td>
-                          <td className="px-4 py-3">
-                            ₦{Number(it.price ?? 0).toLocaleString()}
-                          </td>
-                          <td className="px-4 py-3 font-semibold">
-                            ₦
-                            {Number(
-                              (it.price ?? 0) * (it.quantity ?? 0),
-                            ).toLocaleString()}
-                          </td>
-                        </tr>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <div className="mb-1 text-xs text-gray-500">
+                                Quantity
+                              </div>
+                              <div className="font-medium">{it.quantity}</div>
+                            </div>
+                            <div>
+                              <div className="mb-1 text-xs text-gray-500">
+                                Price
+                              </div>
+                              <div className="font-medium">
+                                ₦{Number(it.price ?? 0).toLocaleString()}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="mb-1 text-xs text-gray-500">
+                                Total
+                              </div>
+                              <div className="font-semibold">
+                                ₦
+                                {Number(
+                                  (it.price ?? 0) * (it.quantity ?? 0),
+                                ).toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       ))}
-                      {(!orderData.getOrder.items ||
-                        orderData.getOrder.items.length === 0) && (
-                        <tr>
-                          <td
-                            className="py-6 text-sm text-center"
-                            colSpan={5}
-                            style={{ color: 'rgb(var(--muted))' }}
-                          >
-                            No items
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                    </div>
+                  )}
                 </div>
               </div>
 

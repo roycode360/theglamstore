@@ -1,24 +1,26 @@
-import { useQuery } from '@apollo/client';
 import { Link, useNavigate } from 'react-router-dom';
-import { GET_CART_ITEMS } from '../graphql/cart';
 import Spinner from '../components/ui/Spinner';
 import { formatCurrency } from '../utils/currency';
 import { TCartItem } from 'src/types';
+import { LocalCartItem } from '../utils/localCart';
 import React, { useEffect, useMemo, useState } from 'react';
 import Modal from '../components/ui/Modal';
 import { useCheckout } from '../contexts/CheckoutContext';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useMutation } from '@apollo/client';
 import { CREATE_BANK_TRANSFER_ORDER } from '../graphql/orders';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { useToast } from '../components/ui/Toast';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 export default function CheckoutPage() {
-  const { data, loading } = useQuery<{ getCartItems: TCartItem[] }>(
-    GET_CART_ITEMS,
-  );
+  const { cartItems, isLoading } = useCart();
+  const { isUserAuthenticated, login } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const items = data?.getCartItems ?? [];
+  const items = cartItems as (TCartItem | LocalCartItem)[];
+  const loading = isLoading;
 
   const subtotal = useMemo(
     () =>
@@ -32,7 +34,11 @@ export default function CheckoutPage() {
   const total = useMemo(() => subtotal + tax, [subtotal, tax]);
 
   const { info, setInfo, reset } = useCheckout();
-  const [form, setForm] = useState({ ...info });
+  const { user } = useAuth();
+  const [form, setForm] = useState({
+    ...info,
+    email: user?.email || info.email || '',
+  });
   const [createOrder] = useMutation(CREATE_BANK_TRANSFER_ORDER);
   const { clearCart } = useCart();
   const navigate = useNavigate();
@@ -51,6 +57,13 @@ export default function CheckoutPage() {
     }
   }, [loading, items]);
 
+  // Update email when user changes
+  useEffect(() => {
+    if (user?.email) {
+      setForm((prev) => ({ ...prev, email: user.email }));
+    }
+  }, [user?.email]);
+
   function update<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
@@ -59,8 +72,7 @@ export default function CheckoutPage() {
     const next: Record<string, string> = {};
     if (!form.firstName.trim()) next.firstName = 'First name is required';
     if (!form.lastName.trim()) next.lastName = 'Last name is required';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
-      next.email = 'Enter a valid email';
+    // Email is pre-filled from user account, so no validation needed
     if (!form.address1.trim()) next.address1 = 'Address is required';
     if (!form.city.trim()) next.city = 'City is required';
     if (!form.state.trim()) next.state = 'State is required';
@@ -76,20 +88,57 @@ export default function CheckoutPage() {
     );
   }
 
+  // Show login modal for unauthenticated users
+  if (!isUserAuthenticated) {
+    return (
+      <>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="mb-4 text-6xl">🔒</div>
+            <h1 className="mb-4 text-3xl font-bold">Login Required</h1>
+            <p className="mb-8 text-muted">
+              You need to be logged in to access the checkout page.
+            </p>
+            <button
+              onClick={login}
+              className="px-8 py-3 text-lg rounded-lg btn-primary"
+            >
+              Login to Continue
+            </button>
+          </div>
+        </div>
+
+        {/* Login Confirmation Modal */}
+        <ConfirmModal
+          open={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onConfirm={() => {
+            setShowLoginModal(false);
+            login();
+          }}
+          title="Login Required"
+          message="You need to be logged in to proceed with checkout. Would you like to log in now?"
+          confirmText="Login"
+          cancelText="Cancel"
+        />
+      </>
+    );
+  }
+
   return (
     <>
-      <div className="px-4 py-8 mx-auto max-w-7xl">
+      <div className="px-2 py-8 mx-auto max-w-7xl sm:px-4">
         <div className="mb-6">
           <Link to="/cart" className="text-brand hover:text-brand-700">
             ← Back to Cart
           </Link>
-          <h1 className="mt-2 text-3xl font-bold">Checkout</h1>
+          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Checkout</h1>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Shipping form */}
           <div className="lg:col-span-2">
-            <div className="p-6 bg-white border rounded-lg shadow-sm">
+            <div className="p-4 bg-white border rounded-lg shadow-sm sm:p-6">
               <h2 className="mb-4 text-xl font-semibold">
                 Shipping Information
               </h2>
@@ -99,7 +148,7 @@ export default function CheckoutPage() {
                     First Name *
                   </label>
                   <input
-                    className="w-full px-3 py-2 border rounded-md theme-border"
+                    className="w-full px-3 py-2 bg-white border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                     value={form.firstName}
                     onChange={(e) => update('firstName', e.target.value)}
                     required
@@ -110,7 +159,7 @@ export default function CheckoutPage() {
                     Last Name *
                   </label>
                   <input
-                    className="w-full px-3 py-2 border rounded-md theme-border"
+                    className="w-full px-3 py-2 bg-white border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                     value={form.lastName}
                     onChange={(e) => update('lastName', e.target.value)}
                     required
@@ -122,18 +171,21 @@ export default function CheckoutPage() {
                   </label>
                   <input
                     type="email"
-                    className="w-full px-3 py-2 border rounded-md theme-border"
+                    className="w-full px-3 py-2 text-gray-600 border rounded-md theme-border bg-gray-50 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                     value={form.email}
-                    onChange={(e) => update('email', e.target.value)}
+                    readOnly
                     required
                   />
+                  <p className="mt-1 text-xs text-muted">
+                    This email is from your account
+                  </p>
                 </div>
                 <div>
                   <label className="block mb-1 text-sm font-medium">
                     Phone
                   </label>
                   <input
-                    className="w-full px-3 py-2 border rounded-md theme-border"
+                    className="w-full px-3 py-2 bg-white border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                     value={form.phone}
                     onChange={(e) => update('phone', e.target.value)}
                   />
@@ -143,7 +195,7 @@ export default function CheckoutPage() {
                     Address *
                   </label>
                   <input
-                    className="w-full px-3 py-2 border rounded-md theme-border"
+                    className="w-full px-3 py-2 bg-white border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                     value={form.address1}
                     onChange={(e) => update('address1', e.target.value)}
                     required
@@ -154,7 +206,7 @@ export default function CheckoutPage() {
                     City *
                   </label>
                   <input
-                    className="w-full px-3 py-2 border rounded-md theme-border"
+                    className="w-full px-3 py-2 bg-white border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                     value={form.city}
                     onChange={(e) => update('city', e.target.value)}
                     required
@@ -165,7 +217,7 @@ export default function CheckoutPage() {
                     State *
                   </label>
                   <input
-                    className="w-full px-3 py-2 border rounded-md theme-border"
+                    className="w-full px-3 py-2 bg-white border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
                     value={form.state}
                     onChange={(e) => update('state', e.target.value)}
                     required
@@ -190,36 +242,39 @@ export default function CheckoutPage() {
 
           {/* Order summary */}
           <aside className="lg:col-span-1">
-            <div className="sticky p-6 bg-white border rounded-lg shadow-sm top-8">
+            <div className="p-4 bg-white border rounded-lg shadow-sm sm:p-6 lg:sticky lg:top-8">
               <h2 className="mb-4 text-xl font-semibold">Order Summary</h2>
               <div className="mb-4 space-y-4">
-                {items.map((it) => (
-                  <div key={it._id} className="flex items-center gap-3">
-                    <div className="w-12 h-12 overflow-hidden bg-gray-100 rounded">
-                      {it.product?.images?.[0] && (
-                        <img
-                          src={it.product.images[0]}
-                          className="object-cover w-full h-full"
-                        />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium truncate">
-                        {it.product?.name}
+                {items.map((it) => {
+                  const itemId = '_id' in it ? it._id : it.id;
+                  return (
+                    <div key={itemId} className="flex items-center gap-3">
+                      <div className="w-12 h-12 overflow-hidden bg-gray-100 rounded">
+                        {it.product?.images?.[0] && (
+                          <img
+                            src={it.product.images[0]}
+                            className="object-cover w-full h-full"
+                          />
+                        )}
                       </div>
-                      <div className="text-xs text-muted">
-                        Qty: {it.quantity} · Size: {it.selectedSize || '—'} ·
-                        Color: {it.selectedColor || '—'}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">
+                          {it.product?.name}
+                        </div>
+                        <div className="text-xs text-muted">
+                          Qty: {it.quantity} · Size: {it.selectedSize || '—'} ·
+                          Color: {it.selectedColor || '—'}
+                        </div>
+                      </div>
+                      <div className="text-sm font-semibold">
+                        {formatCurrency(
+                          (it.product?.salePrice ?? it.product?.price ?? 0) *
+                            (it.quantity ?? 0),
+                        )}
                       </div>
                     </div>
-                    <div className="text-sm font-semibold">
-                      {formatCurrency(
-                        (it.product?.salePrice ?? it.product?.price ?? 0) *
-                          (it.quantity ?? 0),
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -475,7 +530,7 @@ export default function CheckoutPage() {
                   setForm({
                     firstName: '',
                     lastName: '',
-                    email: '',
+                    email: user?.email || '',
                     phone: '',
                     address1: '',
                     city: '',
@@ -518,6 +573,20 @@ export default function CheckoutPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Login Confirmation Modal */}
+      <ConfirmModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        onConfirm={() => {
+          setShowLoginModal(false);
+          login();
+        }}
+        title="Login Required"
+        message="You need to be logged in to proceed with checkout. Would you like to log in now?"
+        confirmText="Login"
+        cancelText="Cancel"
+      />
     </>
   );
 }

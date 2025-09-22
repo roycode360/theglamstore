@@ -106,7 +106,7 @@ export default function CategoryModal({
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="theme-border theme-card relative my-10 max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg border p-6 shadow-xl">
+      <div className="theme-border theme-card relative mx-2 my-10 max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg border p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <div className="text-lg font-semibold">
             {isEdit ? 'Edit Category' : 'Add New Category'}

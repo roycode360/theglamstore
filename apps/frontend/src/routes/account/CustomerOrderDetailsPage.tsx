@@ -28,7 +28,8 @@ export default function CustomerOrderDetailsPage() {
         </div>
         <Link
           to="/orders"
-          className="theme-border text-brand hover:bg-brand-50 inline-flex h-9 items-center gap-2 rounded-md border bg-white px-3 text-sm"
+          className="theme-border text-brand hover:bg-brand-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-white transition-colors sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
+          title="Back to Orders"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -42,7 +43,7 @@ export default function CustomerOrderDetailsPage() {
               clipRule="evenodd"
             />
           </svg>
-          <span>Back to Orders</span>
+          <span className="hidden sm:inline">Back to Orders</span>
         </Link>
       </div>
 
@@ -86,70 +87,149 @@ export default function CustomerOrderDetailsPage() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             <div className="theme-card theme-border rounded-lg border p-6 md:col-span-2">
               <div className="mb-2 font-medium">Items</div>
-              <div className="theme-border overflow-hidden rounded-md border">
-                <table className="w-full text-sm">
-                  <thead className="table-head">
-                    <tr className="text-left">
-                      <th className="px-4 py-3">Product</th>
-                      <th className="px-4 py-3">Options</th>
-                      <th className="px-4 py-3">Qty</th>
-                      <th className="px-4 py-3">Price</th>
-                      <th className="px-4 py-3">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody className="theme-border divide-y">
-                    {order.items?.map((it: any, idx: number) => (
-                      <tr key={idx}>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 overflow-hidden rounded bg-gray-100">
-                              {it.image && (
-                                <img
-                                  src={it.image}
-                                  className="h-full w-full object-cover"
-                                />
-                              )}
-                            </div>
-                            <div>
-                              <div className="font-medium">{it.name}</div>
-                              <div
-                                className="text-xs"
-                                style={{ color: 'rgb(var(--muted))' }}
-                              >
-                                ID: {it.productId}
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <div className="theme-border overflow-hidden rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead className="table-head">
+                      <tr className="text-left">
+                        <th className="px-4 py-3">Product</th>
+                        <th className="px-4 py-3">Options</th>
+                        <th className="px-4 py-3">Qty</th>
+                        <th className="px-4 py-3">Price</th>
+                        <th className="px-4 py-3">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="theme-border divide-y">
+                      {order.items?.map((it: any, idx: number) => (
+                        <tr key={idx}>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 overflow-hidden rounded bg-gray-100">
+                                {it.image && (
+                                  <img
+                                    src={it.image}
+                                    className="h-full w-full object-cover"
+                                  />
+                                )}
+                              </div>
+                              <div>
+                                <div className="font-medium">{it.name}</div>
+                                <div
+                                  className="text-xs"
+                                  style={{ color: 'rgb(var(--muted))' }}
+                                >
+                                  ID: {it.productId}
+                                </div>
                               </div>
                             </div>
+                          </td>
+                          <td className="px-4 py-3 text-xs">
+                            Size: {it.selectedSize || '—'} · Color:{' '}
+                            {it.selectedColor || '—'}
+                          </td>
+                          <td className="px-4 py-3">{it.quantity}</td>
+                          <td className="px-4 py-3">
+                            ₦{Number(it.price ?? 0).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 font-semibold">
+                            ₦
+                            {Number(
+                              (it.price ?? 0) * (it.quantity ?? 0),
+                            ).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                      {(!order.items || order.items.length === 0) && (
+                        <tr>
+                          <td
+                            className="py-6 text-center text-sm"
+                            colSpan={5}
+                            style={{ color: 'rgb(var(--muted))' }}
+                          >
+                            No items
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="-mx-4 md:hidden">
+                {!order.items || order.items.length === 0 ? (
+                  <div
+                    className="py-6 text-center text-sm"
+                    style={{ color: 'rgb(var(--muted))' }}
+                  >
+                    No items
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {order.items.map((it: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className="theme-border rounded-lg border p-4"
+                      >
+                        <div className="mb-3 flex items-start gap-3">
+                          <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+                            {it.image && (
+                              <img
+                                src={it.image}
+                                className="h-full w-full object-cover"
+                              />
+                            )}
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-xs">
-                          Size: {it.selectedSize || '—'} · Color:{' '}
-                          {it.selectedColor || '—'}
-                        </td>
-                        <td className="px-4 py-3">{it.quantity}</td>
-                        <td className="px-4 py-3">
-                          ₦{Number(it.price ?? 0).toLocaleString()}
-                        </td>
-                        <td className="px-4 py-3 font-semibold">
-                          ₦
-                          {Number(
-                            (it.price ?? 0) * (it.quantity ?? 0),
-                          ).toLocaleString()}
-                        </td>
-                      </tr>
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-1 text-sm font-medium">
+                              {it.name}
+                            </div>
+                            <div
+                              className="mb-2 text-xs"
+                              style={{ color: 'rgb(var(--muted))' }}
+                            >
+                              ID: {it.productId}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              Size: {it.selectedSize || '—'} · Color:{' '}
+                              {it.selectedColor || '—'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <div className="mb-1 text-xs text-gray-500">
+                              Quantity
+                            </div>
+                            <div className="font-medium">{it.quantity}</div>
+                          </div>
+                          <div>
+                            <div className="mb-1 text-xs text-gray-500">
+                              Price
+                            </div>
+                            <div className="font-medium">
+                              ₦{Number(it.price ?? 0).toLocaleString()}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="mb-1 text-xs text-gray-500">
+                              Total
+                            </div>
+                            <div className="font-semibold">
+                              ₦
+                              {Number(
+                                (it.price ?? 0) * (it.quantity ?? 0),
+                              ).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     ))}
-                    {(!order.items || order.items.length === 0) && (
-                      <tr>
-                        <td
-                          className="py-6 text-center text-sm"
-                          colSpan={5}
-                          style={{ color: 'rgb(var(--muted))' }}
-                        >
-                          No items
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                  </div>
+                )}
               </div>
             </div>
 

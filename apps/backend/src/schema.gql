@@ -170,6 +170,7 @@ type Query {
   listOrders: [Order!]!
   listOrdersPage(page: Int!, pageSize: Int!, status: String): OrderPage!
   listProducts: [Product!]!
+  listProductsByCategory(category: String!, excludeId: ID, limit: Int): [Product!]!
   listProductsPage(active: Boolean, brand: String, category: String, inStockOnly: Boolean, maxPrice: Float, minPrice: Float, onSaleOnly: Boolean, outOfStock: Boolean, page: Int, pageSize: Int, search: String, sortBy: String, sortDir: String): ProductPage!
   listWishlist: [Product!]!
   me: User!

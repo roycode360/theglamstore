@@ -61,6 +61,16 @@ export class ProductsResolver {
   }
 
   @isPublic()
+  @Query(() => [Product])
+  async listProductsByCategory(
+    @Args('category', { type: () => String }) category: string,
+    @Args('limit', { type: () => Int, nullable: true }) limit = 3,
+    @Args('excludeId', { type: () => ID, nullable: true }) excludeId?: string,
+  ): Promise<Product[]> {
+    return this.products.listByCategory(category, limit, excludeId);
+  }
+
+  @isPublic()
   @Query(() => Product, { nullable: true })
   async getProduct(
     @Args('id', { type: () => ID }) id: string,

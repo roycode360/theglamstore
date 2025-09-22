@@ -48,6 +48,15 @@ export default function DashboardPage() {
     { fetchPolicy: 'cache-and-network' },
   );
 
+  const statusClasses: Record<string, string> = {
+    pending: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+    confirmed: 'bg-blue-50 border-blue-200 text-blue-800',
+    processing: 'bg-amber-50 border-amber-200 text-amber-800',
+    shipped: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+    delivered: 'bg-green-50 border-green-200 text-green-800',
+    cancelled: 'bg-red-50 border-red-200 text-red-800',
+  };
+
   const orders = ordersData?.listOrders ?? [];
   const products = productsData?.listProducts ?? [];
 
@@ -507,7 +516,7 @@ export default function DashboardPage() {
                   role="button"
                   aria-label={`View product ${row.productId}`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center flex-1 min-w-0 gap-2">
                     <div className="flex-shrink-0 w-10 h-10 overflow-hidden bg-gray-100 rounded">
                       {row.image && (
                         <img
@@ -516,8 +525,8 @@ export default function DashboardPage() {
                         />
                       )}
                     </div>
-                    <div>
-                      <div className="line-clamp-1 max-w-[180px] font-medium">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium line-clamp-1">
                         {row.name || row.productId}
                       </div>
                       <div
@@ -530,11 +539,11 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div
-                    className="self-start pt-0.5 text-xs"
+                    className="hidden flex-shrink-0 self-start pt-0.5 text-xs sm:block"
                     style={{ color: 'rgb(var(--muted))' }}
                   >
                     ID:{' '}
-                    <span className="inline-block max-w-[180px] truncate align-bottom">
+                    <span className="inline-block max-w-[120px] truncate align-bottom">
                       {truncateId(row.productId)}
                     </span>
                   </div>
@@ -550,64 +559,135 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="p-6 border rounded-lg theme-card theme-border">
+      <div className="px-2 py-6 border rounded-lg theme-card theme-border">
         <div className="mb-3 text-lg font-semibold">Recent Orders</div>
         {ordersLoading ? (
           <div className="py-6">
             <Spinner label="Loading orders" />
           </div>
         ) : (
-          <div className="overflow-hidden border rounded-md theme-border">
-            <table className="w-full text-sm">
-              <thead className="table-head">
-                <tr className="text-left">
-                  <th className="px-4 py-3">Order</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y theme-border">
-                {recentOrders.map((o: any) => (
-                  <tr
-                    key={o._id}
-                    className="cursor-pointer hover:bg-brand-50"
-                    onClick={() => navigate(`/admin/orders?id=${o._id}`)}
-                    role="button"
-                    aria-label={`View order ${o._id}`}
-                  >
-                    <td className="px-4 py-3 font-mono text-xs">{o._id}</td>
-                    <td className="px-4 py-3">
-                      {new Date(o.createdAt).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-1 text-xs border rounded-full theme-border">
-                        {o.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-right">
-                      ₦{Number(o.total).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-                {recentOrders.length === 0 && (
-                  <tr>
-                    <td
-                      className="py-8 text-center"
-                      colSpan={4}
-                      style={{ color: 'rgb(var(--muted))' }}
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block">
+              <div className="overflow-hidden border rounded-md theme-border">
+                <table className="w-full text-sm">
+                  <thead className="table-head">
+                    <tr className="text-left">
+                      <th className="px-4 py-3">Order</th>
+                      <th className="px-4 py-3">Date</th>
+                      <th className="px-4 py-3">Status</th>
+                      <th className="px-4 py-3 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y theme-border">
+                    {recentOrders.map((o: any) => (
+                      <tr
+                        key={o._id}
+                        className="cursor-pointer hover:bg-brand-50"
+                        onClick={() => navigate(`/admin/orders?id=${o._id}`)}
+                        role="button"
+                        aria-label={`View order ${o._id}`}
+                      >
+                        <td className="px-4 py-3 font-mono text-xs">{o._id}</td>
+                        <td className="px-4 py-3">
+                          {new Date(o.createdAt).toLocaleDateString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                          })}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`rounded-full border px-2 py-1 text-xs ${statusClasses[o.status] ?? 'theme-border'}`}
+                          >
+                            {o.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-semibold text-right">
+                          ₦{Number(o.total).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                    {recentOrders.length === 0 && (
+                      <tr>
+                        <td
+                          className="py-8 text-center"
+                          colSpan={4}
+                          style={{ color: 'rgb(var(--muted))' }}
+                        >
+                          No recent orders
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden">
+              {recentOrders.length === 0 ? (
+                <div
+                  className="py-8 text-sm text-center"
+                  style={{ color: 'rgb(var(--muted))' }}
+                >
+                  No recent orders
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentOrders.map((o: any) => (
+                    <div
+                      key={o._id}
+                      className="px-2 py-4 border rounded-lg cursor-pointer theme-border hover:bg-brand-50"
+                      onClick={() => navigate(`/admin/orders?id=${o._id}`)}
+                      role="button"
+                      aria-label={`View order ${o._id}`}
                     >
-                      No recent orders
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-1 font-mono text-xs text-gray-500">
+                            Order ID
+                          </div>
+                          <div className="font-mono text-sm truncate">
+                            {o._id}
+                          </div>
+                        </div>
+                        <span
+                          className={`rounded-full border px-2 py-1 text-xs ${statusClasses[o.status] ?? 'theme-border'}`}
+                        >
+                          {o.status}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="mb-1 text-xs text-gray-500">Date</div>
+                          <div className="text-sm">
+                            {new Date(o.createdAt).toLocaleDateString(
+                              undefined,
+                              {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              },
+                            )}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="mb-1 text-xs text-gray-500">
+                            Total
+                          </div>
+                          <div className="text-sm font-semibold">
+                            ₦{Number(o.total).toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

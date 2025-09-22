@@ -46,6 +46,27 @@ export class ProductsService {
     return docs.map(this.mapDocToGraphQL);
   }
 
+  async listByCategory(
+    category: string,
+    limit: number = 3,
+    excludeId?: string,
+  ): Promise<Product[]> {
+    const raw = String(category).trim();
+    const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = `^${escaped.replace(/[-\s]+/g, '[-\\\s]+')}$`;
+    const filter: Record<string, unknown> = {
+      category: new RegExp(pattern, 'i'),
+      active: { $ne: false },
+    };
+    if (excludeId) (filter as any)._id = { $ne: excludeId };
+    const docs = await this.productModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(Math.max(1, limit))
+      .lean();
+    return docs.map(this.mapDocToGraphQL);
+  }
+
   async listPage(
     page: number,
     pageSize: number,
