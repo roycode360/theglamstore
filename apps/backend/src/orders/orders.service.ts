@@ -67,27 +67,6 @@ export class OrdersService {
       _id: unknown;
     };
     const order = { ...obj, _id: String(obj._id) } as OrderDTO;
-    // Fire-and-forget: send confirmation email (non-blocking)
-    try {
-      await this.email.sendOrderConfirmationEmail({
-        _id: order._id,
-        email: order.email,
-        firstName: order.firstName,
-        lastName: order.lastName,
-        address1: order.address1,
-        city: order.city,
-        state: order.state,
-        subtotal: order.subtotal,
-        tax: order.tax,
-        total: order.total,
-        paymentMethod: order.paymentMethod,
-        transferProofUrl: order.transferProofUrl,
-        items: order.items,
-      });
-    } catch {
-      // Intentionally ignore email errors to not block order creation
-      // Consider logging in the future
-    }
     return order;
   }
 
@@ -145,7 +124,27 @@ export class OrdersService {
               { $set: { stockAdjusted: true } },
             );
           }
-          // continue to send email
+          // Send order confirmation email when order is confirmed
+          try {
+            await this.email.sendOrderConfirmationEmail({
+              _id: doc._id,
+              email: doc.email,
+              firstName: doc.firstName,
+              lastName: doc.lastName,
+              address1: doc.address1,
+              city: doc.city,
+              state: doc.state,
+              subtotal: doc.subtotal,
+              tax: doc.tax,
+              total: doc.total,
+              paymentMethod: doc.paymentMethod,
+              transferProofUrl: doc.transferProofUrl,
+              items: doc.items,
+            });
+          } catch {
+            // Intentionally ignore email errors to not block order status update
+            // Consider logging in the future
+          }
           break;
         }
         case 'processing':
