@@ -173,18 +173,20 @@ export class EmailService {
           </table>
 
           <div style="margin-top:16px">
-            <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Subtotal </span>
-              <span>${currency(order.subtotal)}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Tax </span>
-              <span>${currency(order.tax)}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">
-              <span>Total </span>
-              <span>${currency(order.total)}</span>
-            </div>
+            <table style="width:100%;border-collapse:collapse">
+              <tr>
+                <td style="padding:6px 0;color:${mutedColor}">Subtotal</td>
+                <td style="padding:6px 0;color:${mutedColor};text-align:right">${currency(order.subtotal)}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;color:${mutedColor}">Tax</td>
+                <td style="padding:6px 0;color:${mutedColor};text-align:right">${currency(order.tax)}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">Total</td>
+                <td style="padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800;text-align:right">${currency(order.total)}</td>
+              </tr>
+            </table>
           </div>
 
           <a href="${orderLink}"
@@ -301,18 +303,20 @@ export class EmailService {
           </table>
 
           <div style="margin-top:16px">
-            <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Subtotal </span
-              <span>${currency(order.subtotal)}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Tax </span>
-              <span>${currency(order.tax)}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">
-              <span>Total </span>
-              <span>${currency(order.total)}</span>
-            </div>
+            <table style="width:100%;border-collapse:collapse">
+              <tr>
+                <td style="padding:6px 0;color:${mutedColor}">Subtotal</td>
+                <td style="padding:6px 0;color:${mutedColor};text-align:right">${currency(order.subtotal)}</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;color:${mutedColor}">Tax</td>
+                <td style="padding:6px 0;color:${mutedColor};text-align:right">${currency(order.tax)}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">Total</td>
+                <td style="padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800;text-align:right">${currency(order.total)}</td>
+              </tr>
+            </table>
           </div>
 
           <div style="margin-top:16px;color:${mutedColor}">
