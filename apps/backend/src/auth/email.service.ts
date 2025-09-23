@@ -116,16 +116,28 @@ export class EmailService {
     const rows = order.items
       .map((it) => {
         const line = (it.price || 0) * (it.quantity || 0);
+        const imageCell = it.image
+          ? `<td style="vertical-align:top;padding-right:10px">
+               <img src="${it.image}" width="48" height="48" alt="${
+                 it.name ?? 'Product'
+               }" style="border-radius:8px;border:1px solid ${border};object-fit:cover;display:block" />
+             </td>`
+          : '';
         return `
           <tr>
             <td style="padding:10px;border-bottom:1px solid ${border}">
-              <div style="font-weight:600">${it.name ?? 'Item'}</div>
-              <div style="color:${mutedColor};font-size:12px">Size: ${
-                it.selectedSize || '—'
-              } · Color: ${it.selectedColor || '—'}</div>
-              <div style="color:${mutedColor};font-size:12px">ID: ${
-                it.productId
-              }</div>
+              <table role="presentation" style="border-collapse:collapse"><tr>
+                ${imageCell}
+                <td style="vertical-align:top">
+                  <div style="font-weight:600">${it.name ?? 'Item'}</div>
+                  <div style="color:${mutedColor};font-size:12px">Size: ${
+                    it.selectedSize || '—'
+                  } · Color: ${it.selectedColor || '—'}</div>
+                  <div style="color:${mutedColor};font-size:12px">ID: ${
+                    it.productId
+                  }</div>
+                </td>
+              </tr></table>
             </td>
             <td style="padding:10px;border-bottom:1px solid ${border};text-align:center">${
               it.quantity ?? 0
@@ -162,15 +174,15 @@ export class EmailService {
 
           <div style="margin-top:16px">
             <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Subtotal - </span>
+              <span>Subtotal </span>
               <span>${currency(order.subtotal)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Tax - </span>
+              <span>Tax </span>
               <span>${currency(order.tax)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">
-              <span>Total - </span>
+              <span>Total </span>
               <span>${currency(order.total)}</span>
             </div>
           </div>
@@ -290,15 +302,15 @@ export class EmailService {
 
           <div style="margin-top:16px">
             <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Subtotal - </span>
+              <span>Subtotal </span
               <span>${currency(order.subtotal)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Tax - </span>
+              <span>Tax </span>
               <span>${currency(order.tax)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">
-              <span>Total - </span>
+              <span>Total </span>
               <span>${currency(order.total)}</span>
             </div>
           </div>
