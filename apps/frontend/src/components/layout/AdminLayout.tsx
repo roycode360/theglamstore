@@ -8,7 +8,7 @@ import { AuthLoadingModal } from '../ui/AuthLoadingModal';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function AdminLayout() {
-  const { loading, authStep } = useAuth();
+  const { loading, authStep, isLoginProcess } = useAuth();
   const tabs = [
     {
       to: '/admin',
@@ -113,7 +113,7 @@ export default function AdminLayout() {
         </div>
         <Outlet />
       </main>
-      <AuthLoadingModal isOpen={loading} step={authStep} />
+      <AuthLoadingModal isOpen={loading && isLoginProcess} step={authStep} />
     </div>
   );
 }

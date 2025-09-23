@@ -16,6 +16,7 @@ interface TAuthContext {
   loading: boolean;
   error: string | null;
   authStep: string;
+  isLoginProcess: boolean;
   login: () => void;
   logout: () => void;
   fetchMe: () => void;
@@ -33,6 +34,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authStep, setAuthStep] = useState<string>('');
+  const [isLoginProcess, setIsLoginProcess] = useState(false);
   const isUserAuthenticated = !!localStorage.getItem(AccessToken.KEY);
 
   const client = useApolloClient();
@@ -62,6 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async () => {
     try {
       setLoading(true);
+      setIsLoginProcess(true);
       setAuthStep('Redirecting to login...');
       // First we login with redirect using Auth0
       await loginWithRedirect({
@@ -75,18 +78,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('login error', error);
       setError('Login failed. Please try again.');
       setAuthStep('');
+      setIsLoginProcess(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchMe = async () => {
+  const fetchMe = async (showLoadingModal = false) => {
     const token = localStorage.getItem(AccessToken.KEY);
     if (!token) return;
 
     try {
       setLoading(true);
-      setAuthStep('Loading user profile...');
+      if (showLoadingModal) {
+        setAuthStep('Loading user profile...');
+      }
       const { data } = await client.query<{ me: TAuthUser }>({
         query: ME,
         fetchPolicy: 'cache-first', // Use cache first to avoid unnecessary network calls
@@ -96,15 +102,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (data?.me) {
         setUser(data.me);
         setError(null);
-        setAuthStep('Loading your data...');
-        await prefetchOrders();
-        setAuthStep('Welcome back!');
-        // Clear the step after a short delay
-        setTimeout(() => setAuthStep(''), 1000);
+        if (showLoadingModal) {
+          setAuthStep('Loading your data...');
+          await prefetchOrders();
+          setAuthStep('Welcome back!');
+          // Clear the step after a short delay
+          setTimeout(() => {
+            setAuthStep('');
+            setIsLoginProcess(false);
+          }, 1000);
+        } else {
+          await prefetchOrders();
+        }
       }
     } catch (err: any) {
       console.log('fetchMe error:', err);
       setAuthStep('');
+      setIsLoginProcess(false);
       // Only set error if it's not a network/auth error
       const isAuthError =
         err?.message?.includes('UNAUTHENTICATED') ||
@@ -125,6 +139,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem(AccessToken.KEY);
     setError(null);
     setLoading(false);
+    setAuthStep('');
+    setIsLoginProcess(false);
 
     // Logout from Auth0 with proper redirect
     logoutAuth0({
@@ -139,6 +155,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading: loading || isAuth0Loading,
     error,
     authStep,
+    isLoginProcess,
     login,
     logout,
     fetchMe,
@@ -151,14 +168,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const existingToken = localStorage.getItem(AccessToken.KEY);
 
       if (existingToken) {
-        // User has a backend token, fetch user data
+        // User has a backend token, fetch user data (silently, no modal)
         try {
           setLoading(true);
-          setAuthStep('Verifying your session...');
-          await fetchMe();
+          await fetchMe(false); // Don't show loading modal for session verification
         } catch (error) {
           console.log('Failed to fetch user with existing token:', error);
-          setAuthStep('');
           // Token might be invalid, clear it
           localStorage.removeItem(AccessToken.KEY);
           setUser(null);
@@ -166,9 +181,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setLoading(false);
         }
       } else if (isAuth0Authenticated && !isAuth0Loading) {
-        // User is authenticated with Auth0 but no backend token
+        // User is authenticated with Auth0 but no backend token (this is a login process)
         try {
           setLoading(true);
+          setIsLoginProcess(true);
           setAuthStep('Processing your login...');
 
           // Get Auth0 token
@@ -190,14 +206,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setUser(data?.loginWithAuth0?.user as TAuthUser);
               setError(null);
               setAuthStep('Loading your profile...');
-              await fetchMe();
+              await fetchMe(true); // Show loading modal for login process
               setAuthStep('Welcome!');
-              setTimeout(() => setAuthStep(''), 1000);
+              setTimeout(() => {
+                setAuthStep('');
+                setIsLoginProcess(false);
+              }, 1000);
             }
           }
         } catch (error) {
           console.log('Auth0 token exchange error:', error);
           setAuthStep('');
+          setIsLoginProcess(false);
           setError('Authentication failed. Please try again.');
         } finally {
           setLoading(false);
