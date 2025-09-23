@@ -15,6 +15,7 @@ interface TAuthContext {
   user: TAuthUser | null;
   loading: boolean;
   error: string | null;
+  authStep: string;
   login: () => void;
   logout: () => void;
   fetchMe: () => void;
@@ -31,6 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<TAuthUser | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authStep, setAuthStep] = useState<string>('');
   const isUserAuthenticated = !!localStorage.getItem(AccessToken.KEY);
 
   const client = useApolloClient();
@@ -60,6 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async () => {
     try {
       setLoading(true);
+      setAuthStep('Redirecting to login...');
       // First we login with redirect using Auth0
       await loginWithRedirect({
         authorizationParams: {
@@ -71,6 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // ignore and leave user unauthenticated on backend
       console.log('login error', error);
       setError('Login failed. Please try again.');
+      setAuthStep('');
     } finally {
       setLoading(false);
     }
@@ -82,6 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       setLoading(true);
+      setAuthStep('Loading user profile...');
       const { data } = await client.query<{ me: TAuthUser }>({
         query: ME,
         fetchPolicy: 'cache-first', // Use cache first to avoid unnecessary network calls
@@ -91,10 +96,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (data?.me) {
         setUser(data.me);
         setError(null);
+        setAuthStep('Loading your data...');
         await prefetchOrders();
+        setAuthStep('Welcome back!');
+        // Clear the step after a short delay
+        setTimeout(() => setAuthStep(''), 1000);
       }
     } catch (err: any) {
       console.log('fetchMe error:', err);
+      setAuthStep('');
       // Only set error if it's not a network/auth error
       const isAuthError =
         err?.message?.includes('UNAUTHENTICATED') ||
@@ -128,6 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     loading: loading || isAuth0Loading,
     error,
+    authStep,
     login,
     logout,
     fetchMe,
@@ -143,9 +154,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // User has a backend token, fetch user data
         try {
           setLoading(true);
+          setAuthStep('Verifying your session...');
           await fetchMe();
         } catch (error) {
           console.log('Failed to fetch user with existing token:', error);
+          setAuthStep('');
           // Token might be invalid, clear it
           localStorage.removeItem(AccessToken.KEY);
           setUser(null);
@@ -156,8 +169,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // User is authenticated with Auth0 but no backend token
         try {
           setLoading(true);
+          setAuthStep('Processing your login...');
 
           // Get Auth0 token
+          setAuthStep('Getting your authentication token...');
           const auth0Token = await getAccessTokenSilently({
             authorizationParams: {
               audience: import.meta.env.VITE_AUTH0_AUDIENCE,
@@ -166,6 +181,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           if (auth0Token) {
             // Exchange Auth0 token for backend token
+            setAuthStep('Setting up your account...');
             const { data } = await exchangeToken({ variables: { auth0Token } });
             const backendToken = data?.loginWithAuth0?.accessToken;
 
@@ -173,12 +189,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               localStorage.setItem(AccessToken.KEY, backendToken);
               setUser(data?.loginWithAuth0?.user as TAuthUser);
               setError(null);
+              setAuthStep('Loading your profile...');
               await fetchMe();
-              await prefetchOrders();
+              setAuthStep('Welcome!');
+              setTimeout(() => setAuthStep(''), 1000);
             }
           }
         } catch (error) {
           console.log('Auth0 token exchange error:', error);
+          setAuthStep('');
           setError('Authentication failed. Please try again.');
         } finally {
           setLoading(false);
@@ -187,6 +206,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // User is not authenticated
         setUser(null);
         setError(null);
+        setAuthStep('');
         setLoading(false);
       }
     };

@@ -4,8 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { ME } from '../../graphql/auth';
 import { AccessToken } from '../../enums/access-token';
+import { AuthLoadingModal } from '../ui/AuthLoadingModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AdminLayout() {
+  const { loading, authStep } = useAuth();
   const tabs = [
     {
       to: '/admin',
@@ -17,7 +20,7 @@ export default function AdminLayout() {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="w-5 h-5"
+          className="h-5 w-5"
         >
           <rect x="3" y="3" width="7" height="7" />
           <rect x="14" y="3" width="7" height="7" />
@@ -37,7 +40,7 @@ export default function AdminLayout() {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="w-5 h-5"
+          className="h-5 w-5"
         >
           <path d="M3 6l9-4 9 4v8l-9 4-9-4V6z" />
           <path d="M3 6l9 4 9-4" />
@@ -56,7 +59,7 @@ export default function AdminLayout() {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="w-5 h-5"
+          className="h-5 w-5"
         >
           <path d="M4 6h16" />
           <path d="M4 12h16" />
@@ -74,7 +77,7 @@ export default function AdminLayout() {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="w-5 h-5"
+          className="h-5 w-5"
         >
           <path d="M3 6h2l2.4 9.6A2 2 0 0 0 9.35 17H17a2 2 0 0 0 1.94-1.52L20.5 9H6" />
           <circle cx="9" cy="20" r="1" />
@@ -86,11 +89,11 @@ export default function AdminLayout() {
 
   return (
     <div className="theme-bg theme-fg">
-      <main className="px-2 py-8 mx-auto max-w-7xl sm:px-4">
+      <main className="mx-auto max-w-7xl px-2 py-8 sm:px-4">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold">Admin</h1>
-          <div className="mt-4 theme-border">
-            <div className="flex items-center justify-between gap-1 p-1 bg-white border rounded-md">
+          <div className="theme-border mt-4">
+            <div className="flex items-center justify-between gap-1 rounded-md border bg-white p-1">
               {tabs.map((t) => (
                 <NavLink
                   key={t.to}
@@ -110,6 +113,7 @@ export default function AdminLayout() {
         </div>
         <Outlet />
       </main>
+      <AuthLoadingModal isOpen={loading} step={authStep} />
     </div>
   );
 }
