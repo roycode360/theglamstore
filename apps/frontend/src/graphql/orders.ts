@@ -88,3 +88,9 @@ export const LIST_ORDERS_PAGE = gql`
     }
   }
 `;
+
+export const GET_PENDING_ORDERS_COUNT = gql`
+  query GetPendingOrdersCount {
+    getPendingOrdersCount
+  }
+`;

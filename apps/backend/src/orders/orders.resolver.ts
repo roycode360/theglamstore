@@ -46,7 +46,6 @@ export class OrdersResolver {
     @Args('pageSize', { type: () => Int }) pageSize: number,
     @Args('status', { type: () => String, nullable: true }) status?: string,
   ): Promise<OrderPage> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const res: OrderPageResult = await this.orders.listPage({
       page,
       pageSize,
@@ -92,5 +91,16 @@ export class OrdersResolver {
   ): Promise<boolean> {
     await this.orders.delete(id);
     return true;
+  }
+
+  @isPublic()
+  @Query(() => Int)
+  async getPendingOrdersCount(): Promise<number> {
+    try {
+      return await this.orders.getPendingCount();
+    } catch (error) {
+      console.error('Error getting pending orders count:', error);
+      return 0;
+    }
   }
 }

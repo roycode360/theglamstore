@@ -163,6 +163,7 @@ type Query {
   getCartItemCount: Float!
   getCartItems: [CartItemType!]!
   getOrder(id: String!): Order
+  getPendingOrdersCount: Int!
   getProduct(id: ID!): Product
   health: String!
   listCategories: [Category!]!

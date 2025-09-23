@@ -229,4 +229,11 @@ export class OrdersService {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     return { items, total, page, pageSize, totalPages };
   }
+
+  async getPendingCount(): Promise<number> {
+    const count = await this.orderModel
+      .countDocuments({ status: 'pending' })
+      .exec();
+    return Number(count);
+  }
 }

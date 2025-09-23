@@ -1,14 +1,26 @@
 import { useQuery } from '@apollo/client';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ME } from '../../graphql/auth';
+import { GET_PENDING_ORDERS_COUNT } from '../../graphql/orders';
 import { AccessToken } from '../../enums/access-token';
 import { AuthLoadingModal } from '../ui/AuthLoadingModal';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function AdminLayout() {
   const { loading, authStep, isLoginProcess } = useAuth();
+  const location = useLocation();
+
+  // Get pending orders count for the badge
+  const { data: pendingOrdersData } = useQuery<{
+    getPendingOrdersCount: number;
+  }>(GET_PENDING_ORDERS_COUNT, {
+    fetchPolicy: 'cache-and-network',
+    pollInterval: 30000, // Poll every 30 seconds to keep count updated
+  });
+
+  const pendingOrdersCount = pendingOrdersData?.getPendingOrdersCount || 0;
   const tabs = [
     {
       to: '/admin',
@@ -92,8 +104,8 @@ export default function AdminLayout() {
       <main className="mx-auto max-w-7xl px-2 py-8 sm:px-4">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold">Admin</h1>
-          <div className="theme-border mt-4">
-            <div className="flex items-center justify-between gap-1 rounded-md border bg-white p-1">
+          <div className="mt-4 w-full sm:inline-block sm:w-auto">
+            <div className="theme-border flex items-center justify-between gap-1 rounded-md border bg-white p-1 sm:justify-start sm:gap-2">
               {tabs.map((t) => (
                 <NavLink
                   key={t.to}
@@ -104,8 +116,32 @@ export default function AdminLayout() {
                   }
                   title={t.label}
                 >
-                  <span className="sm:hidden">{t.icon}</span>
-                  <span className="hidden sm:inline">{t.label}</span>
+                  <div className="relative">
+                    <span className="sm:hidden">{t.icon}</span>
+                    <span className="hidden sm:inline">{t.label}</span>
+                    {/* Show badge for orders tab when there are pending orders */}
+                    {t.to === '/admin/orders' && pendingOrdersCount > 0 && (
+                      <span
+                        className="absolute -right-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs font-semibold"
+                        style={{
+                          backgroundColor:
+                            location.pathname === '/admin/orders'
+                              ? 'rgb(var(--brand-100))'
+                              : 'rgb(var(--brand-700))',
+                          color:
+                            location.pathname === '/admin/orders'
+                              ? 'rgb(var(--brand-900))'
+                              : 'white',
+                          borderColor:
+                            location.pathname === '/admin/orders'
+                              ? 'rgb(var(--brand-300))'
+                              : 'rgb(var(--brand-700))',
+                        }}
+                      >
+                        {pendingOrdersCount}
+                      </span>
+                    )}
+                  </div>
                 </NavLink>
               ))}
             </div>
