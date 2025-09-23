@@ -53,16 +53,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout: logoutAuth0,
     getAccessTokenSilently,
     loginWithRedirect,
+    isAuthenticated: isAuth0Authenticated,
+    isLoading: isAuth0Loading,
   } = useAuth0();
 
   const login = async () => {
     try {
+      setLoading(true);
       // First we login with redirect using Auth0
-      await loginWithRedirect();
+      await loginWithRedirect({
+        authorizationParams: {
+          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        },
+      });
       console.log('loginWithRedirect');
     } catch (error) {
       // ignore and leave user unauthenticated on backend
-      console.log('logout error', error);
+      console.log('login error', error);
+      setError('Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -76,13 +84,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       const { data } = await client.query<{ me: TAuthUser }>({
         query: ME,
-        fetchPolicy: 'network-only',
+        fetchPolicy: 'cache-first', // Use cache first to avoid unnecessary network calls
+        errorPolicy: 'all', // Don't throw on errors, let us handle them
       });
-      setUser(data?.me || null);
-      await prefetchOrders();
+
+      if (data?.me) {
+        setUser(data.me);
+        setError(null);
+        await prefetchOrders();
+      }
     } catch (err: any) {
-      // Do not force logout here; global errorLink handles 401/403
-      setError(err.message || 'Failed to fetch user');
+      console.log('fetchMe error:', err);
+      // Only set error if it's not a network/auth error
+      const isAuthError =
+        err?.message?.includes('UNAUTHENTICATED') ||
+        err?.message?.includes('FORBIDDEN') ||
+        err?.networkError?.statusCode === 401 ||
+        err?.networkError?.statusCode === 403;
+
+      if (!isAuthError) {
+        setError(err.message || 'Failed to fetch user');
+      }
     } finally {
       setLoading(false);
     }
@@ -91,14 +113,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem(AccessToken.KEY);
-    logoutAuth0();
-    setLoading(false);
     setError(null);
+    setLoading(false);
+
+    // Logout from Auth0 with proper redirect
+    logoutAuth0({
+      logoutParams: {
+        returnTo: window.location.origin,
+      },
+    });
   };
 
   const value: TAuthContext = {
     user,
-    loading,
+    loading: loading || isAuth0Loading,
     error,
     login,
     logout,
@@ -106,33 +134,133 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isUserAuthenticated,
   };
 
+  // Initial load - check for existing authentication
   useEffect(() => {
-    fetchMe();
     const initializeAuth = async () => {
-      // Then we send the user details from Auth0 to the backend to create/fetch the user details along with a backend token
-      const auth0Token = await getAccessTokenSilently({
-        authorizationParams: {
-          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-        },
-      });
+      const existingToken = localStorage.getItem(AccessToken.KEY);
 
-      if (!auth0Token) {
-        return;
-      }
+      if (existingToken) {
+        // User has a backend token, fetch user data
+        try {
+          setLoading(true);
+          await fetchMe();
+        } catch (error) {
+          console.log('Failed to fetch user with existing token:', error);
+          // Token might be invalid, clear it
+          localStorage.removeItem(AccessToken.KEY);
+          setUser(null);
+        } finally {
+          setLoading(false);
+        }
+      } else if (isAuth0Authenticated && !isAuth0Loading) {
+        // User is authenticated with Auth0 but no backend token
+        try {
+          setLoading(true);
 
-      const { data } = await exchangeToken({ variables: { auth0Token } });
-      const backendToken = data?.loginWithAuth0?.accessToken;
-      if (backendToken) {
-        localStorage.setItem(AccessToken.KEY, backendToken);
-        setUser(data?.loginWithAuth0?.user as TAuthUser);
+          // Get Auth0 token
+          const auth0Token = await getAccessTokenSilently({
+            authorizationParams: {
+              audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+            },
+          });
+
+          if (auth0Token) {
+            // Exchange Auth0 token for backend token
+            const { data } = await exchangeToken({ variables: { auth0Token } });
+            const backendToken = data?.loginWithAuth0?.accessToken;
+
+            if (backendToken) {
+              localStorage.setItem(AccessToken.KEY, backendToken);
+              setUser(data?.loginWithAuth0?.user as TAuthUser);
+              setError(null);
+              await fetchMe();
+              await prefetchOrders();
+            }
+          }
+        } catch (error) {
+          console.log('Auth0 token exchange error:', error);
+          setError('Authentication failed. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      } else if (!isAuth0Loading) {
+        // User is not authenticated
+        setUser(null);
         setError(null);
-        fetchMe();
-        prefetchOrders();
+        setLoading(false);
       }
     };
 
     initializeAuth();
-  }, []);
+  }, [isAuth0Authenticated, isAuth0Loading]);
+
+  // Handle Auth0 authentication state changes (only when state actually changes)
+  useEffect(() => {
+    const handleAuth0StateChange = async () => {
+      // Only handle state changes, not initial load
+      if (isAuth0Loading) {
+        setLoading(true);
+        return;
+      }
+
+      if (isAuth0Authenticated) {
+        const existingToken = localStorage.getItem(AccessToken.KEY);
+        if (existingToken) {
+          // Already have backend token, just fetch user data
+          try {
+            setLoading(true);
+            await fetchMe();
+          } catch (error) {
+            console.log('Failed to fetch user data:', error);
+          } finally {
+            setLoading(false);
+          }
+        } else {
+          // Need to exchange Auth0 token for backend token
+          try {
+            setLoading(true);
+
+            const auth0Token = await getAccessTokenSilently({
+              authorizationParams: {
+                audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+              },
+            });
+
+            if (auth0Token) {
+              const { data } = await exchangeToken({
+                variables: { auth0Token },
+              });
+              const backendToken = data?.loginWithAuth0?.accessToken;
+
+              if (backendToken) {
+                localStorage.setItem(AccessToken.KEY, backendToken);
+                setUser(data?.loginWithAuth0?.user as TAuthUser);
+                setError(null);
+                await fetchMe();
+                await prefetchOrders();
+              }
+            }
+          } catch (error) {
+            console.log('Auth0 state change error:', error);
+            setError('Authentication failed. Please try again.');
+          } finally {
+            setLoading(false);
+          }
+        }
+      } else {
+        // User is not authenticated with Auth0
+        setUser(null);
+        localStorage.removeItem(AccessToken.KEY);
+        setError(null);
+        setLoading(false);
+      }
+    };
+
+    // Only run this effect when Auth0 state actually changes, not on initial load
+    if (isAuth0Authenticated !== undefined) {
+      handleAuth0StateChange();
+    }
+  }, [isAuth0Authenticated, isAuth0Loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

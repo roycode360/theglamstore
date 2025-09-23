@@ -65,9 +65,20 @@ const authLink = setContext((_, { headers }) => {
 
 // Global error interceptor: logout on unauthenticated/forbidden and toast
 let sessionHandled = false; // avoid duplicate toasts per page load
-const errorLink = onError(({ graphQLErrors, networkError }) => {
+let isInitialLoad = true; // track if this is the initial page load
+
+const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   const hasToken = !!localStorage.getItem(AccessToken.KEY);
   if (!hasToken) return; // only react if user previously had a token
+
+  // Don't show session expired on initial load or during auth queries
+  const isAuthQuery =
+    operation?.operationName === 'Me' ||
+    operation?.operationName === 'LoginWithAuth0';
+
+  if (isInitialLoad || isAuthQuery) {
+    return;
+  }
 
   const gqlUnauth = (graphQLErrors || []).some((err) => {
     const code = (err?.extensions as any)?.code;
@@ -90,6 +101,11 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     window.dispatchEvent(new CustomEvent('app:session-expired'));
   }
 });
+
+// Mark initial load as complete after a short delay
+setTimeout(() => {
+  isInitialLoad = false;
+}, 2000);
 
 const client = new ApolloClient({
   link: from([errorLink, authLink.concat(httpLink)]),
@@ -199,7 +215,11 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
             clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
             authorizationParams={{
               redirect_uri: import.meta.env.VITE_WEB_APP_ORIGIN,
+              audience: import.meta.env.VITE_AUTH0_AUDIENCE,
             }}
+            useRefreshTokens={true}
+            cacheLocation="localstorage"
+            useRefreshTokensFallback={false}
           >
             <AuthProvider>
               <CartProvider>
