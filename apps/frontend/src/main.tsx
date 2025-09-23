@@ -45,7 +45,10 @@ import WishlistPage from './routes/account/WishlistPage';
 import { WishlistProvider } from './contexts/WishlistContext';
 
 const httpLink = new HttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_URL,
+  uri:
+    import.meta.env.VITE_API_URL ||
+    import.meta.env.VITE_GRAPHQL_URL ||
+    'http://localhost:3000/graphql',
   credentials: 'include',
 });
 

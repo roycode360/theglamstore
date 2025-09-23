@@ -69,8 +69,8 @@ export default function ProductModal({
   onSaved: () => void;
 }) {
   const isEdit = !!initial;
-  const [create] = useMutation(CREATE_PRODUCT);
-  const [update] = useMutation(UPDATE_PRODUCT);
+  const [create, { loading: createLoading }] = useMutation(CREATE_PRODUCT);
+  const [update, { loading: updateLoading }] = useMutation(UPDATE_PRODUCT);
   const { showToast } = useToast();
   const { data: catsData } = useQuery(LIST_CATEGORIES);
   const { data: fullData, loading: productLoading } = useQuery(GET_PRODUCT, {
@@ -190,7 +190,10 @@ export default function ProductModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div
+        className="absolute inset-0 bg-black/30"
+        onClick={createLoading || updateLoading ? undefined : onClose}
+      />
       <div className="theme-border theme-card relative mx-2 my-10 max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg border p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
           <div className="text-lg font-semibold">
@@ -198,7 +201,8 @@ export default function ProductModal({
           </div>
           <button
             onClick={onClose}
-            className="flex items-center justify-center w-8 h-8 border rounded theme-border"
+            disabled={createLoading || updateLoading}
+            className="flex items-center justify-center w-8 h-8 border rounded theme-border disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="close"
           >
             ×
@@ -217,7 +221,12 @@ export default function ProductModal({
         <form onSubmit={onSubmit} className="space-y-5">
           <fieldset
             disabled={
-              isEdit && initial?._id && productLoading && !fullData?.getProduct
+              (isEdit &&
+                initial?._id &&
+                productLoading &&
+                !fullData?.getProduct) ||
+              createLoading ||
+              updateLoading
             }
             className="space-y-5"
           >
@@ -553,12 +562,26 @@ export default function ProductModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 rounded btn-ghost"
+                disabled={createLoading || updateLoading}
+                className="px-4 py-2 rounded btn-ghost disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
-              <button className="px-4 py-2 rounded btn-primary">
-                {isEdit ? 'Update Product' : 'Create Product'}
+              <button
+                type="submit"
+                disabled={createLoading || updateLoading}
+                className="px-4 py-2 rounded btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {createLoading || updateLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white rounded-full animate-spin border-t-transparent" />
+                    {isEdit ? 'Updating...' : 'Creating...'}
+                  </span>
+                ) : isEdit ? (
+                  'Update Product'
+                ) : (
+                  'Create Product'
+                )}
               </button>
             </div>
           </fieldset>
