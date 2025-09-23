@@ -106,8 +106,8 @@ export default function CustomerService() {
               className="space-y-2 text-sm"
               style={{ color: 'rgb(var(--muted))' }}
             >
-              <div>support@luxe.com</div>
-              <div>+1 (800) 555-0199</div>
+              <div>support@theglamstore.ng</div>
+              <div>+234 8162113148</div>
               <div>Mon–Fri, 9am–5pm EST</div>
             </div>
           </div>
