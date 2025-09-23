@@ -70,6 +70,7 @@ export class EmailService {
         quantity?: number;
         selectedSize?: string;
         selectedColor?: string;
+        image?: string;
       }>;
     };
     status: 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
@@ -161,15 +162,15 @@ export class EmailService {
 
           <div style="margin-top:16px">
             <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Subtotal</span>
+              <span>Subtotal - </span>
               <span>${currency(order.subtotal)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Tax</span>
+              <span>Tax - </span>
               <span>${currency(order.tax)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">
-              <span>Total</span>
+              <span>Total - </span>
               <span>${currency(order.total)}</span>
             </div>
           </div>
@@ -289,15 +290,15 @@ export class EmailService {
 
           <div style="margin-top:16px">
             <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Subtotal</span>
+              <span>Subtotal - </span>
               <span>${currency(order.subtotal)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;color:${mutedColor}">
-              <span>Tax</span>
+              <span>Tax - </span>
               <span>${currency(order.tax)}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">
-              <span>Total</span>
+              <span>Total - </span>
               <span>${currency(order.total)}</span>
             </div>
           </div>
