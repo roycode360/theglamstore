@@ -65,10 +65,11 @@ export class AuthService {
     // Find or create user
     let user = await this.users.findByEmail(email);
     if (!user) {
-      const adminEmail1 =
-        process.env.ADMIN_EMAIL_1 || process.env.ADMIN_EMAIL_2;
+      const adminEmail1 = process.env.ADMIN_EMAIL_1;
+      const adminEmail2 = process.env.ADMIN_EMAIL_2;
       const role: 'customer' | 'admin' =
-        adminEmail1 && adminEmail1.toLowerCase() === email.toLowerCase()
+        (adminEmail1 && adminEmail1.toLowerCase() === email.toLowerCase()) ||
+        (adminEmail2 && adminEmail2.toLowerCase() === email.toLowerCase())
           ? 'admin'
           : 'customer';
 
