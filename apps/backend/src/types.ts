@@ -17,7 +17,7 @@ export interface JwtPayload {
 export type AuthUser = {
   id: string;
   email: string;
-  role: 'customer' | 'admin';
+  role: AccountRole;
 };
 
 export interface GqlContext {

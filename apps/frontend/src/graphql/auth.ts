@@ -6,9 +6,14 @@ export const LOGIN_WITH_AUTH0 = gql`
       accessToken
       refreshToken
       user {
-        id
+        _id
+        fullName
         email
         role
+        avatar
+        emailVerified
+        createdAt
+        updatedAt
       }
     }
   }
@@ -24,9 +29,13 @@ export const ME = gql`
   query Me {
     me {
       _id
+      fullName
       email
+      avatar
       role
       emailVerified
+      createdAt
+      updatedAt
     }
   }
 `;

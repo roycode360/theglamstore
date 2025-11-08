@@ -13,6 +13,11 @@ export default function AdminCategoriesPage() {
   const [editing, setEditing] = useState<Category | null>(null);
   const [toDelete, setToDelete] = useState<string | null>(null);
 
+  function truncateText(text?: string, max = 120) {
+    if (!text) return '';
+    return text.length > max ? text.slice(0, max) + '…' : text;
+  }
+
   const LIST_CATEGORIES = gql`
     query ListCategories {
       listCategories {
@@ -193,8 +198,9 @@ export default function AdminCategoriesPage() {
                             <div
                               className="text-xs"
                               style={{ color: 'rgb(var(--muted))' }}
+                              title={c.description || ''}
                             >
-                              {c.description}
+                              {truncateText(c.description, 140)}
                             </div>
                           </div>
                         </div>
@@ -284,12 +290,6 @@ export default function AdminCategoriesPage() {
                         <div className="flex-1 min-w-0">
                           <div className="mb-1 text-sm font-medium">
                             {c.name}
-                          </div>
-                          <div
-                            className="mb-2 text-xs"
-                            style={{ color: 'rgb(var(--muted))' }}
-                          >
-                            {c.description}
                           </div>
                           <code className="rounded bg-gray-100 px-2 py-0.5 text-xs">
                             {c.slug}

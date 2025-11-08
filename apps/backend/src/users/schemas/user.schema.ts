@@ -6,13 +6,14 @@ export type UserDocument = HydratedDocument<UserModel>;
 
 @Schema({ timestamps: true })
 export class UserModel {
+  @Prop({ required: true, type: String }) fullName!: string;
+  @Prop({ required: false, type: String, default: null }) avatar?:
+    | string
+    | null;
   @Prop({ required: true, unique: true }) email!: string;
   @Prop({ required: true, enum: ['customer', 'admin'], default: 'customer' })
   role!: 'customer' | 'admin';
-  @Prop({ type: String, default: null }) refreshTokenHash?: string | null;
   @Prop({ type: Boolean, default: false }) emailVerified!: boolean;
-  @Prop({ type: String, default: null }) verificationCode?: string | null;
-  @Prop({ type: Date, default: null }) verificationExpires?: Date | null;
 }
 
 @ObjectType()
@@ -21,12 +22,18 @@ export class User {
   _id!: string;
 
   @Field()
+  fullName!: string;
+
+  @Field()
   email!: string;
 
-  @Field()
-  role!: string;
+  @Field({ nullable: true })
+  avatar?: string;
 
-  @Field()
+  @Field({ defaultValue: 'customer' })
+  role!: 'customer' | 'admin';
+
+  @Field({ defaultValue: false })
   emailVerified!: boolean;
 
   @Field(() => Date, { nullable: true })

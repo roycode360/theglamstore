@@ -25,7 +25,9 @@ export const GET_ORDER = gql`
   query GetOrder($id: String!) {
     getOrder(id: $id) {
       _id
+      orderNumber
       createdAt
+      updatedAt
       email
       firstName
       lastName
@@ -34,11 +36,18 @@ export const GET_ORDER = gql`
       city
       state
       subtotal
-      tax
       total
+      shippingFee
+      couponCode
+      couponDiscount
       paymentMethod
       status
       transferProofUrl
+      amountPaid
+      amountRefunded
+      balanceDue
+      paymentReference
+      notes
       items {
         productId
         name
@@ -69,10 +78,21 @@ export const DELETE_ORDER = gql`
 `;
 
 export const LIST_ORDERS_PAGE = gql`
-  query ListOrdersPage($page: Int!, $pageSize: Int!, $status: String) {
-    listOrdersPage(page: $page, pageSize: $pageSize, status: $status) {
+  query ListOrdersPage(
+    $page: Int!
+    $pageSize: Int!
+    $status: String
+    $email: String
+  ) {
+    listOrdersPage(
+      page: $page
+      pageSize: $pageSize
+      status: $status
+      email: $email
+    ) {
       items {
         _id
+        orderNumber
         createdAt
         email
         firstName
@@ -92,5 +112,98 @@ export const LIST_ORDERS_PAGE = gql`
 export const GET_PENDING_ORDERS_COUNT = gql`
   query GetPendingOrdersCount {
     getPendingOrdersCount
+  }
+`;
+
+export const CREATE_ADMIN_ORDER = gql`
+  mutation CreateAdminOrder($input: CreateAdminOrderInput!) {
+    createAdminOrder(input: $input) {
+      _id
+      orderNumber
+      total
+      amountPaid
+      email
+      createdAt
+    }
+  }
+`;
+
+export const UPDATE_ADMIN_ORDER = gql`
+  mutation UpdateAdminOrder($input: UpdateAdminOrderInput!) {
+    updateAdminOrder(input: $input) {
+      _id
+      orderNumber
+      subtotal
+      total
+      shippingFee
+      couponCode
+      couponDiscount
+      amountPaid
+      amountRefunded
+      balanceDue
+      status
+      paymentReference
+      notes
+      updatedAt
+    }
+  }
+`;
+
+export const EDIT_ORDER_ITEMS = gql`
+  mutation EditOrderItems($input: EditOrderItemsInput!) {
+    editOrderItems(input: $input) {
+      _id
+      orderNumber
+      subtotal
+      total
+      shippingFee
+      couponCode
+      couponDiscount
+      amountPaid
+      amountRefunded
+      balanceDue
+      status
+      updatedAt
+    }
+  }
+`;
+
+export const GET_DASHBOARD_STATS = gql`
+  query GetDashboardStats {
+    getDashboardStats {
+      totalRevenue
+      totalOrders
+      totalProducts
+      lowStockItems
+      recentOrders {
+        _id
+        orderNumber
+        createdAt
+        total
+        status
+        paymentMethod
+        email
+        firstName
+        lastName
+        items {
+          productId
+          name
+          price
+          quantity
+          image
+        }
+      }
+      salesPerDay {
+        day
+        revenue
+      }
+      topSellingProducts {
+        productId
+        name
+        image
+        units
+        revenue
+      }
+    }
   }
 `;

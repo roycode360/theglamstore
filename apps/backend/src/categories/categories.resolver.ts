@@ -1,6 +1,5 @@
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt.guard';
 import { Roles, RolesGuard } from '../auth/roles.guard';
 import { CreateCategoryInput } from './dto/create-category.input';
 import { UpdateCategoryInput } from './dto/update-category.input';
@@ -16,6 +15,14 @@ export class CategoriesResolver {
   @Query(() => [Category])
   async listCategories(): Promise<Category[]> {
     return this.svc.list();
+  }
+
+  @isPublic()
+  @Query(() => [Category])
+  async listSubcategories(
+    @Args('parentId', { type: () => ID }) parentId: string,
+  ): Promise<Category[]> {
+    return this.svc.listByParentId(parentId);
   }
 
   @UseGuards(RolesGuard)

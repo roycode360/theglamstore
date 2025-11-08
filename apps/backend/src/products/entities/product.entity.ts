@@ -23,6 +23,9 @@ export class Product {
   @Field(() => Number, { nullable: true })
   salePrice?: number | null;
 
+  @Field(() => Number, { nullable: true })
+  costPrice?: number | null;
+
   @Field({ nullable: true })
   sku?: string;
 

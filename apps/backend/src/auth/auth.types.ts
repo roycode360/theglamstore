@@ -1,4 +1,5 @@
 import { ObjectType, Field } from '@nestjs/graphql';
+import { User } from 'src/users/schemas/user.schema';
 
 @ObjectType()
 export class AuthUser {
@@ -41,8 +42,8 @@ export class LoginResponse {
   @Field()
   refreshToken!: string;
 
-  @Field(() => AuthUser)
-  user!: AuthUser;
+  @Field(() => User)
+  user!: User;
 }
 
 @ObjectType()
@@ -53,6 +54,6 @@ export class RefreshResponse {
   @Field()
   refreshToken!: string;
 
-  @Field(() => AuthUser)
-  user!: AuthUser;
+  @Field(() => User)
+  user!: User;
 }

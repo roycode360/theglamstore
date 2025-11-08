@@ -29,6 +29,9 @@ export class Order {
   @Field(() => ID)
   _id!: string;
 
+  @Field(() => String, { nullable: true })
+  orderNumber?: string | null;
+
   @Field()
   email!: string;
 
@@ -54,10 +57,16 @@ export class Order {
   subtotal!: number;
 
   @Field(() => Number)
-  tax!: number;
-
-  @Field(() => Number)
   total!: number;
+
+  @Field(() => Number, { nullable: true })
+  shippingFee?: number | null;
+
+  @Field({ nullable: true })
+  couponCode?: string;
+
+  @Field(() => Number, { nullable: true })
+  couponDiscount?: number;
 
   @Field()
   paymentMethod!: string;
@@ -69,13 +78,32 @@ export class Order {
     | 'processing'
     | 'shipped'
     | 'delivered'
-    | 'cancelled';
+    | 'cancelled'
+    | 'awaiting_additional_payment';
 
   @Field({ nullable: true })
   transferProofUrl?: string;
 
   @Field(() => [OrderItem])
   items!: OrderItem[];
+
+  @Field(() => Number, { nullable: true })
+  amountPaid?: number;
+
+  @Field(() => Number, { nullable: true })
+  amountRefunded?: number;
+
+  @Field(() => Number, { nullable: true })
+  balanceDue?: number;
+
+  @Field({ nullable: true })
+  source?: string;
+
+  @Field(() => String, { nullable: true })
+  paymentReference?: string | null;
+
+  @Field(() => String, { nullable: true })
+  notes?: string | null;
 
   @Field()
   createdAt!: Date;

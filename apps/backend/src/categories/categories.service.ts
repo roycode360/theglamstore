@@ -17,6 +17,15 @@ export class CategoriesService {
     const docs = await this.categoryModel
       .find()
       .sort({ sortOrder: 1, createdAt: -1 })
+      .limit(4)
+      .lean();
+    return docs.map(this.mapDoc);
+  }
+
+  async listByParentId(parentId: string): Promise<Category[]> {
+    const docs = await this.categoryModel
+      .find({ parentId })
+      .sort({ name: 1 })
       .lean();
     return docs.map(this.mapDoc);
   }

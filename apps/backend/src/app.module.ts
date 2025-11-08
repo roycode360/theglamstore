@@ -5,7 +5,6 @@ import { join } from 'path';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AppResolver } from './app.resolver';
-import { Module as NestModule } from '@nestjs/common';
 import { ProductsModule } from './products/products.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CategoriesModule } from './categories/categories.module';
@@ -14,6 +13,8 @@ import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
 import { WishlistModule } from './wishlist/wishlist.module';
+import { CouponsModule } from './coupons/coupons.module';
+import { CompanyModule } from './company/company.module';
 
 @Module({
   imports: [
@@ -32,6 +33,8 @@ import { WishlistModule } from './wishlist/wishlist.module';
     CartModule,
     OrdersModule,
     WishlistModule,
+    CouponsModule,
+    CompanyModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

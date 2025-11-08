@@ -20,6 +20,9 @@ export class UpdateProductInput {
   @Field(() => Float, { nullable: true })
   salePrice?: number | null;
 
+  @Field(() => Float, { nullable: true })
+  costPrice?: number | null;
+
   @Field({ nullable: true })
   sku?: string;
 

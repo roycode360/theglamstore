@@ -15,6 +15,9 @@ import RootLayout from './components/layout/AppLayout';
 import HomePage from './routes/HomePage';
 import ProductCategories from './routes/ProductCategories';
 import ProductDetails from './routes/ProductDetails';
+import LoginPage from './routes/LoginPage';
+import PrivacyPolicy from './routes/PrivacyPolicy';
+import TermsOfService from './routes/TermsOfService';
 import CartPage from './routes/CartPage';
 import CheckoutPage from './routes/CheckoutPage';
 import OrderConfirmation from './routes/OrderConfirmation';
@@ -23,8 +26,11 @@ import DashboardPage from './routes/admin/DashboardPage';
 import AdminDashboard from './routes/admin/AdminDashboard';
 import ProductsPage from './routes/ProductsPage';
 import OrdersPage from './routes/admin/OrdersPage';
+import AdminCreateOrderPage from './routes/admin/AdminCreateOrderPage';
+import AdminOrderReceiptPage from './routes/admin/AdminOrderReceiptPage';
 import CustomersPage from './routes/admin/CustomersPage';
 import SettingsPage from './routes/admin/SettingsPage';
+import RevenueAnalyticsPage from './routes/admin/RevenueAnalyticsPage';
 import { ThemeProvider } from './theme';
 import { ToastProvider } from './components/ui/Toast';
 import { CartProvider } from './contexts/CartContext';
@@ -122,6 +128,10 @@ const client = new ApolloClient({
 
 const router = createBrowserRouter([
   {
+    path: '/orders/:id/receipt',
+    element: <AdminOrderReceiptPage />,
+  },
+  {
     element: <MainLayout />,
     children: [
       {
@@ -131,6 +141,9 @@ const router = createBrowserRouter([
           { index: true, element: <HomePage /> },
           { path: 'categories', element: <ProductCategories /> },
           { path: 'ProductDetails', element: <ProductDetails /> },
+          { path: 'login', element: <LoginPage /> },
+          { path: 'privacy-policy', element: <PrivacyPolicy /> },
+          { path: 'terms-of-service', element: <TermsOfService /> },
           { path: 'products', element: <ProductsPage /> },
           { path: 'cart', element: <CartPage /> },
           { path: 'checkout', element: <CheckoutPage /> },
@@ -151,6 +164,8 @@ const router = createBrowserRouter([
               { path: 'products', element: <AdminDashboard /> },
               { path: 'categories', element: <AdminCategoriesPage /> },
               { path: 'orders', element: <OrdersPage /> },
+              { path: 'orders/new', element: <AdminCreateOrderPage /> },
+              { path: 'analytics', element: <RevenueAnalyticsPage /> },
               { path: 'customers', element: <CustomersPage /> },
               { path: 'settings', element: <SettingsPage /> },
             ],

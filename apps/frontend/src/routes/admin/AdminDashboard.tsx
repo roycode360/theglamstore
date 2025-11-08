@@ -1,4 +1,4 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductModal from './ProductModal';
@@ -9,68 +9,8 @@ import Select from '../../components/ui/Select';
 import Checkbox from '../../components/ui/Checkbox';
 import Spinner from '../../components/ui/Spinner';
 import { TProduct } from 'src/types';
-
-const LIST_PRODUCTS = gql`
-  query ListProductsPage(
-    $page: Int!
-    $pageSize: Int!
-    $search: String
-    $category: String
-    $active: Boolean
-    $outOfStock: Boolean
-    $sortBy: String
-    $sortDir: String
-  ) {
-    listProductsPage(
-      page: $page
-      pageSize: $pageSize
-
-      search: $search
-      category: $category
-      active: $active
-      outOfStock: $outOfStock
-      sortBy: $sortBy
-      sortDir: $sortDir
-    ) {
-      items {
-        _id
-        slug
-        name
-        sku
-        brand
-        description
-        sizes
-        colors
-        category
-        price
-        salePrice
-        stockQuantity
-        images
-        active
-        featured
-      }
-      total
-      page
-      pageSize
-      totalPages
-    }
-  }
-`;
-const LIST_CATEGORIES = gql`
-  query ListCategories {
-    listCategories {
-      _id
-      name
-      slug
-      active
-    }
-  }
-`;
-const DELETE_PRODUCT = gql`
-  mutation DeleteProduct($id: ID!) {
-    deleteProduct(id: $id)
-  }
-`;
+import { LIST_PRODUCTS_PAGE, DELETE_PRODUCT } from '../../graphql/products';
+import { LIST_CATEGORIES } from '../../graphql/categories';
 
 export default function AdminDashboard() {
   const [params, setParams] = useSearchParams();
@@ -82,7 +22,7 @@ export default function AdminDashboard() {
   const [sortBy, setSortBy] = useState<string>('createdAt');
   const [sortDir, setSortDir] = useState<string>('desc');
   const [q, setQ] = useState('');
-  const { data, loading, refetch } = useQuery(LIST_PRODUCTS, {
+  const { data, loading, refetch } = useQuery(LIST_PRODUCTS_PAGE, {
     variables: {
       page,
       pageSize,
@@ -116,17 +56,8 @@ export default function AdminDashboard() {
     }
   }, [params, products]);
   const fmt = (n: number) => formatCurrency(n);
-  const filtered = useMemo(() => {
-    const t = q.trim().toLowerCase();
-    if (!t) return products;
-    return products.filter((p: TProduct) =>
-      [p.name, p.brand, p.category]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-        .includes(t),
-    );
-  }, [products, q]);
+  // Backend already handles search filtering, so use products directly
+  const filtered = products;
 
   async function onDelete(id: string) {
     setToDeleteId(id);
@@ -459,7 +390,7 @@ export default function AdminDashboard() {
               <button
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="px-3 text-sm rounded-md btn-ghost h-9 disabled:opacity-50"
+                className="px-3 text-sm rounded-md btn-ghost h-9 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Previous
               </button>
@@ -470,7 +401,7 @@ export default function AdminDashboard() {
                     pageData ? Math.min(pageData.totalPages, p + 1) : p + 1,
                   )
                 }
-                className="px-3 text-sm rounded-md btn-primary h-9 disabled:opacity-50"
+                className="px-3 text-sm rounded-md btn-primary h-9 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next
               </button>

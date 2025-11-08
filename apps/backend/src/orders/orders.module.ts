@@ -8,6 +8,7 @@ import {
   ProductModel,
   ProductSchema,
 } from '../products/schemas/product.schema.js';
+import { CouponsModule } from '../coupons/coupons.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import {
       { name: ProductModel.name, schema: ProductSchema },
     ]),
     AuthModule,
+    CouponsModule,
   ],
   providers: [OrdersResolver, OrdersService],
   exports: [OrdersService],

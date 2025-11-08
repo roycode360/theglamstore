@@ -111,12 +111,8 @@ export default function CartPage() {
     );
   };
 
-  const calculateTax = (subtotal: number | undefined) => {
-    return subtotal ? subtotal * 0.08 : 0; // 8% tax rate
-  };
-
-  const calculateTotal = (subtotal: number | undefined, tax: number) => {
-    return subtotal ? subtotal + tax : 0;
+  const calculateTotal = (subtotal: number | undefined) => {
+    return subtotal ? subtotal : 0;
   };
 
   const parsePrice = (
@@ -161,8 +157,8 @@ export default function CartPage() {
   }
 
   const subtotal = calculateSubtotal();
-  const tax = calculateTax(subtotal);
-  const total = calculateTotal(subtotal, tax);
+  const tax = 0;
+  const total = calculateTotal(subtotal);
 
   return (
     <>
@@ -205,7 +201,7 @@ export default function CartPage() {
                   </h2>
                   <button
                     onClick={handleClearCart}
-                    className="text-sm font-medium text-red-600 hover:text-red-700"
+                    className="text-sm font-medium text-gray-700 hover:text-gray-800"
                   >
                     Clear Cart
                   </button>
@@ -255,7 +251,7 @@ export default function CartPage() {
                             <div className="text-base font-semibold sm:text-lg">
                               {item?.product?.salePrice ? (
                                 <>
-                                  <span className="text-green-600">
+                                  <span className="text-gray-700">
                                     {formatCurrency(item?.product?.salePrice)}
                                   </span>
                                   <span className="ml-2 text-sm line-through text-muted">
@@ -372,7 +368,7 @@ export default function CartPage() {
                             {/* Remove Button */}
                             <button
                               onClick={() => handleRemoveItem(itemId)}
-                              className="text-red-500 transition-colors hover:text-red-700"
+                              className="text-gray-700 transition-colors hover:text-gray-800"
                               title="Remove item"
                             >
                               <svg
@@ -416,12 +412,9 @@ export default function CartPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span className="font-medium text-green-600">Free</span>
+                    <span className="font-medium text-gray-700">Free</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Tax</span>
-                    <span className="font-medium">{formatCurrency(tax)}</span>
-                  </div>
+                  
                   <div className="pt-3 border-t">
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>

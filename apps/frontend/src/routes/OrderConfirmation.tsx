@@ -1,7 +1,7 @@
 export default function OrderConfirmation() {
   return (
     <div className="max-w-3xl px-4 py-16 mx-auto text-center">
-      <div className="flex items-center justify-center mx-auto mb-4 text-2xl text-green-600 bg-green-100 rounded-full h-14 w-14">
+      <div className="flex items-center justify-center mx-auto mb-4 text-2xl text-gray-700 bg-gray-100 rounded-full h-14 w-14">
         ✓
       </div>
       <h1 className="text-3xl font-bold">Order Received</h1>

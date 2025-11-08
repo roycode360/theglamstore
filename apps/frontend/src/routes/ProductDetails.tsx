@@ -1,4 +1,4 @@
-import { gql, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { Link, useSearchParams } from 'react-router-dom';
 import Spinner from '../components/ui/Spinner';
 import { formatCurrency } from '../utils/currency';
@@ -7,26 +7,13 @@ import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useToast } from '../components/ui/Toast';
 import { TProduct } from 'src/types';
-import { LIST_PRODUCTS_BY_CATEGORY } from 'src/graphql/products';
+import {
+  LIST_PRODUCTS_BY_CATEGORY,
+  GET_PRODUCT,
+} from 'src/graphql/products';
 import { GET_CART_ITEMS } from '../graphql/cart';
-
-const GET_PRODUCT = gql`
-  query GetProduct($id: ID!) {
-    getProduct(id: $id) {
-      _id
-      name
-      brand
-      category
-      price
-      salePrice
-      stockQuantity
-      description
-      images
-      sizes
-      colors
-    }
-  }
-`;
+import ProductCard from '../components/ui/ProductCard';
+import { LIST_CATEGORIES } from '../graphql/categories';
 
 export default function ProductDetails() {
   const [params] = useSearchParams();
@@ -50,6 +37,7 @@ export default function ProductDetails() {
     nextFetchPolicy: 'cache-first',
   });
   const { data: cartData } = useQuery(GET_CART_ITEMS);
+  const { data: categoriesData } = useQuery(LIST_CATEGORIES);
 
   // Compute color options from raw data unconditionally to keep hook order stable
   const colorOptions = useMemo(() => {
@@ -69,10 +57,40 @@ export default function ProductDetails() {
     return items.slice(0, 3);
   }, [relatedData]);
 
+  // Find category name from slug
+  const categoryInfo = useMemo(() => {
+    if (!p?.category || !categoriesData?.listCategories) return null;
+    const categories = (categoriesData.listCategories as any[]) ?? [];
+    const category = categories.find((c: any) => c.slug === p.category);
+    return category ? { name: category.name, slug: category.slug } : null;
+  }, [p?.category, categoriesData]);
+
   const [activeImg, setActiveImg] = useState(0);
   const [activeColorIdx, setActiveColorIdx] = useState<number>(0);
   const [activeSize, setActiveSize] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [thumbnailLoaded, setThumbnailLoaded] = useState<boolean[]>([]);
+
+  // Initialize thumbnail loaded states
+  useState(() => {
+    setThumbnailLoaded(new Array(p?.images?.length || 0).fill(false));
+  });
+
+  // Reset image loaded state when active image changes
+  const handleImageChange = (index: number) => {
+    setActiveImg(index);
+    setImageLoaded(false);
+  };
+
+  // Handle thumbnail load
+  const handleThumbnailLoad = (index: number) => {
+    setThumbnailLoaded((prev) => {
+      const newState = [...prev];
+      newState[index] = true;
+      return newState;
+    });
+  };
 
   const { addToCart } = useCart();
   const { showToast } = useToast();
@@ -90,7 +108,7 @@ export default function ProductDetails() {
   if (!p) {
     return (
       <div
-        className="flex items-center justify-center py-16 text-sm bg-white border rounded-lg theme-border"
+        className="theme-border flex items-center justify-center rounded-lg border bg-white py-16 text-sm"
         style={{ color: 'rgb(var(--muted))' }}
       >
         Product not found
@@ -145,23 +163,23 @@ export default function ProductDetails() {
   };
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 px-4 py-10 sm:px-6 lg:px-8">
       {/* Top section */}
       <section className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {/* Images */}
         <div>
           {/* Mobile Continue Shopping Button */}
-          <div className="flex justify-end mb-4 sm:hidden">
+          <div className="mb-4 flex justify-end sm:hidden">
             <Link
               to="/products"
-              className="inline-flex items-center justify-center w-10 h-10 transition-colors bg-white border rounded-lg theme-border text-brand hover:bg-brand-50"
+              className="theme-border text-brand hover:bg-brand-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-white transition-colors"
               title="Continue Shopping"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="w-4 h-4"
+                className="h-4 w-4"
               >
                 <path
                   fillRule="evenodd"
@@ -171,26 +189,59 @@ export default function ProductDetails() {
               </svg>
             </Link>
           </div>
-          <div className="flex gap-2 mb-3">
+          <div className="mb-3 flex gap-2">
             {(p.images ?? []).slice(0, 4).map((src: string, i: number) => (
               <button
                 key={i}
-                onClick={() => setActiveImg(i)}
-                className={`theme-border overflow-hidden rounded-md border bg-gray-50 ${i === activeImg ? 'ring-brand-400 ring-2' : ''}`}
+                onClick={() => handleImageChange(i)}
+                className={`theme-border relative overflow-hidden rounded-md border bg-gray-50 ${i === activeImg ? 'ring-brand-400 ring-2' : ''}`}
                 style={{ width: 64, height: 64 }}
                 aria-label={`Image ${i + 1}`}
               >
+                {/* Thumbnail loading skeleton */}
+                {!thumbnailLoaded[i] && (
+                  <div className="absolute inset-0 animate-pulse bg-gray-200">
+                    <div className="mx-auto mt-5 h-4 w-4 animate-pulse rounded-full bg-gray-300"></div>
+                  </div>
+                )}
                 {src && (
-                  <img src={src} className="object-cover w-full h-full" />
+                  <img
+                    src={src}
+                    className={`h-full w-full object-cover transition-opacity duration-300 ${
+                      thumbnailLoaded[i] ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    loading="lazy"
+                    decoding="async"
+                    alt={`${p.name} thumbnail ${i + 1}`}
+                    onLoad={() => handleThumbnailLoad(i)}
+                  />
                 )}
               </button>
             ))}
           </div>
           <div className="relative h-[60vh] overflow-hidden rounded-lg bg-gray-100 md:h-[70vh]">
+            {/* Enhanced loading skeleton */}
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
+                <div className="flex h-full flex-col items-center justify-center space-y-4">
+                  <div className="h-20 w-20 animate-pulse rounded-full bg-gray-300"></div>
+                  <div className="space-y-2">
+                    <div className="h-3 w-32 animate-pulse rounded bg-gray-300"></div>
+                    <div className="h-2 w-24 animate-pulse rounded bg-gray-300"></div>
+                  </div>
+                </div>
+              </div>
+            )}
             {p.images?.[activeImg] && (
               <img
                 src={p.images[activeImg]}
-                className="object-cover w-full h-full"
+                loading="lazy"
+                decoding="async"
+                alt={p.name}
+                onLoad={() => setImageLoaded(true)}
+                className={`h-full w-full object-cover transition-all duration-700 ease-out ${
+                  imageLoaded ? 'scale-100 opacity-100' : 'scale-105 opacity-0'
+                }`}
               />
             )}
           </div>
@@ -198,6 +249,30 @@ export default function ProductDetails() {
 
         {/* Content */}
         <div className="space-y-6">
+          {/* Category badge */}
+          {categoryInfo && (
+            <div>
+              <Link
+                to={`/products?category=${categoryInfo.slug}`}
+                className="theme-border inline-flex items-center gap-1.5 rounded-full border bg-white px-3 py-1.5 text-xs font-medium transition-colors hover:bg-gray-50"
+                style={{ color: 'rgb(var(--muted))' }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-3 w-3"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M17.707 9.293a1 1 0 010 1.414l-7 7a1 1 0 01-1.414 0l-7-7A.997.997 0 012 10V5a3 3 0 013-3h5c.256 0 .512.098.707.293l7 7zM5 6a1 1 0 100-2 1 1 0 000 2z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{categoryInfo.name}</span>
+              </Link>
+            </div>
+          )}
           <div className="text-xs" style={{ color: 'rgb(var(--muted))' }}>
             {p.brand ? p.brand.toUpperCase() : 'LUXE COLLECTION'}
           </div>
@@ -207,7 +282,7 @@ export default function ProductDetails() {
               <span
                 className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium sm:px-3 sm:py-1.5 sm:text-sm ${
                   p.stockQuantity > 0
-                    ? 'border-green-200 bg-green-50 text-green-700'
+                    ? 'border-gray-200 bg-gray-50 text-gray-700'
                     : 'border-red-200 bg-red-50 text-red-700'
                 }`}
               >
@@ -231,7 +306,7 @@ export default function ProductDetails() {
             )}
           </div>
           <p
-            className="text-sm max-w-prose"
+            className="max-w-prose text-sm"
             style={{ color: 'rgb(var(--muted))' }}
           >
             {p.description ||
@@ -290,10 +365,10 @@ export default function ProductDetails() {
 
           {/* Quantity + CTA */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center border rounded-md theme-border">
+            <div className="theme-border inline-flex items-center rounded-md border">
               <button
                 onClick={() => setQty((n) => Math.max(1, n - 1))}
-                className="w-10 h-10"
+                className="h-10 w-10"
                 aria-label="Decrease quantity"
               >
                 −
@@ -318,7 +393,7 @@ export default function ProductDetails() {
                   }
                   setQty(next);
                 }}
-                className="w-10 h-10"
+                className="h-10 w-10"
                 aria-label="Increase quantity"
               >
                 +
@@ -331,7 +406,7 @@ export default function ProductDetails() {
               Add to Cart
             </button>
             <button
-              className="inline-flex items-center justify-center w-10 h-10 transition-opacity border rounded-md theme-border hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
+              className="theme-border inline-flex h-10 w-10 items-center justify-center rounded-md border transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
               aria-label="Wishlist"
               title="Wishlist"
               aria-pressed={!!wishlist.find((w: any) => w._id === p._id)}
@@ -356,7 +431,7 @@ export default function ProductDetails() {
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
-                    className="w-5 h-5"
+                    className="h-5 w-5"
                     fill={onList ? 'black' : 'none'}
                     stroke="black"
                     strokeWidth="1.5"
@@ -372,7 +447,7 @@ export default function ProductDetails() {
       </section>
 
       {/* Accordions */}
-      <section className="bg-white border divide-y rounded-md theme-border">
+      <section className="theme-border divide-y rounded-md border bg-white">
         {[
           {
             k: 'Full Description',
@@ -386,7 +461,7 @@ export default function ProductDetails() {
           { k: 'Returns', d: '30-day return policy.' },
         ].map((item, i) => (
           <details key={i} className="group">
-            <summary className="flex items-center justify-between px-4 py-3 cursor-pointer">
+            <summary className="flex cursor-pointer items-center justify-between px-4 py-3">
               <span className="font-medium">{item.k}</span>
               <span className="opacity-60">▾</span>
             </summary>
@@ -412,56 +487,7 @@ export default function ProductDetails() {
         </div>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {suggestions.map((s: TProduct, i: number) => (
-            <Link
-              key={i}
-              to={`/ProductDetails?id=${s._id}`}
-              className="theme-border hover:border-brand-300 group transform overflow-hidden rounded-lg border bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 focus:ring-offset-white"
-            >
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-t-lg bg-gray-100">
-                {s.images?.[0] && (
-                  <img
-                    src={s.images[0]}
-                    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                  />
-                )}
-              </div>
-              <div className="p-3 space-y-1">
-                <div className="font-medium">{s.name}</div>
-                <div className="text-xs" style={{ color: 'rgb(var(--muted))' }}>
-                  {s.brand || 'LUXE COLLECTION'}
-                </div>
-                <div className="flex items-center justify-between gap-2 pt-1">
-                  <div className="font-semibold">
-                    {s.salePrice != null ? (
-                      <>
-                        <span>{formatCurrency(s.salePrice)}</span>
-                        <span
-                          className="ml-2 text-sm line-through"
-                          style={{ color: 'rgb(var(--muted))' }}
-                        >
-                          {formatCurrency(s.price)}
-                        </span>
-                      </>
-                    ) : (
-                      <span>{formatCurrency(s.price)}</span>
-                    )}
-                  </div>
-                  {typeof (s as any).stockQuantity === 'number' && (
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${
-                        (s as any).stockQuantity > 0
-                          ? 'border-green-200 bg-green-50 text-green-700'
-                          : 'border-red-200 bg-red-50 text-red-700'
-                      }`}
-                    >
-                      {(s as any).stockQuantity > 0
-                        ? 'In stock'
-                        : 'Out of stock'}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </Link>
+            <ProductCard key={s._id} product={s} />
           ))}
         </div>
       </section>

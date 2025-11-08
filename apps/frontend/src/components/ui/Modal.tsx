@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 type ModalProps = {
@@ -22,70 +22,93 @@ export default function Modal({
   widthClassName = 'max-w-lg',
   canDismiss = true,
 }: ModalProps) {
-  if (!open) return null;
+  const [mounted, setMounted] = useState(open);
+  const [visible, setVisible] = useState(open);
+  const closeTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      // next frame ensure transitions run
+      requestAnimationFrame(() => setVisible(true));
+    } else {
+      setVisible(false);
+      // wait for animation before unmount
+      closeTimerRef.current = window.setTimeout(() => {
+        setMounted(false);
+      }, 200);
+    }
+    return () => {
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
+    };
+  }, [open]);
+
+  if (!mounted) return null;
+  const hasHeading = Boolean(title || titleIcon);
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center px-3 sm:px-0">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-[1px]"
+        className={`absolute inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
         onClick={() => {
           if (canDismiss) onClose();
         }}
       />
       <div
-        className={`relative w-auto max-w-[92vw] sm:w-full ${widthClassName} theme-border theme-card overflow-hidden rounded-xl border shadow-[0_20px_50px_-12px_rgba(0,0,0,0.45)] ring-1 ring-[rgb(var(--brand-300))]/20`}
+        className={`relative w-full max-w-[94vw] sm:w-auto ${widthClassName} overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-20px_rgba(15,23,42,0.35)] transition-all duration-200 ${visible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-95 opacity-0'}`}
       >
-        <div
-          className="h-1.5 w-full"
-          style={{
-            background:
-              'linear-gradient(90deg, rgba(var(--brand-200),0.9) 0%, rgba(var(--brand-400),0.95) 50%, rgba(var(--brand-300),0.9) 100%)',
-          }}
-        />
-        {(title || canDismiss) && (
-          <div className="flex items-start justify-between gap-3 px-4 py-3 border-b theme-border sm:px-5">
-            {title && (
-              <div className="flex items-center gap-2">
-                {titleIcon && (
-                  <span className="inline-flex items-center justify-center w-8 h-8 text-gray-700 rounded-md bg-gray-50 ring-1 ring-gray-200">
-                    {titleIcon}
-                  </span>
-                )}
-                <div
-                  className="text-lg font-semibold"
-                  style={{ color: 'rgb(var(--brand-900))' }}
-                >
-                  {title}
+        <div className={`px-5 py-6 sm:px-8 ${footer ? 'pb-4' : ''}`}>
+          {(hasHeading || canDismiss) && (
+            <div
+              className={`mb-4 flex items-start gap-3 ${
+                hasHeading ? 'justify-between' : 'justify-end'
+              }`}
+            >
+              {(title || titleIcon) && (
+                <div className="flex items-center gap-3">
+                  {titleIcon && (
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-700">
+                      {titleIcon}
+                    </span>
+                  )}
+                  {title && (
+                    <div className="text-xl font-semibold text-gray-900">
+                      {title}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
-            {canDismiss && (
-              <button
-                type="button"
-                aria-label="Close"
-                onClick={onClose}
-                className="p-2 text-gray-600 transition-colors border rounded-md theme-border hover:bg-gray-50 hover:text-gray-800"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  className="w-4 h-4"
+              )}
+              {canDismiss && (
+                <button
+                  type="button"
+                  aria-label="Close"
+                  onClick={onClose}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-gray-500 transition hover:bg-gray-100 hover:text-gray-700"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M6 6l12 12M18 6L6 18"
-                  />
-                </svg>
-              </button>
-            )}
-          </div>
-        )}
-        <div className="px-4 py-4 sm:px-5">{children}</div>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    className="h-4 w-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6 6l12 12M18 6L6 18"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
+          <div>{children}</div>
+        </div>
         {footer && (
-          <div className="flex justify-end gap-2 px-4 py-3 border-t theme-border sm:px-5">
+          <div className="flex justify-end gap-2 px-5 pb-6 sm:px-8">
             {footer}
           </div>
         )}

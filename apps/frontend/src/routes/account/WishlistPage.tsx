@@ -1,27 +1,28 @@
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../../contexts/WishlistContext';
+import { formatCurrency } from '../../utils/currency';
 
 export default function WishlistPage() {
   const { items } = useWishlist();
   return (
-    <div className="space-y-6">
+    <div className="px-4 py-10 space-y-6 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="theme-fg text-2xl font-semibold">My Wishlist</h1>
+          <h1 className="text-2xl font-semibold theme-fg">My Wishlist</h1>
           <p className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
             Save items you love for later
           </p>
         </div>
         <Link
           to="/products"
-          className="theme-border text-brand hover:bg-brand-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-white transition-colors sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
+          className="inline-flex items-center justify-center w-10 h-10 transition-colors bg-white border rounded-lg theme-border text-brand hover:bg-brand-50 sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
           title="Continue Shopping"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="h-4 w-4"
+            className="w-4 h-4"
           >
             <path
               fillRule="evenodd"
@@ -42,18 +43,18 @@ export default function WishlistPage() {
           >
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-t-lg bg-gray-100">
               {p.salePrice != null && (
-                <span className="absolute left-2 top-2 rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+                <span className="absolute left-2 top-2 rounded bg-gray-900 px-2 py-0.5 text-xs font-semibold text-white">
                   Sale
                 </span>
               )}
               {p.images?.[0] && (
                 <img
                   src={p.images[0]}
-                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
                 />
               )}
             </div>
-            <div className="space-y-1 p-3">
+            <div className="p-3 space-y-1">
               <div className="font-medium">{p.name}</div>
               <div className="text-xs" style={{ color: 'rgb(var(--muted))' }}>
                 {p.brand || 'TheGlamStore'}
@@ -62,36 +63,23 @@ export default function WishlistPage() {
                 <div className="font-semibold">
                   {p.salePrice != null ? (
                     <>
-                      <span>
-                        {new Intl.NumberFormat('en-NG', {
-                          style: 'currency',
-                          currency: 'NGN',
-                        }).format(p.salePrice)}
-                      </span>
+                      <span>{formatCurrency(p.salePrice)}</span>
                       <span
                         className="ml-2 text-sm line-through"
                         style={{ color: 'rgb(var(--muted))' }}
                       >
-                        {new Intl.NumberFormat('en-NG', {
-                          style: 'currency',
-                          currency: 'NGN',
-                        }).format(p.price)}
+                        {formatCurrency(p.price)}
                       </span>
                     </>
                   ) : (
-                    <span>
-                      {new Intl.NumberFormat('en-NG', {
-                        style: 'currency',
-                        currency: 'NGN',
-                      }).format(p.price)}
-                    </span>
+                    <span>{formatCurrency(p.price)}</span>
                   )}
                 </div>
                 {typeof p.stockQuantity === 'number' && (
                   <span
                     className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${
                       p.stockQuantity > 0
-                        ? 'border-green-200 bg-green-50 text-green-700'
+                        ? 'border-gray-200 bg-gray-50 text-gray-700'
                         : 'border-red-200 bg-red-50 text-red-700'
                     }`}
                   >
@@ -104,7 +92,7 @@ export default function WishlistPage() {
         ))}
         {items.length === 0 && (
           <div
-            className="rounded-lg border p-6 text-center"
+            className="p-6 text-center border rounded-lg"
             style={{ color: 'rgb(var(--muted))' }}
           >
             Your wishlist is empty.

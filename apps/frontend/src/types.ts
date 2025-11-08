@@ -25,6 +25,7 @@ export interface TProduct {
   category: string;
   price: number;
   salePrice?: number;
+  costPrice?: number;
   sku: string;
   stockQuantity: number;
   description: string;

@@ -11,6 +11,7 @@ export class ProductModel {
   @Prop({ required: true }) category!: string;
   @Prop({ required: true, type: Number }) price!: number;
   @Prop({ type: Number }) salePrice?: number | null;
+  @Prop({ type: Number }) costPrice?: number | null;
   @Prop() sku?: string;
   @Prop({ type: Number }) stockQuantity?: number | null;
   @Prop() description?: string;

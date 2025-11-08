@@ -1,4 +1,4 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { useEffect, useRef, useState } from 'react';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
@@ -8,52 +8,12 @@ import { generateSlug } from '../../utils/slug';
 import { uploadToCloudinary } from '../../utils/cloudinary';
 import Checkbox from '../../components/ui/Checkbox';
 import { useToast } from '../../components/ui/Toast';
-
-const CREATE_PRODUCT = gql`
-  mutation Create($input: CreateProductInput!) {
-    createProduct(input: $input) {
-      _id
-    }
-  }
-`;
-const UPDATE_PRODUCT = gql`
-  mutation Update($id: ID!, $input: UpdateProductInput!) {
-    updateProduct(id: $id, input: $input) {
-      _id
-    }
-  }
-`;
-const GET_PRODUCT = gql`
-  query GetProduct($id: ID!) {
-    getProduct(id: $id) {
-      _id
-      name
-      slug
-      brand
-      category
-      price
-      salePrice
-      sku
-      stockQuantity
-      description
-      images
-      sizes
-      colors
-      featured
-      active
-    }
-  }
-`;
-
-const LIST_CATEGORIES = gql`
-  query ListCategories {
-    listCategories {
-      _id
-      name
-      slug
-    }
-  }
-`;
+import {
+  CREATE_PRODUCT,
+  UPDATE_PRODUCT,
+  GET_PRODUCT,
+} from '../../graphql/products';
+import { LIST_CATEGORIES } from '../../graphql/categories';
 
 type Product = any;
 
@@ -85,6 +45,7 @@ export default function ProductModal({
   const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
   const [salePrice, setSalePrice] = useState('');
+  const [costPrice, setCostPrice] = useState('');
   const [sku, setSku] = useState('');
   const [stockQuantity, setStockQuantity] = useState('');
   const [description, setDescription] = useState('');
@@ -113,6 +74,7 @@ export default function ProductModal({
       setCategory('');
       setPrice('');
       setSalePrice('');
+      setCostPrice('');
       setSku('');
       setStockQuantity('');
       setDescription('');
@@ -132,6 +94,7 @@ export default function ProductModal({
     setCategory(src.category || '');
     setPrice(src.price != null ? String(src.price) : '');
     setSalePrice(src.salePrice != null ? String(src.salePrice) : '');
+    setCostPrice(src.costPrice != null ? String(src.costPrice) : '');
     setSku(src.sku || '');
     setStockQuantity(
       src.stockQuantity != null ? String(src.stockQuantity) : '',
@@ -161,6 +124,7 @@ export default function ProductModal({
       category,
       price: Number(price || '0'),
       salePrice: salePrice ? Number(salePrice) : null,
+      costPrice: costPrice ? Number(costPrice) : null,
       sku: sku || null,
       stockQuantity: stockQuantity ? Number(stockQuantity) : null,
       description: description || null,
@@ -195,14 +159,14 @@ export default function ProductModal({
         onClick={createLoading || updateLoading ? undefined : onClose}
       />
       <div className="theme-border theme-card relative mx-2 my-10 max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg border p-6 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div className="text-lg font-semibold">
             {isEdit ? 'Edit Product' : 'Add Product'}
           </div>
           <button
             onClick={onClose}
             disabled={createLoading || updateLoading}
-            className="flex items-center justify-center w-8 h-8 border rounded theme-border disabled:cursor-not-allowed disabled:opacity-50"
+            className="theme-border flex h-8 w-8 items-center justify-center rounded border disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="close"
           >
             ×
@@ -210,10 +174,10 @@ export default function ProductModal({
         </div>
         {isEdit && initial?._id && productLoading && !fullData?.getProduct && (
           <div
-            className="flex items-center gap-2 mb-3 text-sm"
+            className="mb-3 flex items-center gap-2 text-sm"
             style={{ color: 'rgb(var(--muted))' }}
           >
-            <span className="w-3 h-3 border-2 rounded-full border-brand animate-spin border-t-transparent" />
+            <span className="border-brand h-3 w-3 animate-spin rounded-full border-2 border-t-transparent" />
             <span>Prefilling product details…</span>
           </div>
         )}
@@ -236,7 +200,7 @@ export default function ProductModal({
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full mt-1"
+                  className="mt-1 w-full"
                   required
                 />
               </label>
@@ -255,7 +219,7 @@ export default function ProductModal({
               </label>
               <label className="block text-sm">
                 <div className="font-medium">URL Slug</div>
-                <div className="flex gap-2 mt-1">
+                <div className="mt-1 flex gap-2">
                   <Input
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
@@ -265,7 +229,7 @@ export default function ProductModal({
                   <button
                     type="button"
                     onClick={() => setSlug(generateSlug(name))}
-                    className="px-3 py-2 text-sm bg-white border rounded-md theme-border shrink-0 hover:bg-gray-50"
+                    className="theme-border shrink-0 rounded-md border bg-white px-3 py-2 text-sm hover:bg-gray-50"
                   >
                     Generate
                   </button>
@@ -273,7 +237,7 @@ export default function ProductModal({
               </label>
               <label className="block text-sm">
                 <div className="font-medium">SKU</div>
-                <div className="flex gap-2 mt-1">
+                <div className="mt-1 flex gap-2">
                   <Input
                     value={sku}
                     onChange={(e) => setSku(e.target.value)}
@@ -288,7 +252,7 @@ export default function ProductModal({
                         }),
                       )
                     }
-                    className="px-3 py-2 text-sm bg-white border rounded-md theme-border shrink-0 hover:bg-gray-50"
+                    className="theme-border shrink-0 rounded-md border bg-white px-3 py-2 text-sm hover:bg-gray-50"
                   >
                     Generate
                   </button>
@@ -299,7 +263,7 @@ export default function ProductModal({
                 <Input
                   value={brand}
                   onChange={(e) => setBrand(e.target.value)}
-                  className="w-full mt-1"
+                  className="mt-1 w-full"
                 />
               </label>
               <label className="block text-sm">
@@ -307,7 +271,15 @@ export default function ProductModal({
                 <Input
                   value={stockQuantity}
                   onChange={(e) => setStockQuantity(e.target.value)}
-                  className="w-full mt-1"
+                  className="mt-1 w-full"
+                />
+              </label>
+              <label className="block text-sm">
+                <div className="font-medium">Cost Price (₦)</div>
+                <Input
+                  value={costPrice}
+                  onChange={(e) => setCostPrice(e.target.value)}
+                  className="mt-1 w-full"
                 />
               </label>
               <label className="block text-sm">
@@ -315,7 +287,7 @@ export default function ProductModal({
                 <Input
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="w-full mt-1"
+                  className="mt-1 w-full"
                   required
                 />
               </label>
@@ -324,7 +296,7 @@ export default function ProductModal({
                 <Input
                   value={salePrice}
                   onChange={(e) => setSalePrice(e.target.value)}
-                  className="w-full mt-1"
+                  className="mt-1 w-full"
                 />
               </label>
             </div>
@@ -335,7 +307,7 @@ export default function ProductModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={4}
-                className="w-full mt-1"
+                className="mt-1 w-full"
               />
             </label>
 
@@ -357,11 +329,11 @@ export default function ProductModal({
                         setImageUrl('');
                       }
                     }}
-                    className="px-3 py-2 rounded btn-primary"
+                    className="btn-primary rounded px-3 py-2"
                   >
                     Add
                   </button>
-                  <label className="px-3 py-2 rounded cursor-pointer btn-ghost">
+                  <label className="btn-ghost cursor-pointer rounded px-3 py-2">
                     {uploading ? 'Uploading…' : 'Upload'}
                     <input
                       type="file"
@@ -399,11 +371,11 @@ export default function ProductModal({
                     />
                   </label>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {images.map((src, i) => (
                     <div
                       key={i}
-                      className="relative thumb"
+                      className="thumb relative"
                       draggable
                       onDragStart={(e) => {
                         e.dataTransfer.setData('text/plain', String(i));
@@ -426,14 +398,14 @@ export default function ProductModal({
                     >
                       <img
                         src={src}
-                        className="object-cover w-16 h-16 border rounded theme-border"
+                        className="theme-border h-16 w-16 rounded border object-cover"
                       />
                       <button
                         type="button"
                         onClick={() =>
                           setImages(images.filter((_, idx) => idx !== i))
                         }
-                        className="absolute w-6 h-6 text-xs text-white bg-red-500 rounded-full -right-2 -top-2"
+                        className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-gray-900 text-xs text-white"
                       >
                         ×
                       </button>
@@ -459,16 +431,16 @@ export default function ProductModal({
                         setSizeInput('');
                       }
                     }}
-                    className="px-3 py-2 rounded btn-primary"
+                    className="btn-primary rounded px-3 py-2"
                   >
                     Add
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {sizes.map((s, i) => (
                     <span
                       key={i}
-                      className="px-2 text-sm font-semibold border rounded-full theme-border"
+                      className="theme-border rounded-full border px-2 text-sm font-semibold"
                     >
                       {s}{' '}
                       <button
@@ -498,7 +470,7 @@ export default function ProductModal({
                     type="color"
                     value={colorHex}
                     onChange={(e) => setColorHex(e.target.value)}
-                    className="w-12 h-10 border rounded theme-border"
+                    className="theme-border h-10 w-12 rounded border"
                   />
                   <button
                     type="button"
@@ -509,12 +481,12 @@ export default function ProductModal({
                       setColors([...colors, value]);
                       setColorInput('');
                     }}
-                    className="px-3 py-2 rounded btn-primary"
+                    className="btn-primary rounded px-3 py-2"
                   >
                     Add
                   </button>
                 </div>
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="mt-2 flex flex-wrap gap-2">
                   {colors.map((c, i) => {
                     const [label, hex] = c.includes('|')
                       ? (c.split('|') as [string, string])
@@ -522,10 +494,10 @@ export default function ProductModal({
                     return (
                       <span
                         key={i}
-                        className="inline-flex items-center gap-2 px-2 text-sm border rounded-full theme-border"
+                        className="theme-border inline-flex items-center gap-2 rounded-full border px-2 text-sm"
                       >
                         <span
-                          className="inline-block w-3 h-3 border rounded-full"
+                          className="inline-block h-3 w-3 rounded-full border"
                           style={{ backgroundColor: hex }}
                         />{' '}
                         {label}
@@ -563,18 +535,18 @@ export default function ProductModal({
                 type="button"
                 onClick={onClose}
                 disabled={createLoading || updateLoading}
-                className="px-4 py-2 rounded btn-ghost disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-ghost rounded px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={createLoading || updateLoading}
-                className="px-4 py-2 rounded btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-primary rounded px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {createLoading || updateLoading ? (
                   <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white rounded-full animate-spin border-t-transparent" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     {isEdit ? 'Updating...' : 'Creating...'}
                   </span>
                 ) : isEdit ? (

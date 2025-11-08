@@ -2,6 +2,8 @@ import { useQuery } from '@apollo/client';
 import { useParams, Link } from 'react-router-dom';
 import Spinner from '../../components/ui/Spinner';
 import { GET_ORDER } from '../../graphql/orders';
+import { formatDate } from '../../utils/date';
+import { formatCurrency } from '../../utils/currency';
 
 export default function CustomerOrderDetailsPage() {
   const { id } = useParams();
@@ -12,30 +14,30 @@ export default function CustomerOrderDetailsPage() {
     pending: 'bg-yellow-50 border-yellow-200 text-yellow-800',
     confirmed: 'bg-blue-50 border-blue-200 text-blue-800',
     processing: 'bg-amber-50 border-amber-200 text-amber-800',
-    shipped: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+    shipped: 'bg-gray-50 border-gray-200 text-gray-800',
     delivered: 'bg-green-50 border-green-200 text-green-800',
     cancelled: 'bg-red-50 border-red-200 text-red-800',
   };
 
   return (
-    <div className="space-y-6">
+    <div className="px-4 py-10 space-y-6 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="theme-fg text-2xl font-semibold">Order Details</h1>
+          <h1 className="text-2xl font-semibold theme-fg">Order Details</h1>
           <p className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
             Review your purchase information and status
           </p>
         </div>
         <Link
           to="/orders"
-          className="theme-border text-brand hover:bg-brand-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-white transition-colors sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
+          className="inline-flex items-center justify-center w-10 h-10 transition-colors bg-white border rounded-lg theme-border text-brand hover:bg-brand-50 sm:h-9 sm:w-auto sm:gap-2 sm:px-3"
           title="Back to Orders"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="h-4 w-4"
+            className="w-4 h-4"
           >
             <path
               fillRule="evenodd"
@@ -53,14 +55,14 @@ export default function CustomerOrderDetailsPage() {
         </div>
       ) : !order ? (
         <div
-          className="theme-card theme-border rounded-lg border p-6 text-sm"
+          className="p-6 text-sm border rounded-lg theme-card theme-border"
           style={{ color: 'rgb(var(--muted))' }}
         >
           Order not found.
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="theme-card theme-border rounded-lg border p-6">
+          <div className="p-6 border rounded-lg theme-card theme-border">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1 text-sm">
                 <div>
@@ -68,12 +70,14 @@ export default function CustomerOrderDetailsPage() {
                     className="mr-2 text-xs"
                     style={{ color: 'rgb(var(--muted))' }}
                   >
-                    Order ID
+                    Order No
                   </span>
-                  <span className="font-mono">{order._id}</span>
+                  <span className="font-mono">
+                    {order.orderNumber || order._id}
+                  </span>
                 </div>
                 <div className="text-xs" style={{ color: 'rgb(var(--muted))' }}>
-                  Placed on {new Date(order.createdAt).toLocaleString()}
+                  Placed on {formatDate(order.createdAt)}
                 </div>
               </div>
               <span
@@ -85,12 +89,12 @@ export default function CustomerOrderDetailsPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="theme-card theme-border rounded-lg border p-6 md:col-span-2">
+            <div className="p-6 border rounded-lg theme-card theme-border md:col-span-2">
               <div className="mb-2 font-medium">Items</div>
 
               {/* Desktop Table View */}
               <div className="hidden md:block">
-                <div className="theme-border overflow-hidden rounded-md border">
+                <div className="overflow-hidden border rounded-md theme-border">
                   <table className="w-full text-sm">
                     <thead className="table-head">
                       <tr className="text-left">
@@ -101,16 +105,16 @@ export default function CustomerOrderDetailsPage() {
                         <th className="px-4 py-3">Total</th>
                       </tr>
                     </thead>
-                    <tbody className="theme-border divide-y">
+                    <tbody className="divide-y theme-border">
                       {order.items?.map((it: any, idx: number) => (
                         <tr key={idx}>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 overflow-hidden rounded bg-gray-100">
+                              <div className="w-10 h-10 overflow-hidden bg-gray-100 rounded">
                                 {it.image && (
                                   <img
                                     src={it.image}
-                                    className="h-full w-full object-cover"
+                                    className="object-cover w-full h-full"
                                   />
                                 )}
                               </div>
@@ -131,20 +135,19 @@ export default function CustomerOrderDetailsPage() {
                           </td>
                           <td className="px-4 py-3">{it.quantity}</td>
                           <td className="px-4 py-3">
-                            ₦{Number(it.price ?? 0).toLocaleString()}
+                            {formatCurrency(it.price ?? 0)}
                           </td>
                           <td className="px-4 py-3 font-semibold">
-                            ₦
-                            {Number(
+                            {formatCurrency(
                               (it.price ?? 0) * (it.quantity ?? 0),
-                            ).toLocaleString()}
+                            )}
                           </td>
                         </tr>
                       ))}
                       {(!order.items || order.items.length === 0) && (
                         <tr>
                           <td
-                            className="py-6 text-center text-sm"
+                            className="py-6 text-sm text-center"
                             colSpan={5}
                             style={{ color: 'rgb(var(--muted))' }}
                           >
@@ -161,7 +164,7 @@ export default function CustomerOrderDetailsPage() {
               <div className="-mx-4 md:hidden">
                 {!order.items || order.items.length === 0 ? (
                   <div
-                    className="py-6 text-center text-sm"
+                    className="py-6 text-sm text-center"
                     style={{ color: 'rgb(var(--muted))' }}
                   >
                     No items
@@ -171,18 +174,18 @@ export default function CustomerOrderDetailsPage() {
                     {order.items.map((it: any, idx: number) => (
                       <div
                         key={idx}
-                        className="theme-border rounded-lg border p-4"
+                        className="p-4 border rounded-lg theme-border"
                       >
-                        <div className="mb-3 flex items-start gap-3">
-                          <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="flex-shrink-0 w-16 h-16 overflow-hidden bg-gray-100 rounded">
                             {it.image && (
                               <img
                                 src={it.image}
-                                className="h-full w-full object-cover"
+                                className="object-cover w-full h-full"
                               />
                             )}
                           </div>
-                          <div className="min-w-0 flex-1">
+                          <div className="flex-1 min-w-0">
                             <div className="mb-1 text-sm font-medium">
                               {it.name}
                             </div>
@@ -211,7 +214,7 @@ export default function CustomerOrderDetailsPage() {
                               Price
                             </div>
                             <div className="font-medium">
-                              ₦{Number(it.price ?? 0).toLocaleString()}
+                              {formatCurrency(it.price ?? 0)}
                             </div>
                           </div>
                           <div>
@@ -219,10 +222,9 @@ export default function CustomerOrderDetailsPage() {
                               Total
                             </div>
                             <div className="font-semibold">
-                              ₦
-                              {Number(
+                              {formatCurrency(
                                 (it.price ?? 0) * (it.quantity ?? 0),
-                              ).toLocaleString()}
+                              )}
                             </div>
                           </div>
                         </div>
@@ -234,7 +236,7 @@ export default function CustomerOrderDetailsPage() {
             </div>
 
             <div className="space-y-6">
-              <div className="theme-card theme-border rounded-lg border p-6 text-sm">
+              <div className="p-6 text-sm border rounded-lg theme-card theme-border">
                 <div className="mb-2 font-medium">Shipping</div>
                 <div>
                   {order.firstName} {order.lastName}
@@ -251,12 +253,12 @@ export default function CustomerOrderDetailsPage() {
                 </div>
               </div>
 
-              <div className="theme-card theme-border rounded-lg border p-6 text-sm">
+              <div className="p-6 text-sm border rounded-lg theme-card theme-border">
                 <div className="mb-2 font-medium">Payment</div>
                 <div className="capitalize">
                   {order.paymentMethod?.replace('_', ' ')}
                 </div>
-                <div className="mt-1 flex items-center gap-2 text-xs">
+                <div className="flex items-center gap-2 mt-1 text-xs">
                   <span>Status:</span>
                   <span
                     className={`inline-flex items-center rounded-full border px-2 py-1 ${statusClasses[order.status] ?? 'theme-border'}`}
@@ -266,23 +268,18 @@ export default function CustomerOrderDetailsPage() {
                 </div>
               </div>
 
-              <div className="theme-card theme-border rounded-lg border p-6 text-sm">
+              <div className="p-6 text-sm border rounded-lg theme-card theme-border">
                 <div className="mb-1">
                   Subtotal:{' '}
                   <span className="float-right">
-                    ₦{Number(order.subtotal ?? 0).toLocaleString()}
+                    {formatCurrency(order.subtotal ?? 0)}
                   </span>
                 </div>
-                <div className="mb-1">
-                  Tax:{' '}
-                  <span className="float-right">
-                    ₦{Number(order.tax ?? 0).toLocaleString()}
-                  </span>
-                </div>
-                <div className="mt-2 border-t pt-2 text-lg font-semibold">
+                
+                <div className="pt-2 mt-2 text-lg font-semibold border-t">
                   Total
                   <span className="float-right">
-                    ₦{Number(order.total ?? 0).toLocaleString()}
+                    {formatCurrency(order.total ?? 0)}
                   </span>
                 </div>
               </div>

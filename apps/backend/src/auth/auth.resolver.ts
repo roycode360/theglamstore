@@ -34,6 +34,8 @@ export class AuthResolver {
     return {
       _id: String(existingUser._id ?? ''),
       email: String(existingUser.email ?? ''),
+      fullName: String(existingUser.fullName ?? ''),
+      avatar: String(existingUser.avatar ?? ''),
       role: existingUser.role as AccountRole,
       emailVerified: Boolean(existingUser.emailVerified),
       createdAt: existingUser.createdAt,

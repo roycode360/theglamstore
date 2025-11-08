@@ -57,7 +57,6 @@ export class EmailService {
       email: string;
       firstName: string;
       subtotal: number;
-      tax: number;
       total: number;
       paymentMethod: string;
       address1: string;
@@ -178,10 +177,7 @@ export class EmailService {
                 <td style="padding:6px 0;color:${mutedColor}">Subtotal</td>
                 <td style="padding:6px 0;color:${mutedColor};text-align:right">${currency(order.subtotal)}</td>
               </tr>
-              <tr>
-                <td style="padding:6px 0;color:${mutedColor}">Tax</td>
-                <td style="padding:6px 0;color:${mutedColor};text-align:right">${currency(order.tax)}</td>
-              </tr>
+              
               <tr>
                 <td style="padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">Total</td>
                 <td style="padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800;text-align:right">${currency(order.total)}</td>
@@ -215,7 +211,6 @@ export class EmailService {
     city: string;
     state: string;
     subtotal: number;
-    tax: number;
     total: number;
     paymentMethod: string;
     transferProofUrl?: string;
@@ -308,10 +303,7 @@ export class EmailService {
                 <td style="padding:6px 0;color:${mutedColor}">Subtotal</td>
                 <td style="padding:6px 0;color:${mutedColor};text-align:right">${currency(order.subtotal)}</td>
               </tr>
-              <tr>
-                <td style="padding:6px 0;color:${mutedColor}">Tax</td>
-                <td style="padding:6px 0;color:${mutedColor};text-align:right">${currency(order.tax)}</td>
-              </tr>
+              
               <tr>
                 <td style="padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800">Total</td>
                 <td style="padding:8px 0;border-top:1px solid ${border};margin-top:6px;font-weight:800;text-align:right">${currency(order.total)}</td>

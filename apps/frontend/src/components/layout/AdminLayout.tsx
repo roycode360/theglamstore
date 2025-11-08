@@ -32,7 +32,7 @@ export default function AdminLayout() {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="h-5 w-5"
+          className="w-5 h-5"
         >
           <rect x="3" y="3" width="7" height="7" />
           <rect x="14" y="3" width="7" height="7" />
@@ -52,7 +52,7 @@ export default function AdminLayout() {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="h-5 w-5"
+          className="w-5 h-5"
         >
           <path d="M3 6l9-4 9 4v8l-9 4-9-4V6z" />
           <path d="M3 6l9 4 9-4" />
@@ -71,7 +71,7 @@ export default function AdminLayout() {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="h-5 w-5"
+          className="w-5 h-5"
         >
           <path d="M4 6h16" />
           <path d="M4 12h16" />
@@ -89,7 +89,7 @@ export default function AdminLayout() {
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
-          className="h-5 w-5"
+          className="w-5 h-5"
         >
           <path d="M3 6h2l2.4 9.6A2 2 0 0 0 9.35 17H17a2 2 0 0 0 1.94-1.52L20.5 9H6" />
           <circle cx="9" cy="20" r="1" />
@@ -97,15 +97,50 @@ export default function AdminLayout() {
         </svg>
       ),
     },
+    {
+      to: '/admin/analytics',
+      label: 'Analytics',
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="w-5 h-5"
+        >
+          <path d="M3 3v18h18" />
+          <path d="M7 12l4-4 4 4 6-6" />
+          <path d="M21 12h-6v6" />
+        </svg>
+      ),
+    },
+    {
+      to: '/admin/settings',
+      label: 'Settings',
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="w-5 h-5"
+        >
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.06A1.65 1.65 0 0 0 10 4.11V4a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.06a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.06A1.65 1.65 0 0 0 20 12.91h.09a2 2 0 1 1 0 4H20a1.65 1.65 0 0 0-.6-.09 1.65 1.65 0 0 0-.63.18z" />
+        </svg>
+      ),
+    },
   ];
 
   return (
     <div className="theme-bg theme-fg">
-      <main className="mx-auto max-w-7xl px-2 py-8 sm:px-4">
+      <main className="px-2 py-8 mx-auto max-w-7xl sm:px-4">
         <div className="mb-6">
           <h1 className="text-2xl font-semibold">Admin</h1>
-          <div className="mt-4 w-full sm:inline-block sm:w-auto">
-            <div className="theme-border flex items-center justify-between gap-1 rounded-md border bg-white p-1 sm:justify-start sm:gap-2">
+          <div className="w-full mt-4 sm:inline-block sm:w-auto">
+            <div className="flex items-center justify-between gap-1 p-1 bg-white border rounded-md theme-border sm:justify-start sm:gap-2">
               {tabs.map((t) => (
                 <NavLink
                   key={t.to}
@@ -122,7 +157,7 @@ export default function AdminLayout() {
                     {/* Show badge for orders tab when there are pending orders */}
                     {t.to === '/admin/orders' && pendingOrdersCount > 0 && (
                       <span
-                        className="absolute -right-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-full border text-xs font-semibold"
+                        className="absolute inline-flex items-center justify-center w-5 h-5 text-xs font-semibold border rounded-full -right-2 -top-2"
                         style={{
                           backgroundColor:
                             location.pathname === '/admin/orders'

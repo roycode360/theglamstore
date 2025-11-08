@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UserDocument, UserModel } from './schemas/user.schema';
 import { User } from './schemas/user.schema';
+import { AccountRole } from 'src/types';
 
 @Injectable()
 export class UsersService {
@@ -32,11 +33,19 @@ export class UsersService {
     >();
   }
 
-  async createUser(email: string, role: 'customer' | 'admin'): Promise<User> {
+  async createUser(
+    email: string,
+    role: AccountRole,
+    emailVerified: boolean,
+    fullName: string,
+    avatar?: string,
+  ): Promise<User> {
     const created = await this.userModel.create({
       email,
       role,
-      emailVerified: false,
+      emailVerified,
+      avatar,
+      fullName,
     });
     return created.toObject() as unknown as User;
   }

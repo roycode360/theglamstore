@@ -233,7 +233,7 @@ export default function CategoryModal({
                   <button
                     type="button"
                     onClick={() => setImage('')}
-                    className="absolute w-6 h-6 text-xs text-white bg-red-500 rounded-full -right-2 -top-2"
+                    className="absolute w-6 h-6 text-xs text-white bg-gray-900 rounded-full -right-2 -top-2"
                     aria-label="remove image"
                     title="Remove"
                   >

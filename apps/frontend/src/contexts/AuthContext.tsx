@@ -8,7 +8,12 @@ import { LIST_ORDERS } from '../graphql/orders';
 interface TAuthUser {
   _id: string;
   email: string;
+  fullName: string;
   role: 'customer' | 'admin';
+  avatar?: string;
+  emailVerified: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 interface TAuthContext {
@@ -237,6 +242,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Handle Auth0 authentication state changes (only when state actually changes)
   useEffect(() => {
     const handleAuth0StateChange = async () => {
+      // Prevent duplicate exchanges while a login flow is already in progress
+      if (isLoginProcess) return;
       // Only handle state changes, not initial load
       if (isAuth0Loading) {
         setLoading(true);
@@ -267,6 +274,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             });
 
             if (auth0Token) {
+              // Guard again in case another exchange just finished
+              if (localStorage.getItem(AccessToken.KEY)) {
+                setLoading(false);
+                return;
+              }
               const { data } = await exchangeToken({
                 variables: { auth0Token },
               });

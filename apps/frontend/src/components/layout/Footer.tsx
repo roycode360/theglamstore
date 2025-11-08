@@ -1,23 +1,15 @@
 import { Link } from 'react-router-dom';
+import { brandLogo } from 'src/assets/images';
 
 export const Footer = () => {
   return (
-    <footer className="my-16 border-t bg-white">
-      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-8 px-4 py-10 sm:px-6 md:grid-cols-3">
+    <footer className="py-16 bg-white border-t">
+      <div className="grid grid-cols-1 gap-8 px-4 py-10 mx-auto max-w-7xl sm:px-6 md:grid-cols-3">
         <div>
-          <div className="mb-2 flex items-center gap-2">
-            <span
-              className="inline-flex h-7 w-7 items-center justify-center rounded-full"
-              style={{
-                backgroundColor: 'rgb(var(--brand-200))',
-                color: 'rgb(var(--brand-800))',
-              }}
-            >
-              👜
-            </span>
-            <span className="font-semibold">TheGlamStore</span>
+          <div className="flex items-center gap-2 mb-2">
+            <img src={brandLogo} alt="TheGlamStore" className="w-52" />
           </div>
-          <p className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
+          <p className="mt-5 text-sm" style={{ color: 'rgb(var(--muted))' }}>
             Discover the finest fashion pieces curated for the modern lifestyle.
             Quality craftsmanship meets contemporary design.
           </p>
@@ -42,6 +34,12 @@ export const Footer = () => {
             <li>
               <Link to="/customer-service">Customer Service</Link>
             </li>
+            <li>
+              <Link to="/terms-of-service">Terms of Service</Link>
+            </li>
+            <li>
+              <Link to="/privacy-policy">Privacy Policy</Link>
+            </li>
             {/* <li>
               <a href="#">Size Guide</a>
             </li> */}
@@ -52,7 +50,7 @@ export const Footer = () => {
         </div>
       </div>
       <div
-        className="mx-auto mt-7 max-w-7xl px-4 pb-10 text-center text-xs sm:px-6"
+        className="px-4 pb-10 mx-auto text-xs text-center mt-7 max-w-7xl sm:px-6"
         style={{ color: 'rgb(var(--muted))' }}
       >
         © 2025 TheGlamStore. All rights reserved.

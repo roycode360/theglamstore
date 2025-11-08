@@ -15,6 +15,7 @@ type ProductDocLike = {
   category?: string;
   price?: number;
   salePrice?: number | null;
+  costPrice?: number | null;
   sku?: string;
   stockQuantity?: number | null;
   description?: string;
@@ -39,10 +40,11 @@ export class ProductsService {
 
   async listFeatured(): Promise<Product[]> {
     const docs = await this.productModel
-      .find({ featured: true, active: { $ne: false } })
+      .find({ featured: true })
       .sort({ createdAt: -1 })
       .limit(24)
       .lean();
+
     return docs.map(this.mapDocToGraphQL);
   }
 
@@ -53,12 +55,13 @@ export class ProductsService {
   ): Promise<Product[]> {
     const raw = String(category).trim();
     const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const pattern = `^${escaped.replace(/[-\s]+/g, '[-\\\s]+')}$`;
-    const filter: Record<string, unknown> = {
+    // Replace any run of whitespace/dashes with a character-class pattern "[\s-]+"
+    const pattern = `^${escaped.replace(new RegExp('[\\s-]+', 'g'), '[\\s-]+')}$`;
+    const filter: Record<string, any> = {
       category: new RegExp(pattern, 'i'),
       active: { $ne: false },
     };
-    if (excludeId) (filter as any)._id = { $ne: excludeId };
+    if (excludeId) filter._id = { $ne: excludeId };
     const docs = await this.productModel
       .find(filter)
       .sort({ createdAt: -1 })
@@ -85,23 +88,21 @@ export class ProductsService {
     },
   ) {
     const skip = Math.max(0, (page - 1) * pageSize);
-    const filter: Record<string, unknown> & {
-      $or?: Record<string, unknown>[];
-    } = {};
+    const filter: Record<string, any> & { $or?: Record<string, any>[] } = {};
     if (opts?.search) {
       const rx = new RegExp(opts.search, 'i');
       filter.$or = [{ name: rx }, { brand: rx }, { category: rx }];
     }
-    if (opts?.category) {
+    if (typeof opts?.category === 'string' && opts.category.trim()) {
       const raw = String(opts.category).trim();
-      const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const pattern = `^${escaped.replace(/[-\s]+/g, '[-\\s]+')}$`;
+      const escaped = raw.replace(/[.*+?^${}|()[\]\\]/g, '\\$&');
+      const pattern = `^${escaped.replace(new RegExp('[\\s-]+', 'g'), '[\\s-]+')}$`;
       filter.category = new RegExp(pattern, 'i');
     }
-    if (opts?.brand) {
+    if (typeof opts?.brand === 'string' && opts.brand.trim()) {
       const raw = String(opts.brand).trim();
-      const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const pattern = `^${escaped.replace(/[-\s]+/g, '[-\\s]+')}$`;
+      const escaped = raw.replace(/[.*+?^${}|()[\]\\]/g, '\\$&');
+      const pattern = `^${escaped.replace(new RegExp('[\\s-]+', 'g'), '[\\s-]+')}$`;
       filter.brand = new RegExp(pattern, 'i');
     }
     if (
@@ -120,13 +121,13 @@ export class ProductsService {
     if (typeof opts?.active === 'boolean') filter.active = opts.active;
     // Availability should be an AND condition, not OR with other filters
     if (opts?.inStockOnly) {
-      (filter as any).stockQuantity = { $gt: 0 };
+      filter.stockQuantity = { $gt: 0 };
     } else if (opts?.outOfStock) {
-      (filter as any).stockQuantity = { $lte: 0 };
+      filter.stockQuantity = { $lte: 0 };
     }
     // On sale can also be an AND, so combine directly
     if (opts?.onSaleOnly) {
-      (filter as any).salePrice = { $ne: null };
+      filter.salePrice = { $ne: null };
     }
 
     const sort: Record<string, 1 | -1> = {};
@@ -181,6 +182,7 @@ export class ProductsService {
     category: doc.category ?? 'others',
     price: doc.price ?? 0,
     salePrice: doc.salePrice ?? null,
+    costPrice: doc.costPrice ?? null,
     sku: doc.sku ?? undefined,
     stockQuantity: doc.stockQuantity ?? null,
     description: doc.description ?? undefined,
