@@ -239,6 +239,12 @@ type LoginResponse {
   user: User!
 }
 
+input ModerateReviewInput {
+  action: String!
+  reason: String
+  reviewId: ID!
+}
+
 type Mutation {
   addToCart(input: AddToCartInput!): CartItemType!
   addToWishlist(productId: String!, selectedColor: String, selectedSize: String): Boolean!
@@ -254,11 +260,13 @@ type Mutation {
   deleteProduct(id: ID!): Boolean!
   editOrderItems(input: EditOrderItemsInput!): Order
   loginWithAuth0(auth0Token: String!): LoginResponse!
+  moderateReview(input: ModerateReviewInput!): Review!
   recordBankTransferPayment(input: RecordPaymentInput!): Order
   removeFromCart(input: RemoveFromCartInput!): Boolean!
   removeFromWishlist(productId: String!, selectedColor: String, selectedSize: String): Boolean!
   sendContactMessage(email: String!, message: String!, name: String!, subject: String): Boolean!
   setCouponActive(id: ID!, isActive: Boolean!): Coupon
+  submitProductReview(input: SubmitReviewInput!): Review!
   updateAdminOrder(input: UpdateAdminOrderInput!): Order
   updateCartItem(input: UpdateCartItemInput!): CartItemType!
   updateCategory(id: ID!, input: UpdateCategoryInput!): Category
@@ -327,6 +335,8 @@ type Product {
   images: [String!]!
   name: String!
   price: Float!
+  reviewAverage: Float
+  reviewCount: Float!
   salePrice: Float
   sizes: [String!]!
   sku: String
@@ -363,6 +373,7 @@ type Query {
   getProduct(id: ID!): Product
   getProfitCostComparison(period: String): ProfitCostComparison!
   getRevenueTrend(period: String): RevenueTrend!
+  getReviewEligibility(productId: String!): ReviewEligibility!
   getTopSellingProducts(limit: Int): TopSellingProducts!
   health: String!
   listCategories: [Category!]!
@@ -370,6 +381,8 @@ type Query {
   listFeaturedProducts: [Product!]!
   listOrders: [Order!]!
   listOrdersPage(email: String, page: Int!, pageSize: Int!, status: String): OrderPage!
+  listPendingReviews(limit: Int): [Review!]!
+  listProductReviews(productId: String!): [Review!]!
   listProducts: [Product!]!
   listProductsByCategory(category: String!, excludeId: ID, limit: Int): [Product!]!
   listProductsPage(active: Boolean, brand: String, category: String, inStockOnly: Boolean, maxPrice: Float, minPrice: Float, onSaleOnly: Boolean, outOfStock: Boolean, page: Int, pageSize: Int, search: String, sortBy: String, sortDir: String): ProductPage!
@@ -400,9 +413,53 @@ type RevenueTrendPoint {
   revenue: Float!
 }
 
+type Review {
+  _id: ID!
+  createdAt: DateTime!
+  customerAvatarUrl: String
+  customerEmail: String!
+  customerId: String!
+  customerName: String!
+  message: String!
+  moderatedAt: DateTime
+  moderatedBy: String
+  orderId: String!
+  orderNumber: String
+  productId: String!
+  productImage: String
+  productName: String!
+  productSlug: String
+  rating: Float!
+  rejectionReason: String
+  status: ReviewStatus!
+  updatedAt: DateTime!
+}
+
+type ReviewEligibility {
+  canReview: Boolean!
+  existingReview: Review
+  hasPurchased: Boolean!
+}
+
+enum ReviewStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
 type SalesPerDay {
   day: Int!
   revenue: Float!
+}
+
+input SubmitReviewInput {
+  avatarUrl: String
+  displayName: String!
+  message: String!
+  orderId: ID
+  orderNumber: String
+  productId: ID!
+  rating: Int!
 }
 
 type TopSellingProduct {

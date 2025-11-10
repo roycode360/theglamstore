@@ -34,6 +34,8 @@ export const GET_PRODUCT = gql`
       featured
       slug
       sku
+      reviewCount
+      reviewAverage
     }
   }
 `;

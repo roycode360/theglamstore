@@ -1,23 +1,49 @@
-import { useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { Link, useSearchParams } from 'react-router-dom';
 import Spinner from '../components/ui/Spinner';
 import { formatCurrency } from '../utils/currency';
-import { useMemo, useState } from 'react';
+import {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useToast } from '../components/ui/Toast';
-import { TProduct } from 'src/types';
-import {
-  LIST_PRODUCTS_BY_CATEGORY,
-  GET_PRODUCT,
-} from 'src/graphql/products';
+import { TProduct, TReview } from 'src/types';
+import { LIST_PRODUCTS_BY_CATEGORY, GET_PRODUCT } from 'src/graphql/products';
 import { GET_CART_ITEMS } from '../graphql/cart';
 import ProductCard from '../components/ui/ProductCard';
 import { LIST_CATEGORIES } from '../graphql/categories';
+import {
+  LIST_PRODUCT_REVIEWS,
+  GET_REVIEW_ELIGIBILITY,
+  SUBMIT_PRODUCT_REVIEW,
+} from '../graphql/reviews';
+import { useAuth } from '../contexts/AuthContext';
+import { uploadToCloudinary } from '../utils/cloudinary';
+import { formatDateOnly } from '../utils/date';
+
+type ReviewEligibilityState = {
+  hasPurchased: boolean;
+  canReview: boolean;
+  existingReview?: {
+    _id: string;
+    rating: number;
+    message: string;
+    status: 'pending' | 'approved' | 'rejected';
+    createdAt: string;
+  } | null;
+};
 
 export default function ProductDetails() {
   const [params] = useSearchParams();
   const id = params.get('id') ?? '';
+  const { user, login } = useAuth();
 
   const { data, loading } = useQuery<{ getProduct: TProduct }>(GET_PRODUCT, {
     variables: { id },
@@ -38,6 +64,74 @@ export default function ProductDetails() {
   });
   const { data: cartData } = useQuery(GET_CART_ITEMS);
   const { data: categoriesData } = useQuery(LIST_CATEGORIES);
+  const {
+    data: reviewsData,
+    loading: reviewsLoading,
+    refetch: refetchReviews,
+  } = useQuery<{ listProductReviews: TReview[] }>(LIST_PRODUCT_REVIEWS, {
+    variables: { productId: id },
+    skip: !id,
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-first',
+  });
+  const [
+    loadEligibility,
+    { data: eligibilityData, loading: eligibilityLoading },
+  ] = useLazyQuery<{ getReviewEligibility: ReviewEligibilityState }>(
+    GET_REVIEW_ELIGIBILITY,
+    {
+      fetchPolicy: 'network-only',
+    },
+  );
+  const refreshEligibility = useCallback(async () => {
+    if (!id || !user?.email) return;
+    await loadEligibility({
+      variables: { productId: id },
+    });
+  }, [id, loadEligibility, user?.email]);
+
+  useEffect(() => {
+    void refreshEligibility();
+  }, [refreshEligibility]);
+  const eligibility = eligibilityData?.getReviewEligibility ?? null;
+  const existingReview = eligibility?.existingReview ?? null;
+  const reviews = (reviewsData?.listProductReviews ?? []) as TReview[];
+
+  const [submitProductReview, { loading: submittingReview }] = useMutation(
+    SUBMIT_PRODUCT_REVIEW,
+  );
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [displayName, setDisplayName] = useState(user?.fullName ?? '');
+  const [rating, setRating] = useState<number>(5);
+  const [message, setMessage] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState<string>(user?.avatar ?? '');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const reviewFormRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (user?.fullName) {
+      setDisplayName((prev) => (prev ? prev : user.fullName));
+    }
+    if (user?.avatar) {
+      setAvatarUrl((prev) => (prev ? prev : user.avatar || ''));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!eligibility?.canReview) {
+      setShowReviewForm(false);
+    }
+  }, [eligibility?.canReview]);
+
+  useEffect(() => {
+    if (showReviewForm && reviewFormRef.current) {
+      reviewFormRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }, [showReviewForm]);
 
   // Compute color options from raw data unconditionally to keep hook order stable
   const colorOptions = useMemo(() => {
@@ -52,6 +146,33 @@ export default function ProductDetails() {
   }, [data]);
 
   const p = data?.getProduct ?? null;
+  const reviewsCount = reviews.length;
+  const averageRating =
+    reviewsCount > 0
+      ? reviews.reduce((sum, review) => sum + (review.rating || 0), 0) /
+        reviewsCount
+      : null;
+  const roundedAverage =
+    typeof averageRating === 'number'
+      ? Math.round(averageRating * 10) / 10
+      : null;
+  const canShowPrompt = Boolean(
+    user && eligibility?.hasPurchased && eligibility?.canReview,
+  );
+  const hasExistingReview = Boolean(existingReview);
+  const reviewStatus = existingReview?.status ?? null;
+  const pendingReviewForViewer =
+    existingReview && existingReview.status.toLowerCase() === 'pending'
+      ? {
+          _id: existingReview._id,
+          customerName: user?.fullName || user?.email || 'You',
+          customerAvatarUrl: avatarUrl || undefined,
+          rating: existingReview.rating,
+          message: existingReview.message,
+          createdAt: existingReview.createdAt,
+        }
+      : null;
+
   const suggestions = useMemo(() => {
     const items = (relatedData?.listProductsByCategory ?? []) as TProduct[];
     return items.slice(0, 3);
@@ -108,7 +229,7 @@ export default function ProductDetails() {
   if (!p) {
     return (
       <div
-        className="theme-border flex items-center justify-center rounded-lg border bg-white py-16 text-sm"
+        className="flex items-center justify-center py-16 text-sm bg-white border rounded-lg theme-border"
         style={{ color: 'rgb(var(--muted))' }}
       >
         Product not found
@@ -162,24 +283,119 @@ export default function ProductDetails() {
     });
   };
 
+  const renderStaticStars = (value: number) => {
+    const normalized = Math.max(0, Math.min(5, value));
+    return (
+      <div className="flex items-center gap-1" aria-hidden="true">
+        {Array.from({ length: 5 }).map((_, idx) => {
+          const active = idx + 1 <= Math.round(normalized);
+          return (
+            <svg
+              key={idx}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              className="w-4 h-4"
+              fill={active ? '#facc15' : 'none'}
+              stroke="#facc15"
+              strokeWidth="1.5"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.13 3.466a1 1 0 00.95.69h3.641c.969 0 1.371 1.24.588 1.81l-2.945 2.14a1 1 0 00-.364 1.118l1.13 3.466c.3.92-.755 1.688-1.54 1.118l-2.945-2.14a1 1 0 00-1.176 0l-2.945 2.14c-.784.57-1.838-.198-1.539-1.118l1.13-3.466a1 1 0 00-.364-1.118l-2.945-2.14c-.783-.57-.38-1.81.588-1.81h3.642a1 1 0 00.95-.69l1.13-3.466z" />
+            </svg>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      setAvatarUploading(true);
+      const { secure_url } = await uploadToCloudinary(file);
+      setAvatarUrl(secure_url);
+      showToast('Avatar uploaded', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('Failed to upload avatar', 'error');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatarUrl('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSubmitReview = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!p) return;
+
+    const trimmedName = displayName.trim();
+    const trimmedMessage = message.trim();
+
+    if (!trimmedName) {
+      showToast('Please enter your name', 'warning');
+      return;
+    }
+    if (trimmedMessage.length < 10) {
+      showToast(
+        'Share a few words about your experience (min 10 characters)',
+        'warning',
+      );
+      return;
+    }
+
+    try {
+      await submitProductReview({
+        variables: {
+          input: {
+            productId: p._id,
+            displayName: trimmedName,
+            rating,
+            message: trimmedMessage,
+            avatarUrl: avatarUrl || undefined,
+          },
+        },
+      });
+      showToast('Review submitted for moderation', 'success');
+      setMessage('');
+      setRating(5);
+      setShowReviewForm(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      await Promise.allSettled([refetchReviews(), refreshEligibility()]);
+    } catch (error: any) {
+      const message =
+        error?.graphQLErrors?.[0]?.message ||
+        error?.message ||
+        'Unable to submit review. Please try again.';
+      showToast(message, 'error');
+    }
+  };
+
   return (
-    <div className="space-y-12 px-4 py-10 sm:px-6 lg:px-8">
+    <div className="px-4 py-10 space-y-12 sm:px-6 lg:px-8">
       {/* Top section */}
       <section className="grid grid-cols-1 gap-8 md:grid-cols-2">
         {/* Images */}
         <div>
           {/* Mobile Continue Shopping Button */}
-          <div className="mb-4 flex justify-end sm:hidden">
+          <div className="flex justify-end mb-4 sm:hidden">
             <Link
               to="/products"
-              className="theme-border text-brand hover:bg-brand-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-white transition-colors"
+              className="inline-flex items-center justify-center w-10 h-10 transition-colors bg-white border rounded-lg theme-border text-brand hover:bg-brand-50"
               title="Continue Shopping"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="h-4 w-4"
+                className="w-4 h-4"
               >
                 <path
                   fillRule="evenodd"
@@ -189,7 +405,7 @@ export default function ProductDetails() {
               </svg>
             </Link>
           </div>
-          <div className="mb-3 flex gap-2">
+          <div className="flex gap-2 mb-3">
             {(p.images ?? []).slice(0, 4).map((src: string, i: number) => (
               <button
                 key={i}
@@ -200,8 +416,8 @@ export default function ProductDetails() {
               >
                 {/* Thumbnail loading skeleton */}
                 {!thumbnailLoaded[i] && (
-                  <div className="absolute inset-0 animate-pulse bg-gray-200">
-                    <div className="mx-auto mt-5 h-4 w-4 animate-pulse rounded-full bg-gray-300"></div>
+                  <div className="absolute inset-0 bg-gray-200 animate-pulse">
+                    <div className="w-4 h-4 mx-auto mt-5 bg-gray-300 rounded-full animate-pulse"></div>
                   </div>
                 )}
                 {src && (
@@ -223,11 +439,11 @@ export default function ProductDetails() {
             {/* Enhanced loading skeleton */}
             {!imageLoaded && (
               <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
-                <div className="flex h-full flex-col items-center justify-center space-y-4">
-                  <div className="h-20 w-20 animate-pulse rounded-full bg-gray-300"></div>
+                <div className="flex flex-col items-center justify-center h-full space-y-4">
+                  <div className="w-20 h-20 bg-gray-300 rounded-full animate-pulse"></div>
                   <div className="space-y-2">
-                    <div className="h-3 w-32 animate-pulse rounded bg-gray-300"></div>
-                    <div className="h-2 w-24 animate-pulse rounded bg-gray-300"></div>
+                    <div className="w-32 h-3 bg-gray-300 rounded animate-pulse"></div>
+                    <div className="w-24 h-2 bg-gray-300 rounded animate-pulse"></div>
                   </div>
                 </div>
               </div>
@@ -261,7 +477,7 @@ export default function ProductDetails() {
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                   fill="currentColor"
-                  className="h-3 w-3"
+                  className="w-3 h-3"
                 >
                   <path
                     fillRule="evenodd"
@@ -306,7 +522,7 @@ export default function ProductDetails() {
             )}
           </div>
           <p
-            className="max-w-prose text-sm"
+            className="text-sm max-w-prose"
             style={{ color: 'rgb(var(--muted))' }}
           >
             {p.description ||
@@ -365,10 +581,10 @@ export default function ProductDetails() {
 
           {/* Quantity + CTA */}
           <div className="flex flex-wrap items-center gap-3">
-            <div className="theme-border inline-flex items-center rounded-md border">
+            <div className="inline-flex items-center border rounded-md theme-border">
               <button
                 onClick={() => setQty((n) => Math.max(1, n - 1))}
-                className="h-10 w-10"
+                className="w-10 h-10"
                 aria-label="Decrease quantity"
               >
                 −
@@ -393,7 +609,7 @@ export default function ProductDetails() {
                   }
                   setQty(next);
                 }}
-                className="h-10 w-10"
+                className="w-10 h-10"
                 aria-label="Increase quantity"
               >
                 +
@@ -406,7 +622,7 @@ export default function ProductDetails() {
               Add to Cart
             </button>
             <button
-              className="theme-border inline-flex h-10 w-10 items-center justify-center rounded-md border transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
+              className="inline-flex items-center justify-center w-10 h-10 transition-opacity border rounded-md theme-border hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
               aria-label="Wishlist"
               title="Wishlist"
               aria-pressed={!!wishlist.find((w: any) => w._id === p._id)}
@@ -431,7 +647,7 @@ export default function ProductDetails() {
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
-                    className="h-5 w-5"
+                    className="w-5 h-5"
                     fill={onList ? 'black' : 'none'}
                     stroke="black"
                     strokeWidth="1.5"
@@ -447,7 +663,7 @@ export default function ProductDetails() {
       </section>
 
       {/* Accordions */}
-      <section className="theme-border divide-y rounded-md border bg-white">
+      <section className="bg-white border divide-y rounded-md theme-border">
         {[
           {
             k: 'Full Description',
@@ -461,7 +677,7 @@ export default function ProductDetails() {
           { k: 'Returns', d: '30-day return policy.' },
         ].map((item, i) => (
           <details key={i} className="group">
-            <summary className="flex cursor-pointer items-center justify-between px-4 py-3">
+            <summary className="flex items-center justify-between px-4 py-3 cursor-pointer">
               <span className="font-medium">{item.k}</span>
               <span className="opacity-60">▾</span>
             </summary>
@@ -473,6 +689,278 @@ export default function ProductDetails() {
             </div>
           </details>
         ))}
+      </section>
+
+      {/* Reviews */}
+      <section className="p-6 space-y-6 bg-white border border-gray-200 rounded-md shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-extrabold tracking-tight">
+              Customer Reviews
+            </h2>
+            <p className="text-sm text-gray-500">
+              Hear from shoppers who purchased this item
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            {typeof averageRating === 'number' ? (
+              <>
+                {renderStaticStars(averageRating)}
+                <span className="text-sm font-semibold text-gray-700">
+                  {roundedAverage?.toFixed(1)}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm text-gray-500">Not yet rated</span>
+            )}
+            <span className="text-sm text-gray-500">
+              ({reviewsCount} review{reviewsCount === 1 ? '' : 's'})
+            </span>
+          </div>
+        </div>
+
+        {canShowPrompt && !showReviewForm && !hasExistingReview && (
+          <button
+            type="button"
+            onClick={() => setShowReviewForm(true)}
+            disabled={eligibilityLoading}
+            className="w-full px-4 py-3 text-sm font-medium text-left text-gray-700 transition border border-gray-300 border-dashed rounded-md bg-gray-50 hover:bg-white focus:outline-none focus:ring-2 focus:ring-black sm:w-auto"
+          >
+            You purchased this item — write a review
+          </button>
+        )}
+
+        {!user && reviewsCount === 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-gray-600 border border-gray-200 rounded-md bg-gray-50">
+            <span>
+              Purchase this item and sign in to share your experience with
+              others.
+            </span>
+            <button
+              type="button"
+              onClick={login}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 transition hover:bg-white"
+            >
+              Sign in
+            </button>
+          </div>
+        )}
+
+        {showReviewForm && (
+          <div ref={reviewFormRef}>
+            <form
+              onSubmit={handleSubmitReview}
+              className="p-4 space-y-4 bg-white border border-gray-200 rounded-md shadow-sm"
+            >
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Display name
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                  className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                  placeholder="Enter your name"
+                  autoComplete="name"
+                />
+              </div>
+
+              <div>
+                <span className="text-sm font-medium text-gray-700">
+                  Rating
+                </span>
+                <div className="flex items-center gap-2 mt-2">
+                  {Array.from({ length: 5 }).map((_, idx) => {
+                    const value = idx + 1;
+                    const active = value <= rating;
+                    return (
+                      <button
+                        type="button"
+                        key={value}
+                        onClick={() => setRating(value)}
+                        className="rounded focus:outline-none focus:ring-2 focus:ring-black"
+                        aria-label={`Rate ${value} star${value === 1 ? '' : 's'}`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          className="w-6 h-6 transition-colors"
+                          fill={active ? '#facc15' : 'none'}
+                          stroke="#facc15"
+                          strokeWidth="1.5"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.13 3.466a1 1 0 00.95.69h3.641c.969 0 1.371 1.24.588 1.81l-2.945 2.14a1 1 0 00-.364 1.118l1.13 3.466c.3.92-.755 1.688-1.54 1.118l-2.945-2.14a1 1 0 00-1.176 0l-2.945 2.14c-.784.57-1.838-.198-1.539-1.118l1.13-3.466a1 1 0 00-.364-1.118l-2.945-2.14c-.783-.57-.38-1.81.588-1.81h3.642a1 1 0 00.95-.69l1.13-3.466z" />
+                        </svg>
+                      </button>
+                    );
+                  })}
+                  <span className="text-sm text-gray-500">{rating} / 5</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Share your experience
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+                  placeholder="Tell us how the product fit, the quality, and anything future shoppers should know."
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Avatar (optional)
+                </label>
+                <div className="flex flex-wrap items-center gap-3 mt-2">
+                  <label className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-600 transition border border-gray-300 border-dashed rounded-md cursor-pointer hover:border-gray-400">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                    <span>Upload image</span>
+                  </label>
+                  {avatarUploading && (
+                    <span className="text-xs text-gray-500">
+                      Uploading avatar…
+                    </span>
+                  )}
+                  {avatarUrl && (
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={avatarUrl}
+                        alt="Avatar preview"
+                        className="object-cover w-12 h-12 rounded-full"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveAvatar}
+                        className="text-sm text-gray-500 transition hover:text-gray-800"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="submit"
+                  disabled={submittingReview || avatarUploading}
+                  className="btn-primary rounded-md px-5 py-2.5 disabled:opacity-60"
+                >
+                  {submittingReview ? 'Submitting…' : 'Submit review'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowReviewForm(false)}
+                  className="px-4 py-2 text-sm text-gray-600 transition border border-gray-200 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {pendingReviewForViewer && (
+            <div className="p-4 bg-white border rounded-md shadow-sm border-amber-100">
+              <div className="flex items-start gap-4">
+                <div className="flex items-center justify-center w-12 h-12 text-sm font-semibold rounded-full shrink-0 bg-amber-100 text-amber-700">
+                  {pendingReviewForViewer.customerAvatarUrl ? (
+                    <img
+                      src={pendingReviewForViewer.customerAvatarUrl}
+                      alt={`${pendingReviewForViewer.customerName} avatar`}
+                      className="object-cover w-full h-full rounded-full"
+                    />
+                  ) : (
+                    (
+                      pendingReviewForViewer.customerName?.[0] || 'Y'
+                    ).toUpperCase()
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold text-gray-900">
+                      {pendingReviewForViewer.customerName}
+                    </span>
+                    {renderStaticStars(pendingReviewForViewer.rating)}
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                      Awaiting moderation
+                    </span>
+                    {pendingReviewForViewer.createdAt && (
+                      <span className="text-xs text-gray-500">
+                        {formatDateOnly(pendingReviewForViewer.createdAt)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 whitespace-pre-line">
+                    {pendingReviewForViewer.message}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          {reviewsLoading ? (
+            <div className="py-6">
+              <Spinner label="Loading reviews" />
+            </div>
+          ) : reviews.length === 0 ? (
+            pendingReviewForViewer ? null : (
+              <p className="text-sm text-gray-500">
+                {user && eligibility?.hasPurchased
+                  ? 'No reviews yet — be the first to share your thoughts.'
+                  : 'No reviews yet. Only verified purchasers can leave reviews.'}
+              </p>
+            )
+          ) : (
+            <ul className="space-y-4">
+              {reviews.map((review) => (
+                <li
+                  key={review._id}
+                  className="p-4 bg-white border border-gray-100 rounded-md shadow-sm"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 text-sm font-semibold text-gray-600 bg-gray-100 rounded-full shrink-0">
+                      {review.customerAvatarUrl ? (
+                        <img
+                          src={review.customerAvatarUrl}
+                          alt={`${review.customerName} avatar`}
+                          className="object-cover w-full h-full rounded-full"
+                        />
+                      ) : (
+                        (review.customerName?.[0] || '?').toUpperCase()
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-gray-900">
+                          {review.customerName}
+                        </span>
+                        {renderStaticStars(review.rating)}
+                        <span className="text-xs text-gray-500">
+                          {formatDateOnly(review.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 whitespace-pre-line">
+                        {review.message}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
 
       {/* Suggestions */}

@@ -24,6 +24,8 @@ type ProductDocLike = {
   colors?: string[];
   featured?: boolean;
   active?: boolean;
+  reviewCount?: number;
+  reviewAverage?: number | null;
 };
 
 @Injectable()
@@ -191,5 +193,8 @@ export class ProductsService {
     colors: doc.colors ?? [],
     featured: !!doc.featured,
     active: !!doc.active,
+  reviewCount: doc.reviewCount ?? 0,
+  reviewAverage:
+    typeof doc.reviewAverage === 'number' ? doc.reviewAverage : null,
   });
 }

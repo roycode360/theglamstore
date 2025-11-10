@@ -332,4 +332,59 @@ export class EmailService {
       body: html,
     });
   }
+
+  async sendPendingReviewNotification(params: {
+    productName: string;
+    productId: string;
+    rating: number;
+    message: string;
+    customerName: string;
+    orderNumber?: string;
+  }): Promise<void> {
+    const toEmail = process.env.ADMIN_EMAIL_1 || '';
+    if (!toEmail) return;
+
+    const brandColor = '#e3b094';
+    const mutedColor = '#6b7280';
+    const border = '#e5e7eb';
+    const rating = Math.min(5, Math.max(1, Math.round(params.rating || 0)));
+    const stars = Array.from({ length: 5 })
+      .map((_, idx) => (idx < rating ? '★' : '☆'))
+      .join(' ');
+
+    const orderRef =
+      params.orderNumber && params.orderNumber.trim().length > 0
+        ? params.orderNumber.trim()
+        : '—';
+
+    const html = `
+      <div style="font-family:Inter,system-ui,sans-serif;background:#fff;color:#111;padding:24px">
+        <div style="font-weight:800;font-size:18px;margin-bottom:8px;">New Product Review Pending</div>
+        <div style="border:1px solid ${border};border-radius:12px;padding:20px">
+          <div style="font-weight:700;margin-bottom:4px">${params.productName}</div>
+          <div style="color:${mutedColor};font-size:13px;margin-bottom:12px">Order Reference: <span style="font-family:ui-monospace,Menlo,monospace">${orderRef}</span></div>
+
+          <div style="margin-bottom:12px">
+            <div style="font-size:24px;color:${brandColor};letter-spacing:4px">${stars}</div>
+            <div style="color:${mutedColor};font-size:12px">Submitted by ${params.customerName}</div>
+          </div>
+
+          <div style="padding:16px;border-radius:10px;background:#f9fafb;border:1px solid ${border};white-space:pre-wrap">${params.message}</div>
+
+          <a href="${process.env.ADMIN_APP_ORIGIN || 'https://admin.theglamstore.ng'}/admin/reviews/pending"
+             style="display:inline-block;margin-top:16px;background:${brandColor};color:#111;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">
+            Moderate reviews
+          </a>
+        </div>
+        <div style="color:${mutedColor};font-size:12px;margin-top:16px">Product ID: ${params.productId}</div>
+      </div>
+    `;
+
+    await this.plunk.emails.send({
+      to: toEmail,
+      from: process.env.MAIL_FROM || 'no-reply@theglamstore.ng',
+      subject: `Review pending approval: ${params.productName}`,
+      body: html,
+    });
+  }
 }

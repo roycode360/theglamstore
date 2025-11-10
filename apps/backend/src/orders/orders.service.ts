@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ClientSession, Model } from 'mongoose';
+import { ClientSession, Model, Types } from 'mongoose';
 import { InjectModel as InjectProductModel } from '@nestjs/mongoose';
 import { CouponsService } from '../coupons/coupons.service.js';
 import {
@@ -668,6 +668,46 @@ export class OrdersService {
     }
 
     return { ...doc, orderNumber, _id: String(doc._id) } as OrderDTO;
+  }
+
+  async findCustomerOrderForProduct(params: {
+    email: string;
+    productId: string;
+    orderId?: string | null;
+    orderNumber?: string | null;
+  }): Promise<OrderDTO | null> {
+    const eligibleStatuses: OrderDTO['status'][] = [
+      'confirmed',
+      'processing',
+      'shipped',
+      'delivered',
+    ];
+
+    const query: Record<string, unknown> = {
+      email: params.email,
+      status: { $in: eligibleStatuses },
+      'items.productId': params.productId,
+    };
+
+    if (params.orderNumber) {
+      query.orderNumber = params.orderNumber;
+    }
+
+    if (params.orderId && Types.ObjectId.isValid(params.orderId)) {
+      query._id = new Types.ObjectId(params.orderId);
+    }
+
+    type DBOrder = Omit<OrderDTO, '_id'> & { _id: unknown };
+    const doc = await this.orderModel
+      .findOne(query)
+      .sort({ createdAt: -1 })
+      .lean<DBOrder | null>();
+
+    if (!doc) {
+      return null;
+    }
+
+    return this.getById(String(doc._id));
   }
 
   async updateStatus(

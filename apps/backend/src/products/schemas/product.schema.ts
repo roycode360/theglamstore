@@ -20,6 +20,12 @@ export class ProductModel {
   @Prop({ type: [String], default: [] }) colors!: string[];
   @Prop({ default: false }) featured!: boolean;
   @Prop({ default: true }) active!: boolean;
+
+  @Prop({ type: Number, default: 0 })
+  reviewCount!: number;
+
+  @Prop({ type: Number, default: null })
+  reviewAverage?: number | null;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(ProductModel);

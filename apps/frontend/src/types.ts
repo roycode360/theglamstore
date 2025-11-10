@@ -27,13 +27,25 @@ export interface TProduct {
   salePrice?: number;
   costPrice?: number;
   sku: string;
-  stockQuantity: number;
-  description: string;
+  stockQuantity?: number;
+  description?: string;
   images: string[];
   sizes: string[];
   colors: string[];
   featured: boolean;
   active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  reviewCount?: number;
+  reviewAverage?: number | null;
+}
+
+export interface TReview {
+  _id: string;
+  customerName: string;
+  customerAvatarUrl?: string | null;
+  rating: number;
+  message: string;
   createdAt: string;
-  updatedAt: string;
+  status: 'pending' | 'approved' | 'rejected';
 }

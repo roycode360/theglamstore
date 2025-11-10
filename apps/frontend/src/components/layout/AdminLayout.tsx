@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { ME } from '../../graphql/auth';
 import { GET_PENDING_ORDERS_COUNT } from '../../graphql/orders';
+import { LIST_PENDING_REVIEWS } from '../../graphql/reviews';
 import { AccessToken } from '../../enums/access-token';
 import { AuthLoadingModal } from '../ui/AuthLoadingModal';
 import { useAuth } from '../../contexts/AuthContext';
@@ -21,6 +22,15 @@ export default function AdminLayout() {
   });
 
   const pendingOrdersCount = pendingOrdersData?.getPendingOrdersCount || 0;
+  const { data: pendingReviewsData } = useQuery<{
+    listPendingReviews: Array<{ _id: string }>;
+  }>(LIST_PENDING_REVIEWS, {
+    variables: { limit: 50 },
+    fetchPolicy: 'network-only',
+    pollInterval: 30000,
+  });
+  const pendingReviewsCount =
+    pendingReviewsData?.listPendingReviews?.length || 0;
   const tabs = [
     {
       to: '/admin',
@@ -116,6 +126,22 @@ export default function AdminLayout() {
       ),
     },
     {
+      to: '/admin/reviews',
+      label: 'Reviews',
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="w-5 h-5"
+        >
+          <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z" />
+        </svg>
+      ),
+    },
+    {
       to: '/admin/settings',
       label: 'Settings',
       icon: (
@@ -174,6 +200,27 @@ export default function AdminLayout() {
                         }}
                       >
                         {pendingOrdersCount}
+                      </span>
+                    )}
+                    {t.to === '/admin/reviews' && pendingReviewsCount > 0 && (
+                      <span
+                        className="absolute inline-flex items-center justify-center w-5 h-5 text-xs font-semibold border rounded-full -right-2 -top-2"
+                        style={{
+                          backgroundColor:
+                            location.pathname === '/admin/reviews'
+                              ? 'rgb(var(--brand-100))'
+                              : 'rgb(var(--brand-700))',
+                          color:
+                            location.pathname === '/admin/reviews'
+                              ? 'rgb(var(--brand-900))'
+                              : 'white',
+                          borderColor:
+                            location.pathname === '/admin/reviews'
+                              ? 'rgb(var(--brand-300))'
+                              : 'rgb(var(--brand-700))',
+                        }}
+                      >
+                        {pendingReviewsCount}
                       </span>
                     )}
                   </div>

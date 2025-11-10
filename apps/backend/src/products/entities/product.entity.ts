@@ -49,4 +49,10 @@ export class Product {
 
   @Field()
   active!: boolean;
+
+  @Field(() => Number)
+  reviewCount!: number;
+
+  @Field(() => Number, { nullable: true })
+  reviewAverage?: number | null;
 }
