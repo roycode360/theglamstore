@@ -233,6 +233,13 @@ input FounderInput {
   visible: Boolean
 }
 
+input ListAnalyticsUsersInput {
+  country: String
+  page: Float
+  pageSize: Float
+  search: String
+}
+
 type LoginResponse {
   accessToken: String!
   refreshToken: String!
@@ -262,6 +269,7 @@ type Mutation {
   loginWithAuth0(auth0Token: String!): LoginResponse!
   moderateReview(input: ModerateReviewInput!): Review!
   recordBankTransferPayment(input: RecordPaymentInput!): Order
+  recordUserEvent(input: RecordUserEventInput!): Boolean!
   removeFromCart(input: RemoveFromCartInput!): Boolean!
   removeFromWishlist(productId: String!, selectedColor: String, selectedSize: String): Boolean!
   sendContactMessage(email: String!, message: String!, name: String!, subject: String): Boolean!
@@ -364,6 +372,7 @@ type ProfitCostPoint {
 
 type Query {
   companySettings: CompanySettings
+  exportUsersForAnalytics(input: ListAnalyticsUsersInput): UserAnalyticsExport!
   getAnalytics: Analytics!
   getCartItemCount: Float!
   getCartItems: [CartItemType!]!
@@ -375,6 +384,13 @@ type Query {
   getRevenueTrend(period: String): RevenueTrend!
   getReviewEligibility(productId: String!): ReviewEligibility!
   getTopSellingProducts(limit: Int): TopSellingProducts!
+  getUserActivityTrend(days: Float, period: String! = "daily", range: UserAnalyticsRangeInput): [UserActivityPoint!]!
+  getUserAnalyticsSummary: UserAnalyticsSummary!
+  getUserAnalyticsUser(userId: String!): UserAnalyticsDetail
+  getUserBehaviorFunnel(range: UserAnalyticsRangeInput): [UserFunnelStep!]!
+  getUserPageVisitTrend(range: UserAnalyticsRangeInput): [UserPageMetricPoint!]!
+  getUserTopProducts(limit: Float, range: UserAnalyticsRangeInput): [UserAnalyticsTopProduct!]!
+  getUserTrafficOverview(range: UserAnalyticsRangeInput): UserTrafficBreakdown!
   health: String!
   listCategories: [Category!]!
   listCoupons: [Coupon!]!
@@ -387,6 +403,7 @@ type Query {
   listProductsByCategory(category: String!, excludeId: ID, limit: Int): [Product!]!
   listProductsPage(active: Boolean, brand: String, category: String, inStockOnly: Boolean, maxPrice: Float, minPrice: Float, onSaleOnly: Boolean, outOfStock: Boolean, page: Int, pageSize: Int, search: String, sortBy: String, sortDir: String): ProductPage!
   listSubcategories(parentId: ID!): [Category!]!
+  listUsersForAnalytics(input: ListAnalyticsUsersInput): UserAnalyticsUserPage!
   listWishlist: [Product!]!
   me: User!
   popularCoupons(limit: Float): [Coupon!]!
@@ -398,6 +415,19 @@ input RecordPaymentInput {
   note: String
   orderId: String!
   transferProofUrl: String
+}
+
+input RecordUserEventInput {
+  campaign: String
+  country: String
+  device: String
+  durationMs: Float
+  eventType: String!
+  medium: String
+  page: String
+  productId: String
+  sessionId: String
+  source: String
 }
 
 input RemoveFromCartInput {
@@ -562,10 +592,131 @@ input UpsertCompanySettingsInput {
 type User {
   _id: ID!
   avatar: String
+  country: String
   createdAt: DateTime
   email: String!
   emailVerified: Boolean!
   fullName: String!
+  lastLoginAt: DateTime
+  lastSeenAt: DateTime
+  region: String
   role: String!
+  totalLogins: Float
   updatedAt: DateTime
+}
+
+type UserActivityPoint {
+  activeUsers: Float!
+  date: String!
+  newUsers: Float!
+  sessions: Float!
+}
+
+type UserAnalyticsDetail {
+  averageOrderValue: Float!
+  country: String
+  createdAt: DateTime
+  email: String!
+  fullName: String!
+  lastLoginAt: DateTime
+  lastSeenAt: DateTime
+  lifetimeOrders: Float!
+  lifetimeSpend: Float!
+  recentEvents: [UserAnalyticsEventInsight!]!
+  recentOrders: [UserAnalyticsOrderSummary!]!
+  region: String
+  totalOrders: Float!
+  totalSessions: Float!
+  totalSpend: Float!
+  userId: String!
+}
+
+type UserAnalyticsEventInsight {
+  country: String
+  createdAt: DateTime!
+  device: String
+  durationMs: Float
+  eventType: String!
+  medium: String
+  page: String
+  productId: String
+  source: String
+}
+
+type UserAnalyticsExport {
+  rows: [UserAnalyticsUser!]!
+}
+
+type UserAnalyticsKeyValue {
+  label: String!
+  value: Float!
+}
+
+type UserAnalyticsOrderSummary {
+  createdAt: DateTime
+  orderId: String!
+  orderNumber: String
+  status: String!
+  total: Float!
+}
+
+input UserAnalyticsRangeInput {
+  end: DateTime
+  start: DateTime
+}
+
+type UserAnalyticsSummary {
+  activeUsersToday: Float!
+  newSignupsThisMonth: Float!
+  returningUsersThisWeek: Float!
+  totalUsers: Float!
+}
+
+type UserAnalyticsTopProduct {
+  clicks: Float!
+  name: String!
+  productId: String!
+  purchases: Float!
+  views: Float!
+}
+
+type UserAnalyticsUser {
+  averageOrderValue: Float!
+  country: String
+  createdAt: DateTime
+  email: String!
+  fullName: String!
+  lastLoginAt: DateTime
+  lastSeenAt: DateTime
+  region: String
+  totalOrders: Float!
+  totalSessions: Float!
+  totalSpend: Float!
+  userId: String!
+}
+
+type UserAnalyticsUserPage {
+  items: [UserAnalyticsUser!]!
+  page: Float!
+  pageSize: Float!
+  total: Float!
+}
+
+type UserFunnelStep {
+  count: Float!
+  key: String!
+  label: String!
+}
+
+type UserPageMetricPoint {
+  averageSessionDuration: Float!
+  date: String!
+  pageViews: Float!
+  sessions: Float!
+}
+
+type UserTrafficBreakdown {
+  countries: [UserAnalyticsKeyValue!]!
+  devices: [UserAnalyticsKeyValue!]!
+  sources: [UserAnalyticsKeyValue!]!
 }

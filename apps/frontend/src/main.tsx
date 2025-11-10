@@ -30,6 +30,7 @@ import AdminCreateOrderPage from './routes/admin/AdminCreateOrderPage';
 import AdminOrderReceiptPage from './routes/admin/AdminOrderReceiptPage';
 import CustomersPage from './routes/admin/CustomersPage';
 import SettingsPage from './routes/admin/SettingsPage';
+import AdminUserAnalyticsPage from './routes/admin/AdminUserAnalyticsPage';
 import RevenueAnalyticsPage from './routes/admin/RevenueAnalyticsPage';
 import AdminReviewsPage from './routes/admin/AdminReviewsPage';
 import { ThemeProvider } from './theme';
@@ -167,6 +168,7 @@ const router = createBrowserRouter([
               { path: 'orders', element: <OrdersPage /> },
               { path: 'orders/new', element: <AdminCreateOrderPage /> },
               { path: 'analytics', element: <RevenueAnalyticsPage /> },
+              { path: 'user-analytics', element: <AdminUserAnalyticsPage /> },
               { path: 'reviews', element: <AdminReviewsPage /> },
               { path: 'customers', element: <CustomersPage /> },
               { path: 'settings', element: <SettingsPage /> },

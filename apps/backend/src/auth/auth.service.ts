@@ -115,6 +115,11 @@ export class AuthService {
       // Persist refresh token hash
       const refreshHash = await bcrypt.hash(refreshToken, 10);
       await this.users.setRefreshTokenHash(String(user._id), refreshHash);
+      await this.users.recordLogin(String(user._id), {
+        country: auth0User?.['https://theglamstore.ng/location'] as
+          | string
+          | undefined,
+      });
 
       return {
         accessToken,
@@ -123,7 +128,7 @@ export class AuthService {
           _id: String(user._id),
           fullName: user.fullName,
           email: email,
-          avatar: user.avatar,
+          avatar: user.avatar ?? undefined,
           role: role ?? user.role,
           emailVerified: user.emailVerified,
           createdAt: user.createdAt,

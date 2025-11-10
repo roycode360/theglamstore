@@ -16,6 +16,7 @@ import { WishlistModule } from './wishlist/wishlist.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { CompanyModule } from './company/company.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     CouponsModule,
     CompanyModule,
     ReviewsModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

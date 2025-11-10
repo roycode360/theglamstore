@@ -14,6 +14,11 @@ export class UserModel {
   @Prop({ required: true, enum: ['customer', 'admin'], default: 'customer' })
   role!: 'customer' | 'admin';
   @Prop({ type: Boolean, default: false }) emailVerified!: boolean;
+  @Prop({ type: Date, default: null }) lastLoginAt?: Date | null;
+  @Prop({ type: Date, default: null }) lastSeenAt?: Date | null;
+  @Prop({ type: String, default: null }) country?: string | null;
+  @Prop({ type: String, default: null }) region?: string | null;
+  @Prop({ type: Number, default: 0 }) totalLogins?: number;
 }
 
 @ObjectType()
@@ -27,7 +32,7 @@ export class User {
   @Field()
   email!: string;
 
-  @Field({ nullable: true })
+  @Field(() => String, { nullable: true })
   avatar?: string;
 
   @Field({ defaultValue: 'customer' })
@@ -41,6 +46,21 @@ export class User {
 
   @Field(() => Date, { nullable: true })
   updatedAt?: Date;
+
+  @Field(() => Date, { nullable: true })
+  lastLoginAt?: Date | null;
+
+  @Field(() => Date, { nullable: true })
+  lastSeenAt?: Date | null;
+
+  @Field(() => String, { nullable: true })
+  country?: string | null;
+
+  @Field(() => String, { nullable: true })
+  region?: string | null;
+
+  @Field(() => Number, { nullable: true })
+  totalLogins?: number | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(UserModel);

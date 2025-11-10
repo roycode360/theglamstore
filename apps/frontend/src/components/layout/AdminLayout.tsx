@@ -126,6 +126,27 @@ export default function AdminLayout() {
       ),
     },
     {
+      to: '/admin/user-analytics',
+      label: 'User Analytics',
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="w-5 h-5"
+        >
+          <path d="M9 17v-6" />
+          <path d="M15 17V7" />
+          <path d="M3 3h18" />
+          <path d="M3 21h18" />
+          <path d="M7 3v18" />
+          <path d="M17 3v18" />
+        </svg>
+      ),
+    },
+    {
       to: '/admin/reviews',
       label: 'Reviews',
       icon: (
