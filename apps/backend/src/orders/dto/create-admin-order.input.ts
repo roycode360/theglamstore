@@ -47,6 +47,15 @@ export class CreateAdminOrderInput {
   shippingFee?: number;
 
   @Field(() => Float, { nullable: true })
+  deliveryFee?: number;
+
+  @Field(() => ID, { nullable: true })
+  deliveryLocationId?: string;
+
+  @Field({ nullable: true })
+  deliveryLocationName?: string;
+
+  @Field(() => Float, { nullable: true })
   amountPaid?: number;
 
   @Field({ nullable: true })

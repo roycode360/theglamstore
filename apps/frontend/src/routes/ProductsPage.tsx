@@ -1,4 +1,5 @@
 import { useQuery } from '@apollo/client';
+import { useApolloClient } from '@apollo/client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { formatCurrency } from '../utils/currency';
@@ -13,6 +14,7 @@ import { LIST_CATEGORIES, LIST_SUBCATEGORIES } from '../graphql/categories';
 export default function ProductsPage() {
   const PAGE_SIZE = 12;
   const [params, setParams] = useSearchParams();
+  const apollo = useApolloClient();
   const [page, setPage] = useState(1);
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
@@ -22,6 +24,7 @@ export default function ProductsPage() {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const prevCatRef = useRef<string>('');
+  const [initialized, setInitialized] = useState(false);
 
   const { data, loading, refetch } = useQuery(LIST_PRODUCTS_PAGE, {
     variables: {
@@ -57,27 +60,79 @@ export default function ProductsPage() {
     setItems(payload?.items ?? []);
   }, [data]);
 
-  // Initialize category from URL (one-time)
+  // Initialize filters from URL (handle both category and subcategory)
   useEffect(() => {
-    const initial = params.get('category') || '';
-    if (initial) setCat(initial);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (initialized) return;
+    const parents = (catsData?.listCategories ?? []).filter(
+      (c: any) => !c.parentId,
+    );
+    const parentSlugs = new Set(parents.map((c: any) => c.slug));
+
+    const urlCat = params.get('category') || '';
+    const urlSub = params.get('subcategory') || '';
+
+    const setFromSub = async (subSlug: string) => {
+      // Try to find parent by scanning categories' subcategories
+      for (const parent of parents) {
+        try {
+          const res = await apollo.query({
+            query: LIST_SUBCATEGORIES,
+            variables: { parentId: parent._id },
+            fetchPolicy: 'cache-first',
+          });
+          const match = (res?.data?.listSubcategories ?? []).find(
+            (s: any) => s.slug === subSlug,
+          );
+          if (match) {
+            setCat(parent.slug);
+            setSubcat(subSlug);
+            break;
+          }
+        } catch (e) {
+          // ignore and continue
+        }
+      }
+    };
+
+    (async () => {
+      if (urlSub) {
+        // explicit subcategory param wins; set parent if present or resolve
+        if (urlCat && parentSlugs.has(urlCat)) setCat(urlCat);
+        await setFromSub(urlSub);
+        setInitialized(true);
+        return;
+      }
+      if (urlCat) {
+        if (parentSlugs.has(urlCat)) {
+          setCat(urlCat);
+          setInitialized(true);
+          return;
+        }
+        // Treat as subcategory slug and resolve parent
+        await setFromSub(urlCat);
+        setInitialized(true);
+        return;
+      }
+      setInitialized(true);
+    })();
+  }, [catsData, params, apollo, initialized]);
 
   // Reset subcategory whenever category changes
   useEffect(() => {
     const categoryChanged = prevCatRef.current !== cat;
     if (categoryChanged) {
-      setSubcat('');
+      if (initialized) setSubcat('');
       prevCatRef.current = cat;
     }
-  }, [cat]);
+  }, [cat, initialized]);
 
   // Refetch when filters change (and reset to page 1); keep URL in sync
   useEffect(() => {
     const next = new URLSearchParams(params);
     if (cat) next.set('category', cat);
     else next.delete('category');
+    if (subcat) next.set('subcategory', subcat);
+    else next.delete('subcategory');
     setParams(next, { replace: true });
     setPage(1);
 
@@ -129,9 +184,7 @@ export default function ProductsPage() {
   const subcategoryOptions: Array<SelectOption> = useMemo(() => {
     const subs = (subcatsData?.listSubcategories ?? []) as Array<any>;
     const opts = [{ value: '', label: 'All subcategories' } as SelectOption];
-    subs.forEach((s) =>
-      opts.push({ value: s.slug as string, label: s.name }),
-    );
+    subs.forEach((s) => opts.push({ value: s.slug as string, label: s.name }));
     return opts as any;
   }, [subcatsData]);
 

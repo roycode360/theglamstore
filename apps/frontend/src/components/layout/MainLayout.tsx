@@ -7,6 +7,7 @@ import { AuthLoadingModal } from '../ui/AuthLoadingModal';
 import { useAuth } from '../../contexts/AuthContext';
 import PromoModal from '../ui/PromoModal';
 import { GET_COMPANY_SETTINGS } from '../../graphql/settings';
+import AnalyticsRouterListener from '../analytics/AnalyticsRouterListener';
 
 type PromoSettings = {
   _id: string;
@@ -117,6 +118,7 @@ export default function MainLayout() {
 
   return (
     <div>
+      <AnalyticsRouterListener />
       <ScrollToTop />
       <Header />
       <Outlet />

@@ -8,6 +8,10 @@ import {
   ProductModel,
 } from '../products/schemas/product.schema.js';
 import { OrderDocument, OrderModel } from './schemas/order.schema.js';
+import {
+  DeliveryLocationDocument,
+  DeliveryLocationModel,
+} from '../delivery-locations/schemas/delivery-location.schema.js';
 import { EmailService } from '../auth/email.service.js';
 import { EditOrderItemsInput, EditOp } from './dto/edit-order-items.input.js';
 import { CreateAdminOrderInput } from './dto/create-admin-order.input.js';
@@ -82,6 +86,8 @@ export class OrdersService {
   constructor(
     @InjectModel(OrderModel.name)
     private orderModel: Model<OrderDocument>,
+    @InjectModel(DeliveryLocationModel.name)
+    private deliveryLocationModel: Model<DeliveryLocationDocument>,
     private readonly email: EmailService,
     @InjectProductModel(ProductModel.name)
     private productModel: Model<ProductDocument>,
@@ -108,7 +114,24 @@ export class OrdersService {
   ): Promise<OrderDTO> {
     const orderNumber = await this.generateOrderNumber();
 
-    const shippingFee = Number(payload.shippingFee ?? 0) || 0;
+    let shippingFee = Number(payload.shippingFee ?? 0) || 0;
+    let deliveryFee = Number(payload.deliveryFee ?? 0) || 0;
+    let deliveryLocationId: string | null =
+      (payload.deliveryLocationId as string | undefined) ?? null;
+    let deliveryLocationName: string | null =
+      (payload.deliveryLocationName as string | undefined) ?? null;
+
+    // If deliveryLocationId is provided, prefer it to compute fees and names
+    if (deliveryLocationId) {
+      const loc = await this.deliveryLocationModel
+        .findById(deliveryLocationId)
+        .lean<{ _id: unknown; name?: string; price?: number; active?: boolean } | null>();
+      if (loc && (loc.active ?? true)) {
+        deliveryFee = Number(loc.price ?? 0) || 0;
+        shippingFee = deliveryFee; // keep compatibility
+        deliveryLocationName = loc.name ?? deliveryLocationName;
+      }
+    }
 
     const doc = await this.orderModel.create({
       ...payload,
@@ -128,6 +151,9 @@ export class OrdersService {
           : 0,
       source: payload.source ?? 'customer',
       shippingFee,
+      deliveryFee,
+      deliveryLocationId,
+      deliveryLocationName,
       paymentReference: payload.paymentReference ?? null,
       notes: payload.notes ?? null,
     });
@@ -381,7 +407,43 @@ export class OrdersService {
       selectedColor: it.selectedColor,
       image: it.image,
     }));
-    const shippingFee = Number(input.shippingFee ?? 0) || 0;
+    let deliveryFee =
+      input.deliveryFee != null
+        ? Number(input.deliveryFee)
+        : Number(input.shippingFee ?? 0);
+    if (!Number.isFinite(deliveryFee) || deliveryFee < 0) {
+      deliveryFee = 0;
+    }
+    let deliveryLocationId =
+      typeof input.deliveryLocationId === 'string'
+        ? input.deliveryLocationId
+        : null;
+    let deliveryLocationName =
+      typeof input.deliveryLocationName === 'string'
+        ? input.deliveryLocationName
+        : null;
+
+    if (deliveryLocationId) {
+      const deliveryLocation = await this.deliveryLocationModel
+        .findById(deliveryLocationId)
+        .lean<{
+          _id: unknown;
+          name?: string;
+          price?: number;
+          active?: boolean;
+        } | null>();
+      if (deliveryLocation && (deliveryLocation.active ?? true)) {
+        deliveryFee = Number(deliveryLocation.price ?? 0) || 0;
+        deliveryLocationName =
+          deliveryLocation.name ?? deliveryLocationName ?? null;
+        deliveryLocationId = String(deliveryLocation._id);
+      } else {
+        deliveryLocationId = null;
+        deliveryLocationName = null;
+      }
+    }
+
+    let shippingFee = deliveryFee;
     const amountPaid = input.amountPaid || 0;
     const amountRefunded = 0;
 
@@ -480,6 +542,14 @@ export class OrdersService {
       const notesValue = sanitizeOptionalString(
         (input as { notes?: unknown }).notes,
       );
+      const deliveryLocationNameValue = sanitizeOptionalString(
+        deliveryLocationName,
+      );
+      const deliveryLocationIdValue =
+        typeof deliveryLocationId === 'string' &&
+        deliveryLocationId.trim().length > 0
+          ? deliveryLocationId.trim()
+          : null;
 
       const orderPayload = {
         email: input.email,
@@ -501,6 +571,9 @@ export class OrdersService {
         amountRefunded,
         balanceDue: totals.balanceDue,
         shippingFee: totals.shippingFee,
+        deliveryFee: totals.shippingFee,
+        deliveryLocationId: deliveryLocationIdValue,
+        deliveryLocationName: deliveryLocationNameValue,
         source: 'admin',
         stockAdjusted: quantityByProduct.size > 0,
         paymentReference: paymentReferenceValue,

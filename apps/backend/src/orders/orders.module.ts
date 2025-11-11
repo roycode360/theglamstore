@@ -9,12 +9,20 @@ import {
   ProductSchema,
 } from '../products/schemas/product.schema.js';
 import { CouponsModule } from '../coupons/coupons.module.js';
+import {
+  DeliveryLocationModel,
+  DeliveryLocationSchema,
+} from '../delivery-locations/schemas/delivery-location.schema.js';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: OrderModel.name, schema: OrderSchema },
       { name: ProductModel.name, schema: ProductSchema },
+      {
+        name: DeliveryLocationModel.name,
+        schema: DeliveryLocationSchema,
+      },
     ]),
     AuthModule,
     CouponsModule,

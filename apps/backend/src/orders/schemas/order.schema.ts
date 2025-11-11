@@ -22,6 +22,16 @@ export class OrderModel {
   @Prop({ type: Number, default: 0 })
   shippingFee?: number;
 
+  // Delivery fields
+  @Prop({ type: Number, default: 0 })
+  deliveryFee?: number;
+
+  @Prop({ type: String })
+  deliveryLocationId?: string | null;
+
+  @Prop({ type: String })
+  deliveryLocationName?: string | null;
+
   // Optional coupon fields
   @Prop() couponCode?: string;
   @Prop({ type: Number }) couponDiscount?: number;

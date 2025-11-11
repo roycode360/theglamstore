@@ -157,3 +157,9 @@ export const EXPORT_USERS_FOR_ANALYTICS = gql`
     }
   }
 `;
+
+export const RECORD_USER_EVENT = gql`
+  mutation RecordUserEvent($input: RecordUserEventInput!) {
+    recordUserEvent(input: $input)
+  }
+`;

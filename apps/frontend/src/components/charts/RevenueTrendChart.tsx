@@ -1,5 +1,6 @@
 import {
-  LineChart,
+  Area,
+  ComposedChart,
   Line,
   XAxis,
   YAxis,
@@ -54,7 +55,7 @@ export default function RevenueTrendChart({
     if (active && payload && payload.length) {
       return (
         <div
-          className="rounded-lg border bg-white p-3 shadow-lg"
+          className="p-3 bg-white border rounded-lg shadow-lg"
           style={{ borderColor: 'rgb(var(--border))' }}
         >
           <p className="text-sm font-medium">
@@ -74,7 +75,7 @@ export default function RevenueTrendChart({
 
   return (
     <div className={className}>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Revenue Trend</h3>
         <div className="flex items-center gap-2">
           <button
@@ -112,7 +113,7 @@ export default function RevenueTrendChart({
 
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-black"></div>
+          <div className="w-8 h-8 border-4 border-gray-200 rounded-full animate-spin border-t-black"></div>
         </div>
       ) : points.length === 0 ? (
         <div className="flex items-center justify-center py-12">
@@ -122,10 +123,29 @@ export default function RevenueTrendChart({
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart
+          <ComposedChart
             data={points}
             margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
           >
+            <defs>
+              <linearGradient id="revenueGradient" x1="0" x2="0" y1="0" y2="1">
+                <stop
+                  offset="0%"
+                  stopColor="rgb(var(--brand-700))"
+                  stopOpacity={0.28}
+                />
+                <stop
+                  offset="60%"
+                  stopColor="rgb(var(--brand-700))"
+                  stopOpacity={0.12}
+                />
+                <stop
+                  offset="100%"
+                  stopColor="rgb(var(--brand-700))"
+                  stopOpacity={0.04}
+                />
+              </linearGradient>
+            </defs>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="#e5e7eb"
@@ -153,6 +173,15 @@ export default function RevenueTrendChart({
               tick={{ fill: '#6b7280' }}
             />
             <Tooltip content={<CustomTooltip />} />
+            <Area
+              type="monotone"
+              dataKey="revenue"
+              stroke="none"
+              fill="url(#revenueGradient)"
+              fillOpacity={1}
+              dot={false}
+              activeDot={false}
+            />
             <Line
               type="monotone"
               dataKey="revenue"
@@ -161,7 +190,7 @@ export default function RevenueTrendChart({
               dot={{ fill: 'rgb(var(--brand-700))', r: 4 }}
               activeDot={{ r: 6 }}
             />
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
       )}
     </div>

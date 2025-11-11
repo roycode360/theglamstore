@@ -1,24 +1,8 @@
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { useMemo, useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useLazyQuery, useQuery } from '@apollo/client';
-import Spinner from '../../components/ui/Spinner';
-import Input from '../../components/ui/Input';
-import Select from '../../components/ui/Select';
 import { formatCurrency } from '../../utils/currency';
 import { formatDateOnly } from '../../utils/date';
+import { useToast } from '../../components/ui/Toast';
 import {
   GET_USER_ANALYTICS_SUMMARY,
   GET_USER_ACTIVITY_TREND,
@@ -30,27 +14,31 @@ import {
   GET_USER_ANALYTICS_USER,
   EXPORT_USERS_FOR_ANALYTICS,
 } from '../../graphql/userAnalytics';
-import Modal from '../../components/ui/Modal';
-import { useToast } from '../../components/ui/Toast';
+import { SummaryCards } from './user-analytics/SummaryCards';
+import { ActivityTrendCard } from './user-analytics/ActivityTrendCard';
+import { PageEngagementCard } from './user-analytics/PageEngagementCard';
+import { TopProductsCard } from './user-analytics/TopProductsCard';
+import { TrafficOverviewCard } from './user-analytics/TrafficOverviewCard';
+import { BehaviorFunnelCard } from './user-analytics/BehaviorFunnelCard';
+import { UsersTable } from './user-analytics/UsersTable';
+import { UserDetailModal } from './user-analytics/UserDetailModal';
+import {
+  ActivityPeriod,
+  formatNumber,
+  secondsFromMillis,
+} from './user-analytics/utils';
 
-type ActivityPeriod = 'daily' | 'weekly';
-
-function formatNumber(value: number | null | undefined) {
-  if (value == null) return '0';
-  return Number(value).toLocaleString('en-US');
-}
-
-function secondsFromMillis(value: number | null | undefined) {
-  if (!value || value <= 0) return '0s';
-  const seconds = Math.round(value / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  const remainder = seconds % 60;
-  return remainder > 0 ? `${minutes}m ${remainder}s` : `${minutes}m`;
-}
+type TopProduct = {
+  productId: string;
+  name: string;
+  views: number;
+  clicks: number;
+  purchases: number;
+};
 
 export default function AdminUserAnalyticsPage() {
   const { showToast } = useToast();
+
   const { data: summaryData, loading: summaryLoading } = useQuery(
     GET_USER_ANALYTICS_SUMMARY,
     { fetchPolicy: 'cache-and-network' },
@@ -68,6 +56,7 @@ export default function AdminUserAnalyticsPage() {
       fetchPolicy: 'cache-and-network',
     },
   );
+
   const activityPoints =
     activityData?.getUserActivityTrend?.map((point: any) => ({
       ...point,
@@ -97,21 +86,17 @@ export default function AdminUserAnalyticsPage() {
       fetchPolicy: 'cache-and-network',
     },
   );
-  const topProducts = topProductsData?.getUserTopProducts ?? [];
+  const topProducts: TopProduct[] = topProductsData?.getUserTopProducts ?? [];
 
   const { data: trafficData, loading: trafficLoading } = useQuery(
     GET_USER_TRAFFIC_OVERVIEW,
-    {
-      fetchPolicy: 'cache-and-network',
-    },
+    { fetchPolicy: 'cache-and-network' },
   );
   const trafficOverview = trafficData?.getUserTrafficOverview;
 
   const { data: funnelData, loading: funnelLoading } = useQuery(
     GET_USER_BEHAVIOR_FUNNEL,
-    {
-      fetchPolicy: 'cache-and-network',
-    },
+    { fetchPolicy: 'cache-and-network' },
   );
   const funnelSteps = funnelData?.getUserBehaviorFunnel ?? [];
 
@@ -159,25 +144,20 @@ export default function AdminUserAnalyticsPage() {
   const userPageData = usersData?.listUsersForAnalytics;
   const userItems = userPageData?.items ?? [];
   const userTotal = userPageData?.total ?? 0;
-  const totalUserPages = Math.max(1, Math.ceil(userTotal / pageSize));
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedUserName, setSelectedUserName] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [
-    fetchUserDetail,
-    { data: detailData, loading: detailLoading },
-  ] = useLazyQuery(GET_USER_ANALYTICS_USER, {
-    fetchPolicy: 'network-only',
-  });
+  const [fetchUserDetail, { data: detailData, loading: detailLoading }] =
+    useLazyQuery(GET_USER_ANALYTICS_USER, {
+      fetchPolicy: 'network-only',
+    });
   const detail = detailData?.getUserAnalyticsUser ?? null;
 
-  const [
-    fetchExport,
-    { loading: exportLoading },
-  ] = useLazyQuery(EXPORT_USERS_FOR_ANALYTICS, {
-    fetchPolicy: 'network-only',
-  });
+  const [fetchExport, { loading: exportLoading }] = useLazyQuery(
+    EXPORT_USERS_FOR_ANALYTICS,
+    { fetchPolicy: 'network-only' },
+  );
 
   const buildExportInput = () => ({
     page: 1,
@@ -190,9 +170,12 @@ export default function AdminUserAnalyticsPage() {
     setSelectedUserName(user.fullName);
     setSelectedUserId(user.userId);
     setDetailOpen(true);
-    void fetchUserDetail({
-      variables: { userId: user.userId },
-    });
+    void fetchUserDetail({ variables: { userId: user.userId } });
+  };
+
+  const handleCloseDetail = () => {
+    setDetailOpen(false);
+    setSelectedUserId(null);
   };
 
   const handleExportCsv = async () => {
@@ -237,7 +220,7 @@ export default function AdminUserAnalyticsPage() {
             .map((value) => {
               const asString = String(value ?? '');
               if (asString.includes(',') || asString.includes('"')) {
-                return `"${asString.replace(/"/g, '""')}"`;
+                return '"' + asString.replace(/"/g, '""') + '"';
               }
               return asString;
             })
@@ -250,7 +233,7 @@ export default function AdminUserAnalyticsPage() {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `user-analytics-${new Date().toISOString()}.csv`;
+      link.download = 'user-analytics-' + new Date().toISOString() + '.csv';
       link.click();
       window.URL.revokeObjectURL(url);
       showToast('CSV export generated.', 'success');
@@ -282,52 +265,69 @@ export default function AdminUserAnalyticsPage() {
       }
       const tableRows = rows
         .map(
-          (row: any) => `
-            <tr>
-              <td>${row.fullName}</td>
-              <td>${row.email}</td>
-              <td>${row.country ?? ''}</td>
-              <td>${row.region ?? ''}</td>
-              <td>${row.createdAt ? formatDateOnly(row.createdAt) : ''}</td>
-              <td>${row.totalOrders ?? 0}</td>
-              <td>${formatCurrency(row.totalSpend ?? 0)}</td>
-              <td>${row.totalSessions ?? 0}</td>
-            </tr>
-          `,
+          (row: any) =>
+            '<tr>' +
+            '<td>' +
+            row.fullName +
+            '</td>' +
+            '<td>' +
+            row.email +
+            '</td>' +
+            '<td>' +
+            (row.country ?? '') +
+            '</td>' +
+            '<td>' +
+            (row.region ?? '') +
+            '</td>' +
+            '<td>' +
+            (row.createdAt ? formatDateOnly(row.createdAt) : '') +
+            '</td>' +
+            '<td>' +
+            (row.totalOrders ?? 0) +
+            '</td>' +
+            '<td>' +
+            formatCurrency(row.totalSpend ?? 0) +
+            '</td>' +
+            '<td>' +
+            (row.totalSessions ?? 0) +
+            '</td>' +
+            '</tr>',
         )
         .join('');
-      popup.document.write(`
-        <html>
-          <head>
-            <title>User Analytics Export</title>
-            <style>
-              body { font-family: Arial, sans-serif; padding: 24px; color: #1f2937; }
-              h1 { font-size: 20px; margin-bottom: 16px; }
-              table { border-collapse: collapse; width: 100%; }
-              th, td { border: 1px solid #e5e7eb; padding: 8px; font-size: 12px; text-align: left; }
-              th { background: #f9fafb; }
-            </style>
-          </head>
-          <body>
-            <h1>User Analytics Export</h1>
-            <table>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Country</th>
-                  <th>Region</th>
-                  <th>Joined</th>
-                  <th>Orders</th>
-                  <th>Total Spend</th>
-                  <th>Sessions</th>
-                </tr>
-              </thead>
-              <tbody>${tableRows}</tbody>
-            </table>
-          </body>
-        </html>
-      `);
+      popup.document.write(
+        '<html>' +
+          '<head>' +
+          '<title>User Analytics Export</title>' +
+          '<style>' +
+          'body { font-family: Arial, sans-serif; padding: 24px; color: #1f2937; }' +
+          'h1 { font-size: 20px; margin-bottom: 16px; }' +
+          'table { border-collapse: collapse; width: 100%; }' +
+          'th, td { border: 1px solid #e5e7eb; padding: 8px; font-size: 12px; text-align: left; }' +
+          'th { background: #f9fafb; }' +
+          '</style>' +
+          '</head>' +
+          '<body>' +
+          '<h1>User Analytics Export</h1>' +
+          '<table>' +
+          '<thead>' +
+          '<tr>' +
+          '<th>Name</th>' +
+          '<th>Email</th>' +
+          '<th>Country</th>' +
+          '<th>Region</th>' +
+          '<th>Joined</th>' +
+          '<th>Orders</th>' +
+          '<th>Total Spend</th>' +
+          '<th>Sessions</th>' +
+          '</tr>' +
+          '</thead>' +
+          '<tbody>' +
+          tableRows +
+          '</tbody>' +
+          '</table>' +
+          '</body>' +
+          '</html>',
+      );
       popup.document.close();
       popup.focus();
       popup.print();
@@ -341,8 +341,7 @@ export default function AdminUserAnalyticsPage() {
   };
 
   const trafficTotals = useMemo(() => {
-    if (!trafficOverview)
-      return { country: 0, source: 0, device: 0 };
+    if (!trafficOverview) return { country: 0, source: 0, device: 0 };
     const sumValues = (entries: Array<{ value: number }>) =>
       entries.reduce((sum, entry) => sum + (entry.value ?? 0), 0);
     return {
@@ -352,737 +351,95 @@ export default function AdminUserAnalyticsPage() {
     };
   }, [trafficOverview]);
 
-  const activityTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const current = payload[0].payload;
-      return (
-        <div className="rounded-lg border bg-white p-3 shadow-lg">
-          <p className="text-sm font-semibold">{current.dateLabel}</p>
-          <p className="mt-1 text-xs text-gray-600">
-            Active users: <span className="font-semibold">{formatNumber(current.activeUsers)}</span>
-          </p>
-          <p className="text-xs text-gray-600">
-            Sessions: <span className="font-semibold">{formatNumber(current.sessions)}</span>
-          </p>
-          <p className="text-xs text-gray-600">
-            New users: <span className="font-semibold">{formatNumber(current.newUsers)}</span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const pageTrendTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const current = payload[0].payload;
-      return (
-        <div className="rounded-lg border bg-white p-3 shadow-lg">
-          <p className="text-sm font-semibold">{current.dateLabel}</p>
-          <p className="mt-1 text-xs text-gray-600">
-            Page views: <span className="font-semibold">{formatNumber(current.pageViews)}</span>
-          </p>
-          <p className="text-xs text-gray-600">
-            Sessions: <span className="font-semibold">{formatNumber(current.sessions)}</span>
-          </p>
-          <p className="text-xs text-gray-600">
-            Avg. session: <span className="font-semibold">{secondsFromMillis(current.averageSessionDuration)}</span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const funnelDataChart = funnelSteps.map((step: any) => ({
-    ...step,
-    labelShort: step.label,
-  }));
+  const countryOptions = useMemo(
+    () =>
+      (trafficOverview?.countries ?? []).map((item: any) => ({
+        value: item.label,
+        label: item.label,
+      })),
+    [trafficOverview],
+  );
 
   return (
     <>
       <div className="space-y-10">
-      <div>
-        <h1 className="text-2xl font-semibold theme-fg">User Analytics</h1>
-        <p className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
-          Understand how people discover, browse, and purchase on your store.
-        </p>
+        <div>
+          <h1 className="text-2xl font-semibold theme-fg">User Analytics</h1>
+          <p className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
+            Understand how people discover, browse, and purchase on your store.
+          </p>
+        </div>
+
+        <SummaryCards
+          items={[
+            { label: 'Total users', value: summary?.totalUsers },
+            {
+              label: 'New signups this month',
+              value: summary?.newSignupsThisMonth,
+            },
+            { label: 'Active users today', value: summary?.activeUsersToday },
+            {
+              label: 'Returning users this week',
+              value: summary?.returningUsersThisWeek,
+            },
+          ]}
+          loading={summaryLoading}
+        />
+
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <ActivityTrendCard
+            period={activityPeriod}
+            onPeriodChange={setActivityPeriod}
+            data={activityPoints}
+            loading={activityLoading}
+          />
+          <PageEngagementCard data={pageTrendPoints} />
+        </section>
+
+        <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <TopProductsCard
+            products={topProducts}
+            loading={topProductsLoading}
+          />
+          <div className="grid grid-cols-1 gap-4">
+            <TrafficOverviewCard
+              overview={trafficOverview}
+              totals={trafficTotals}
+              loading={trafficLoading}
+            />
+            <BehaviorFunnelCard data={funnelSteps} loading={funnelLoading} />
+          </div>
+        </section>
+
+        <UsersTable
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          countryFilter={countryFilter}
+          countryOptions={countryOptions}
+          onCountryChange={(value) => {
+            setCountryFilter(value);
+            setUserPage(1);
+          }}
+          onExportCsv={handleExportCsv}
+          onExportPdf={handleExportPdf}
+          exportLoading={exportLoading}
+          users={userItems}
+          loading={usersLoading}
+          page={userPage}
+          pageSize={pageSize}
+          totalUsers={userTotal}
+          onPageChange={setUserPage}
+          onRowClick={handleOpenDetail}
+        />
       </div>
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {[
-          {
-            label: 'Total users',
-            value: summary?.totalUsers,
-          },
-          {
-            label: 'New signups this month',
-            value: summary?.newSignupsThisMonth,
-          },
-          {
-            label: 'Active users today',
-            value: summary?.activeUsersToday,
-          },
-          {
-            label: 'Returning users this week',
-            value: summary?.returningUsersThisWeek,
-          },
-        ].map((card) => (
-          <div
-            key={card.label}
-            className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
-          >
-            <p className="text-sm text-gray-500">{card.label}</p>
-            {summaryLoading ? (
-              <div className="flex items-center justify-center py-6">
-                <div className="h-6 w-6 animate-spin rounded-full border-3 border-gray-200 border-t-black"></div>
-              </div>
-            ) : (
-              <p className="mt-2 text-2xl font-semibold text-gray-900">
-                {formatNumber(card.value)}
-              </p>
-            )}
-          </div>
-        ))}
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              User activity over time
-            </h2>
-            <div className="flex items-center gap-2">
-              {(['daily', 'weekly'] as ActivityPeriod[]).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setActivityPeriod(period)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
-                    activityPeriod === period
-                      ? 'bg-black text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {period === 'daily' ? 'Daily' : 'Weekly'}
-                </button>
-              ))}
-            </div>
-          </div>
-          {activityLoading ? (
-            <div className="flex items-center justify-center py-16">
-              <Spinner />
-            </div>
-          ) : activityPoints.length === 0 ? (
-            <div className="flex items-center justify-center py-16 text-sm text-gray-500">
-              No activity data available
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={activityPoints}>
-                <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(value, index) => activityPoints[index]?.dateLabel}
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                  allowDecimals={false}
-                />
-                <Tooltip content={activityTooltip} />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="activeUsers"
-                  name="Active users"
-                  stroke="rgb(var(--brand-700))"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="sessions"
-                  name="Sessions"
-                  stroke="#6366f1"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="newUsers"
-                  name="New users"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Page visits & engagement
-            </h2>
-            <p className="text-xs text-gray-500">
-              Average session duration measured in seconds
-            </p>
-          </div>
-          {pageTrendPoints.length === 0 ? (
-            <div className="flex items-center justify-center py-16 text-sm text-gray-500">
-              No page visit data available
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={320}>
-              <AreaChart data={pageTrendPoints}>
-                <defs>
-                  <linearGradient id="colorPageViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="rgb(59 130 246)" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="rgb(59 130 246)" stopOpacity={0.05} />
-                  </linearGradient>
-                  <linearGradient id="colorSessions" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="rgb(16 185 129)" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="rgb(16 185 129)" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(value, index) => pageTrendPoints[index]?.dateLabel}
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} allowDecimals={false} />
-                <Tooltip content={pageTrendTooltip} />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="pageViews"
-                  name="Page views"
-                  stroke="rgb(59 130 246)"
-                  fillOpacity={1}
-                  fill="url(#colorPageViews)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="sessions"
-                  name="Sessions"
-                  stroke="rgb(16 185 129)"
-                  fillOpacity={1}
-                  fill="url(#colorSessions)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Top viewed products
-            </h2>
-          </div>
-          {topProductsLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Spinner />
-            </div>
-          ) : topProducts.length === 0 ? (
-            <div className="flex items-center justify-center py-12 text-sm text-gray-500">
-              No product engagement data available
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-gray-500">
-                    <th className="px-4 py-2">Product</th>
-                    <th className="px-4 py-2">Views</th>
-                    <th className="px-4 py-2">Clicks</th>
-                    <th className="px-4 py-2">Purchases</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {topProducts.map((product: any) => (
-                    <tr key={product.productId}>
-                      <td className="px-4 py-2">
-                        <p className="font-medium text-gray-900">{product.name}</p>
-                        <p className="text-xs text-gray-500">{product.productId}</p>
-                      </td>
-                      <td className="px-4 py-2">{formatNumber(product.views)}</td>
-                      <td className="px-4 py-2">{formatNumber(product.clicks)}</td>
-                      <td className="px-4 py-2">{formatNumber(product.purchases)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Traffic overview</h2>
-            {trafficLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Spinner />
-              </div>
-            ) : !trafficOverview ? (
-              <p className="py-8 text-sm text-gray-500">No traffic data yet</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                {[
-                  { title: 'Top countries', data: trafficOverview.countries, total: trafficTotals.country },
-                  { title: 'Top sources', data: trafficOverview.sources, total: trafficTotals.source },
-                  { title: 'Top devices', data: trafficOverview.devices, total: trafficTotals.device },
-                ].map((section) => (
-                  <div key={section.title}>
-                    <h3 className="text-sm font-semibold text-gray-900">
-                      {section.title}
-                    </h3>
-                    <div className="mt-2 space-y-2">
-                      {(section.data ?? []).slice(0, 5).map((item: any) => {
-                        const percent =
-                          section.total > 0
-                            ? Math.round((item.value / section.total) * 100)
-                            : 0;
-                        return (
-                          <div
-                            key={`${section.title}-${item.label}`}
-                            className="rounded-md border border-gray-100 bg-gray-50 px-3 py-2"
-                          >
-                            <div className="flex items-center justify-between text-xs text-gray-600">
-                              <span className="font-medium text-gray-800">
-                                {item.label}
-                              </span>
-                              <span>{percent}%</span>
-                            </div>
-                            <div className="mt-1 h-1.5 w-full rounded-full bg-gray-200">
-                              <div
-                                className="h-full rounded-full bg-black"
-                                style={{ width: `${percent}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {(section.data ?? []).length === 0 && (
-                        <p className="text-xs text-gray-500">
-                          No data available
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Behavior funnel</h2>
-            {funnelLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Spinner />
-              </div>
-            ) : funnelDataChart.length === 0 ? (
-              <p className="py-8 text-sm text-gray-500">No funnel data yet</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart
-                  data={funnelDataChart}
-                  layout="vertical"
-                  margin={{ left: 60, right: 16, top: 8, bottom: 8 }}
-                >
-                  <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" />
-                  <XAxis type="number" tick={{ fill: '#6b7280', fontSize: 12 }} />
-                  <YAxis
-                    type="category"
-                    dataKey="labelShort"
-                    width={130}
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
-                  />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const item = payload[0].payload;
-                        return (
-                          <div className="rounded-lg border bg-white p-3 shadow-lg">
-                            <p className="text-sm font-semibold">{item.label}</p>
-                            <p className="text-xs text-gray-600">
-                              {formatNumber(item.count)} users
-                            </p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Bar dataKey="count" fill="rgb(var(--brand-700))" radius={[4, 4, 4, 4]} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Users
-            </h2>
-            <p className="text-xs text-gray-500">
-              Search, filter, and explore user engagement.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search by name or email"
-              className="h-9 w-72 text-sm focus-brand"
-            />
-            <Select
-              value={countryFilter}
-              onChange={(value) => {
-                setCountryFilter(value);
-                setUserPage(1);
-              }}
-              options={[
-                { value: '', label: 'All countries' },
-                ...(trafficOverview?.countries ?? []).map((item: any) => ({
-                  value: item.label,
-                  label: item.label,
-                })),
-              ]}
-              className="h-9 w-48 text-sm"
-            />
-            <button
-              onClick={handleExportCsv}
-              disabled={exportLoading}
-              className={`rounded-md border px-3 py-1.5 text-xs font-medium transition ${
-                exportLoading
-                  ? 'cursor-not-allowed border-gray-200 text-gray-300'
-                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              Export CSV
-            </button>
-            <button
-              onClick={handleExportPdf}
-              disabled={exportLoading}
-              className={`rounded-md border px-3 py-1.5 text-xs font-medium transition ${
-                exportLoading
-                  ? 'cursor-not-allowed border-gray-200 text-gray-300'
-                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              Export PDF
-            </button>
-          </div>
-        </div>
-        <div className="overflow-x-auto rounded-lg border border-gray-100">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-              <tr>
-                <th className="px-4 py-2 text-left">User</th>
-                <th className="px-4 py-2 text-left">Country</th>
-                <th className="px-4 py-2 text-left">Orders</th>
-                <th className="px-4 py-2 text-left">Total spend</th>
-                <th className="px-4 py-2 text-left">Avg. order</th>
-                <th className="px-4 py-2 text-left">Sessions</th>
-                <th className="px-4 py-2 text-left">Last active</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {usersLoading ? (
-                <tr>
-                  <td colSpan={7} className="py-10 text-center">
-                    <Spinner />
-                  </td>
-                </tr>
-              ) : userItems.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="py-10 text-center text-sm text-gray-500">
-                    No users found for this filter
-                  </td>
-                </tr>
-              ) : (
-                userItems.map((user: any) => (
-                  <tr
-                    key={user.userId}
-                    onClick={() => handleOpenDetail(user)}
-                    className="cursor-pointer transition hover:bg-gray-50"
-                  >
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{user.fullName}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                      <p className="text-xs text-gray-400">
-                        Joined {user.createdAt ? formatDateOnly(user.createdAt) : '—'}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3">
-                      {user.country ? (
-                        <>
-                          <span className="font-medium text-gray-800">{user.country}</span>
-                          {user.region && (
-                            <span className="ml-1 text-xs text-gray-500">
-                              · {user.region}
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="text-xs text-gray-400">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="font-semibold text-gray-900">
-                        {formatNumber(user.totalOrders)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">{formatCurrency(user.totalSpend)}</td>
-                    <td className="px-4 py-3">{formatCurrency(user.averageOrderValue)}</td>
-                    <td className="px-4 py-3">{formatNumber(user.totalSessions)}</td>
-                    <td className="px-4 py-3">
-                      <div className="text-xs text-gray-500">
-                        <div>
-                          Last login:{' '}
-                          <span className="font-medium text-gray-800">
-                            {user.lastLoginAt ? formatDateOnly(user.lastLoginAt) : '—'}
-                          </span>
-                        </div>
-                        <div>
-                          Last seen:{' '}
-                          <span className="font-medium text-gray-800">
-                            {user.lastSeenAt ? formatDateOnly(user.lastSeenAt) : '—'}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-gray-500">
-            Showing {(userPage - 1) * pageSize + Math.min(pageSize, userItems.length)} of{' '}
-            {formatNumber(userTotal)} users
-          </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setUserPage((prev) => Math.max(1, prev - 1))}
-              disabled={userPage === 1}
-              className={`rounded-md border px-3 py-1 text-xs font-medium transition ${
-                userPage === 1
-                  ? 'cursor-not-allowed border-gray-200 text-gray-300'
-                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              Previous
-            </button>
-            <span className="text-xs text-gray-500">
-              Page {userPage} of {formatNumber(totalUserPages)}
-            </span>
-            <button
-              onClick={() => setUserPage((prev) => Math.min(totalUserPages, prev + 1))}
-              disabled={userPage >= totalUserPages}
-              className={`rounded-md border px-3 py-1 text-xs font-medium transition ${
-                userPage >= totalUserPages
-                  ? 'cursor-not-allowed border-gray-200 text-gray-300'
-                  : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
-      <Modal
+      <UserDetailModal
         open={detailOpen}
-        onClose={() => setDetailOpen(false)}
+        onClose={handleCloseDetail}
         title={selectedUserName || 'User details'}
-        widthClassName="max-w-5xl"
-      >
-        {detailLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Spinner label="Loading user insights..." />
-          </div>
-        ) : !detail ? (
-          <p className="py-6 text-sm text-gray-500">
-            No analytics available for this user.
-          </p>
-        ) : (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 gap-4 rounded-lg border border-gray-200 bg-gray-50 p-4 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { label: 'Email', value: detail.email },
-                {
-                  label: 'Location',
-                  value: detail.country
-                    ? `${detail.country}${detail.region ? ` · ${detail.region}` : ''}`
-                    : '—',
-                },
-                {
-                  label: 'Joined',
-                  value: detail.createdAt ? formatDateOnly(detail.createdAt) : '—',
-                },
-                {
-                  label: 'Last login',
-                  value: detail.lastLoginAt ? formatDateOnly(detail.lastLoginAt) : '—',
-                },
-                {
-                  label: 'Last seen',
-                  value: detail.lastSeenAt ? formatDateOnly(detail.lastSeenAt) : '—',
-                },
-                {
-                  label: 'Lifetime orders',
-                  value: formatNumber(detail.lifetimeOrders),
-                },
-                {
-                  label: 'Lifetime spend',
-                  value: formatCurrency(detail.lifetimeSpend ?? 0),
-                },
-                {
-                  label: 'Total sessions',
-                  value: formatNumber(detail.totalSessions),
-                },
-              ].map((item) => (
-                <div key={item.label}>
-                  <p className="text-xs uppercase tracking-wide text-gray-500">
-                    {item.label}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900">
-                    {item.value}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">
-                  Recent orders
-                </h3>
-                <div className="mt-2 overflow-hidden rounded-lg border border-gray-200">
-                  <table className="min-w-full divide-y divide-gray-200 text-xs">
-                    <thead className="bg-gray-50 text-gray-500">
-                      <tr>
-                        <th className="px-3 py-2 text-left">Order</th>
-                        <th className="px-3 py-2 text-left">Status</th>
-                        <th className="px-3 py-2 text-left">Total</th>
-                        <th className="px-3 py-2 text-left">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 bg-white">
-                      {detail.recentOrders.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="px-3 py-4 text-center text-gray-500"
-                          >
-                            No orders yet
-                          </td>
-                        </tr>
-                      ) : (
-                        detail.recentOrders.map((order: any) => (
-                          <tr key={order.orderId}>
-                            <td className="px-3 py-2 font-medium text-gray-900">
-                              {order.orderNumber || order.orderId}
-                            </td>
-                            <td className="px-3 py-2 capitalize text-gray-600">
-                              {order.status}
-                            </td>
-                            <td className="px-3 py-2">
-                              {formatCurrency(order.total ?? 0)}
-                            </td>
-                            <td className="px-3 py-2">
-                              {order.createdAt ? formatDateOnly(order.createdAt) : '—'}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">
-                  Recent activity
-                </h3>
-                <div className="mt-2 max-h-72 overflow-y-auto space-y-3 rounded-lg border border-gray-200 bg-white p-3">
-                  {detail.recentEvents.length === 0 ? (
-                    <p className="text-xs text-gray-500">
-                      No recent activity logs.
-                    </p>
-                  ) : (
-                    detail.recentEvents.map((event: any, idx: number) => (
-                      <div key={`${event.createdAt}-${idx}`}>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span className="font-semibold text-gray-800">
-                            {event.eventType.replace(/_/g, ' ')}
-                          </span>
-                          <span>{formatDateOnly(event.createdAt)}</span>
-                        </div>
-                        <div className="mt-1 grid grid-cols-2 gap-2 text-[11px] text-gray-600">
-                          {event.page && (
-                            <span>
-                              <span className="font-semibold">Page:</span> {event.page}
-                            </span>
-                          )}
-                          {event.productId && (
-                            <span>
-                              <span className="font-semibold">Product:</span>{' '}
-                              {event.productId}
-                            </span>
-                          )}
-                          {event.device && (
-                            <span>
-                              <span className="font-semibold">Device:</span>{' '}
-                              {event.device}
-                            </span>
-                          )}
-                          {event.country && (
-                            <span>
-                              <span className="font-semibold">Country:</span>{' '}
-                              {event.country}
-                            </span>
-                          )}
-                          {event.source && (
-                            <span>
-                              <span className="font-semibold">Source:</span>{' '}
-                              {event.source}
-                            </span>
-                          )}
-                          {event.medium && (
-                            <span>
-                              <span className="font-semibold">Medium:</span>{' '}
-                              {event.medium}
-                            </span>
-                          )}
-                          {event.durationMs ? (
-                            <span>
-                              <span className="font-semibold">Duration:</span>{' '}
-                              {secondsFromMillis(event.durationMs)}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </Modal>
+        loading={detailLoading}
+        detail={detail}
+      />
     </>
   );
 }
-

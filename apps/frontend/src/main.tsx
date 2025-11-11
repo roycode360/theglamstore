@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   ApolloClient,
@@ -11,6 +11,7 @@ import { onError } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
+import { initTracker } from './analytics/tracker';
 import RootLayout from './components/layout/AppLayout';
 import HomePage from './routes/HomePage';
 import ProductCategories from './routes/ProductCategories';
@@ -21,22 +22,11 @@ import TermsOfService from './routes/TermsOfService';
 import CartPage from './routes/CartPage';
 import CheckoutPage from './routes/CheckoutPage';
 import OrderConfirmation from './routes/OrderConfirmation';
-import AdminLayout from './components/layout/AdminLayout';
-import DashboardPage from './routes/admin/DashboardPage';
-import AdminDashboard from './routes/admin/AdminDashboard';
 import ProductsPage from './routes/ProductsPage';
-import OrdersPage from './routes/admin/OrdersPage';
-import AdminCreateOrderPage from './routes/admin/AdminCreateOrderPage';
-import AdminOrderReceiptPage from './routes/admin/AdminOrderReceiptPage';
-import CustomersPage from './routes/admin/CustomersPage';
-import SettingsPage from './routes/admin/SettingsPage';
-import AdminUserAnalyticsPage from './routes/admin/AdminUserAnalyticsPage';
-import RevenueAnalyticsPage from './routes/admin/RevenueAnalyticsPage';
-import AdminReviewsPage from './routes/admin/AdminReviewsPage';
 import { ThemeProvider } from './theme';
 import { ToastProvider } from './components/ui/Toast';
 import { CartProvider } from './contexts/CartContext';
-import AdminCategoriesPage from './routes/admin/AdminCategoriesPage';
+import AdminLayout from './components/layout/AdminLayout';
 import RequireAuth from './routes/RequireAuth';
 import NotAuthorized from './routes/NotAuthorized';
 import { Auth0Provider } from '@auth0/auth0-react';
@@ -51,6 +41,29 @@ import CustomerOrderDetailsPage from './routes/account/CustomerOrderDetailsPage'
 import CustomerService from './routes/CustomerService';
 import WishlistPage from './routes/account/WishlistPage';
 import { WishlistProvider } from './contexts/WishlistContext';
+import PageLoader from './components/ui/PageLoader';
+
+const DashboardPage = lazy(() => import('./routes/admin/DashboardPage'));
+const AdminDashboard = lazy(() => import('./routes/admin/AdminDashboard'));
+const OrdersPage = lazy(() => import('./routes/admin/OrdersPage'));
+const AdminCreateOrderPage = lazy(
+  () => import('./routes/admin/AdminCreateOrderPage'),
+);
+const AdminOrderReceiptPage = lazy(
+  () => import('./routes/admin/AdminOrderReceiptPage'),
+);
+const CustomersPage = lazy(() => import('./routes/admin/CustomersPage'));
+const SettingsPage = lazy(() => import('./routes/admin/SettingsPage'));
+const AdminUserAnalyticsPage = lazy(
+  () => import('./routes/admin/AdminUserAnalyticsPage'),
+);
+const RevenueAnalyticsPage = lazy(
+  () => import('./routes/admin/RevenueAnalyticsPage'),
+);
+const AdminReviewsPage = lazy(() => import('./routes/admin/AdminReviewsPage'));
+const AdminCategoriesPage = lazy(
+  () => import('./routes/admin/AdminCategoriesPage'),
+);
 
 const httpLink = new HttpLink({
   uri:
@@ -128,10 +141,25 @@ const client = new ApolloClient({
   },
 });
 
+const tracker = initTracker(client);
+tracker.record({
+  eventType: 'session_start',
+  page: typeof window !== 'undefined' ? window.location.pathname : undefined,
+});
+
+const withSuspense = (
+  Component: React.LazyExoticComponent<React.ComponentType<any>>,
+  label?: string,
+) => (
+  <Suspense fallback={<PageLoader label={label} />}>
+    <Component />
+  </Suspense>
+);
+
 const router = createBrowserRouter([
   {
     path: '/orders/:id/receipt',
-    element: <AdminOrderReceiptPage />,
+    element: withSuspense(AdminOrderReceiptPage),
   },
   {
     element: <MainLayout />,
@@ -161,17 +189,32 @@ const router = createBrowserRouter([
           {
             element: <AdminLayout />,
             children: [
-              { index: true, element: <DashboardPage /> },
-              { path: 'dashboard', element: <DashboardPage /> },
-              { path: 'products', element: <AdminDashboard /> },
-              { path: 'categories', element: <AdminCategoriesPage /> },
-              { path: 'orders', element: <OrdersPage /> },
-              { path: 'orders/new', element: <AdminCreateOrderPage /> },
-              { path: 'analytics', element: <RevenueAnalyticsPage /> },
-              { path: 'user-analytics', element: <AdminUserAnalyticsPage /> },
-              { path: 'reviews', element: <AdminReviewsPage /> },
-              { path: 'customers', element: <CustomersPage /> },
-              { path: 'settings', element: <SettingsPage /> },
+              { index: true, element: withSuspense(DashboardPage) },
+              { path: 'dashboard', element: withSuspense(DashboardPage) },
+              { path: 'products', element: withSuspense(AdminDashboard) },
+              {
+                path: 'categories',
+                element: withSuspense(AdminCategoriesPage),
+              },
+              { path: 'orders', element: withSuspense(OrdersPage) },
+              {
+                path: 'orders/new',
+                element: withSuspense(AdminCreateOrderPage),
+              },
+              {
+                path: 'analytics',
+                element: withSuspense(RevenueAnalyticsPage),
+              },
+              {
+                path: 'user-analytics',
+                element: withSuspense(
+                  AdminUserAnalyticsPage,
+                  'Loading analytics…',
+                ),
+              },
+              { path: 'reviews', element: withSuspense(AdminReviewsPage) },
+              { path: 'customers', element: withSuspense(CustomersPage) },
+              { path: 'settings', element: withSuspense(SettingsPage) },
             ],
           },
         ],

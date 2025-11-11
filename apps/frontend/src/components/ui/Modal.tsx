@@ -25,44 +25,59 @@ export default function Modal({
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(open);
   const closeTimerRef = useRef<number | null>(null);
+  const openRaf1Ref = useRef<number | null>(null);
+  const openRaf2Ref = useRef<number | null>(null);
 
   useEffect(() => {
     if (open) {
       setMounted(true);
-      // next frame ensure transitions run
-      requestAnimationFrame(() => setVisible(true));
+      // Ensure we start from the hidden state, then transition to visible
+      setVisible(false);
+      openRaf1Ref.current = requestAnimationFrame(() => {
+        // A second RAF guarantees layout has been flushed before toggling
+        openRaf2Ref.current = requestAnimationFrame(() => setVisible(true));
+      });
     } else {
       setVisible(false);
-      // wait for animation before unmount
+      // wait for animation before unmount (keep in sync with duration below)
       closeTimerRef.current = window.setTimeout(() => {
         setMounted(false);
-      }, 200);
+      }, 300);
     }
     return () => {
       if (closeTimerRef.current) {
         window.clearTimeout(closeTimerRef.current);
         closeTimerRef.current = null;
       }
+      if (openRaf1Ref.current) {
+        cancelAnimationFrame(openRaf1Ref.current);
+        openRaf1Ref.current = null;
+      }
+      if (openRaf2Ref.current) {
+        cancelAnimationFrame(openRaf2Ref.current);
+        openRaf2Ref.current = null;
+      }
     };
   }, [open]);
 
   if (!mounted) return null;
   const hasHeading = Boolean(title || titleIcon);
+  const easeClass = visible ? 'ease-out' : 'ease-in';
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-3 sm:px-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-2 sm:px-0">
       <div
-        className={`absolute inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity duration-200 ${visible ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity duration-300 ${easeClass} ${visible ? 'opacity-100' : 'opacity-0'}`}
         onClick={() => {
           if (canDismiss) onClose();
         }}
       />
       <div
-        className={`relative w-full max-w-[94vw] sm:w-auto ${widthClassName} overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-20px_rgba(15,23,42,0.35)] transition-all duration-200 ${visible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-2 scale-95 opacity-0'}`}
+        className={`relative w-full max-w-[94vw] sm:w-auto ${widthClassName} overflow-hidden rounded-3xl bg-white shadow-[0_24px_60px_-20px_rgba(15,23,42,0.35)] transition-all duration-300 ${easeClass} ${visible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-3 scale-95 opacity-0'}`}
       >
-        <div className={`px-5 py-6 sm:px-8 ${footer ? 'pb-4' : ''}`}>
+        <div className={`px-4 py-4 sm:px-8 sm:py-6 ${footer ? 'pb-4' : ''}`}>
           {(hasHeading || canDismiss) && (
             <div
-              className={`mb-4 flex items-start gap-3 ${
+              className={`mb-3 flex items-start gap-3 sm:mb-4 ${
                 hasHeading ? 'justify-between' : 'justify-end'
               }`}
             >
@@ -105,7 +120,7 @@ export default function Modal({
               )}
             </div>
           )}
-          <div>{children}</div>
+          <div className="max-h-[85vh] overflow-y-auto">{children}</div>
         </div>
         {footer && (
           <div className="flex justify-end gap-2 px-5 pb-6 sm:px-8">

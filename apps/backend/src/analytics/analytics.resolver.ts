@@ -1,9 +1,4 @@
-import {
-  Args,
-  Mutation,
-  Query,
-  Resolver,
-} from '@nestjs/graphql';
+import { Args, Int, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service.js';
 import { UserAnalyticsSummary } from './entities/user-analytics-summary.entity.js';
@@ -43,7 +38,7 @@ export class AnalyticsResolver {
   async getUserActivityTrend(
     @Args('period', { type: () => String, defaultValue: 'daily' })
     period: 'daily' | 'weekly',
-    @Args('days', { type: () => Number, nullable: true })
+    @Args('days', { type: () => Int, nullable: true })
     days?: number | null,
     @Args('range', { type: () => UserAnalyticsRangeInput, nullable: true })
     range?: UserAnalyticsRangeInput | null,
@@ -65,7 +60,7 @@ export class AnalyticsResolver {
   @Roles('admin')
   @Query(() => [UserAnalyticsTopProduct])
   async getUserTopProducts(
-    @Args('limit', { type: () => Number, nullable: true })
+    @Args('limit', { type: () => Int, nullable: true })
     limit?: number | null,
     @Args('range', { type: () => UserAnalyticsRangeInput, nullable: true })
     range?: UserAnalyticsRangeInput | null,
@@ -137,4 +132,3 @@ export class AnalyticsResolver {
     return true;
   }
 }
-

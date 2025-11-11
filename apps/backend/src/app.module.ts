@@ -17,6 +17,7 @@ import { CouponsModule } from './coupons/coupons.module';
 import { CompanyModule } from './company/company.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { DeliveryLocationsModule } from './delivery-locations/delivery-locations.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     CompanyModule,
     ReviewsModule,
     AnalyticsModule,
+    DeliveryLocationsModule,
   ],
   controllers: [AppController],
   providers: [AppService, AppResolver],

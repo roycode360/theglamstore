@@ -1,6 +1,13 @@
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '../../utils/currency';
 import { useState } from 'react';
+import { useAnalyticsTracker } from '../../hooks/useAnalyticsTracker';
+import { useCart } from '../../contexts/CartContext';
+import { useLazyQuery } from '@apollo/client';
+import { GET_PRODUCT } from '../../graphql/products';
+import { ProductQuickViewModal } from './ProductQuickViewModal';
+import { useWishlist } from '../../contexts/WishlistContext';
+import { useToast } from './Toast';
 
 interface ProductCardProps {
   product: {
@@ -10,12 +17,33 @@ interface ProductCardProps {
     price: number;
     salePrice?: number | null;
     images?: string[];
+    colors?: string[];
+    reviewAverage?: number | null;
   };
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const { trackProductClick } = useAnalyticsTracker();
+  const { addToCart } = useCart();
+  const [addingToCart, setAddingToCart] = useState(false);
+  const rawColor = product.colors?.[0] ?? '';
+  const defaultColor = rawColor
+    ? rawColor.includes('|')
+      ? rawColor.split('|')[0] || rawColor.split('|')[1]
+      : rawColor
+    : '';
+
+  const [quickOpen, setQuickOpen] = useState(false);
+  const [loadQuick, { data: quickData, loading: quickLoading }] = useLazyQuery(
+    GET_PRODUCT,
+    { fetchPolicy: 'cache-first' },
+  );
+
+  const { items: wishlist, add: addWish, remove: removeWish } = useWishlist();
+  const { showToast } = useToast();
+  const onWishlist = !!wishlist.find((w: any) => w._id === product._id);
 
   return (
     <div
@@ -26,6 +54,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       <Link
         to={`/ProductDetails?id=${product._id}`}
         className="block overflow-hidden bg-white"
+        onClick={() => trackProductClick(product._id)}
       >
         {/* Product Image with loading skeleton and progressive hover */}
         <div className="relative aspect-[3/4] w-full overflow-hidden bg-white">
@@ -69,12 +98,28 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div className="absolute z-10 flex flex-col items-center gap-4 bottom-3 right-3">
               {/* Heart icon */}
               <button
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.preventDefault();
-                  // TODO: Add to wishlist
+                  try {
+                    if (onWishlist) {
+                      await removeWish({ productId: product._id });
+                      showToast('Removed from wishlist', 'success');
+                    } else {
+                      await addWish({ productId: product._id });
+                      showToast('Added to wishlist', 'success');
+                    }
+                  } catch (err) {
+                    showToast('Unable to update wishlist', 'error');
+                  }
                 }}
-                className="flex items-center justify-center w-12 h-12 text-black transition-all duration-1000 ease-out bg-white rounded-full hover:bg-black hover:text-white hover:shadow-lg"
+                className={`flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 ease-out hover:shadow-lg ${
+                  onWishlist
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black hover:bg-black hover:text-white'
+                }`}
                 aria-label="Add to wishlist"
+                aria-pressed={onWishlist}
+                title={onWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -96,7 +141,8 @@ export default function ProductCard({ product }: ProductCardProps) {
               <button
                 onClick={(e) => {
                   e.preventDefault();
-                  // TODO: Quick view
+                  setQuickOpen(true);
+                  void loadQuick({ variables: { id: product._id } });
                 }}
                 className="flex items-center justify-center w-12 h-12 text-black transition-all duration-1000 ease-out bg-white rounded-full hover:bg-black hover:text-white hover:shadow-lg"
                 aria-label="Quick view"
@@ -120,29 +166,46 @@ export default function ProductCard({ product }: ProductCardProps) {
 
               {/* Cart icon */}
               <button
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.preventDefault();
-                  // TODO: Add to cart
+                  e.stopPropagation();
+                  if (addingToCart) return;
+                  try {
+                    setAddingToCart(true);
+                    await addToCart({
+                      productId: product._id,
+                      quantity: 1,
+                      selectedSize: '',
+                      selectedColor: defaultColor,
+                    });
+                  } finally {
+                    setAddingToCart(false);
+                  }
                 }}
                 className="flex items-center justify-center w-12 h-12 text-black transition-all duration-1000 ease-out bg-white rounded-full hover:bg-black hover:text-white hover:shadow-lg"
+                aria-disabled={addingToCart}
                 aria-label="Add to cart"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  className="lucide lucide-shopping-cart-icon lucide-shopping-cart"
-                >
-                  <circle cx="8" cy="21" r="1" />
-                  <circle cx="19" cy="21" r="1" />
-                  <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
-                </svg>
+                {addingToCart ? (
+                  <span className="w-5 h-5 border-2 border-black rounded-full animate-spin border-t-transparent" />
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    className="lucide lucide-shopping-cart-icon lucide-shopping-cart"
+                  >
+                    <circle cx="8" cy="21" r="1" />
+                    <circle cx="19" cy="21" r="1" />
+                    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
+                  </svg>
+                )}
               </button>
             </div>
           )}
@@ -157,18 +220,21 @@ export default function ProductCard({ product }: ProductCardProps) {
 
           {/* Star rating */}
           <div className="mb-1 mt-2 flex items-center gap-0.5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <svg
-                key={i}
-                className={`h-3.5 w-3.5 ${i < 4 ? 'fill-black text-black' : 'fill-gray-300 text-gray-300'}`}
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                stroke="currentColor"
-                strokeWidth={'0'}
-              >
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-              </svg>
-            ))}
+            {(() => {
+              const rating = Math.round(Number(product.reviewAverage ?? 0));
+              return Array.from({ length: 5 }).map((_, i) => (
+                <svg
+                  key={i}
+                  className={`h-3.5 w-3.5 ${i < rating ? 'fill-black text-black' : 'fill-gray-300 text-gray-300'}`}
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  stroke="currentColor"
+                  strokeWidth={'0'}
+                >
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                </svg>
+              ));
+            })()}
           </div>
 
           {/* Price */}
@@ -186,6 +252,14 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
       </Link>
+
+      {/* Quick View Modal */}
+      <ProductQuickViewModal
+        open={quickOpen}
+        onClose={() => setQuickOpen(false)}
+        loading={quickLoading}
+        product={quickData?.getProduct}
+      />
     </div>
   );
 }

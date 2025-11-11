@@ -163,7 +163,7 @@ export default function CartPage() {
   return (
     <>
       <div className="min-h-screen py-6 bg-gray-50 sm:py-8">
-        <div className="mx-auto max-w-7xl sm:px-4">
+        <div className="px-4 mx-auto max-w-7xl sm:px-6">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-4 mb-4">
@@ -231,7 +231,12 @@ export default function CartPage() {
                           {/* Product Details */}
                           <div className="flex-1 min-w-0">
                             <h3 className="mb-1 text-lg font-semibold">
-                              {item?.product?.name}
+                              <Link
+                                to={`/ProductDetails?id=${item?.product?._id ?? ''}`}
+                                className="transition-colors hover:text-brand-700"
+                              >
+                                {item?.product?.name}
+                              </Link>
                             </h3>
                             <p className="mb-2 text-sm text-muted">
                               {item?.product?.brand}
@@ -242,8 +247,38 @@ export default function CartPage() {
                               <span className="bg-brand-100 text-brand-800 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
                                 Size: {item?.selectedSize}
                               </span>
-                              <span className="bg-brand-100 text-brand-800 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
-                                Color: {item?.selectedColor}
+                              <span className="bg-brand-100 text-brand-800 inline-flex items-center gap-2 rounded-full px-2.5 py-0.5 text-xs font-medium">
+                                <span className="flex items-center gap-1">
+                                  Color:
+                                  {(() => {
+                                    const selected = item?.selectedColor || '';
+                                    let swatch = '';
+                                    let label = selected;
+                                    if (selected.includes('|')) {
+                                      const parts = selected.split('|');
+                                      label = parts[0] || parts[1] || '';
+                                      swatch = parts[1] || parts[0] || '';
+                                    } else {
+                                      swatch = selected;
+                                    }
+                                    return (
+                                      <>
+                                        {swatch && (
+                                          <span
+                                            className="ml-1 inline-flex h-2.5 w-2.5 shrink-0 rounded-full border border-white/70 shadow-sm"
+                                            style={{
+                                              backgroundColor: swatch,
+                                              boxShadow:
+                                                '0 0 0 1px rgba(0,0,0,0.08)',
+                                            }}
+                                            aria-hidden="true"
+                                          />
+                                        )}
+                                        <span>{label}</span>
+                                      </>
+                                    );
+                                  })()}
+                                </span>
                               </span>
                             </div>
 
@@ -410,11 +445,7 @@ export default function CartPage() {
                       {formatCurrency(subtotal || 0)}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span className="font-medium text-gray-700">Free</span>
-                  </div>
-                  
+
                   <div className="pt-3 border-t">
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
@@ -435,35 +466,11 @@ export default function CartPage() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-100">
-                      🚚
-                    </div>
-                    <div>
-                      <div className="font-medium">Free Shipping</div>
-                      <div className="text-sm text-muted">
-                        On orders over ₦30,000
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-100">
                       🛡️
                     </div>
                     <div>
                       <div className="font-medium">Secure Payment</div>
                       <div className="text-sm text-muted">Bank transfer </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-100">
-                      📅
-                    </div>
-                    <div>
-                      <div className="font-medium">Easy Returns</div>
-                      <div className="text-sm text-muted">
-                        7-day return policy
-                      </div>
                     </div>
                   </div>
                 </div>

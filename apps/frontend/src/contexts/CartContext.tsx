@@ -19,6 +19,7 @@ import { useToast } from '../components/ui/Toast';
 import { useAuth } from './AuthContext';
 import { localCartUtils, LocalCartItem } from '../utils/localCart';
 import { GET_PRODUCT } from '../graphql/products';
+import { useAnalyticsTracker } from '../hooks/useAnalyticsTracker';
 
 interface TCartContext {
   addToCart: (input: {
@@ -43,6 +44,7 @@ interface TCartContext {
   cartItems: TCartItem[] | LocalCartItem[];
   cartItemCount: number;
   isLoading: boolean;
+  cartLoaded: boolean;
   syncLocalCartToServer: () => Promise<void>;
 }
 
@@ -56,11 +58,13 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const { showToast } = useToast();
   const { isUserAuthenticated, user } = useAuth();
   const client = useApolloClient();
+  const { trackAddToCart } = useAnalyticsTracker();
 
   // State for hybrid cart
   const [cartItems, setCartItems] = useState<TCartItem[] | LocalCartItem[]>([]);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [cartLoaded, setCartLoaded] = useState(false);
 
   const [addToCartMutation] = useMutation<{ addToCart: TCartItem }>(
     ADD_TO_CART,
@@ -131,20 +135,25 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   // Load cart data based on authentication status
   useEffect(() => {
     if (isUserAuthenticated) {
-      // User is authenticated, use API data
-      if (apiCartData?.getCartItems) {
-        setCartItems(apiCartData.getCartItems);
-      }
-      if (apiCartCountData?.getCartItemCount !== undefined) {
-        setCartItemCount(apiCartCountData.getCartItemCount);
-      }
       setIsLoading(apiCartLoading);
+      if (!apiCartLoading) {
+        setCartItems(apiCartData?.getCartItems ?? []);
+        if (apiCartCountData?.getCartItemCount !== undefined) {
+          setCartItemCount(apiCartCountData.getCartItemCount);
+        } else {
+          setCartItemCount(apiCartData?.getCartItems?.length ?? 0);
+        }
+        setCartLoaded(true);
+      } else {
+        setCartLoaded(false);
+      }
     } else {
       // User is not authenticated, use local storage
       const localItems = localCartUtils.getCartItems();
       setCartItems(localItems);
       setCartItemCount(localCartUtils.getCartItemCount());
       setIsLoading(false);
+      setCartLoaded(true);
     }
   }, [isUserAuthenticated, apiCartData, apiCartCountData, apiCartLoading]);
 
@@ -179,6 +188,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
             'success',
             { title: 'Added to Cart!' },
           );
+          trackAddToCart(input.productId);
         }
       } catch (error) {
         showToast('Failed to add item to cart', 'error');
@@ -232,6 +242,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           } else {
             showToast(`${product.name} added to cart`, 'success');
           }
+          trackAddToCart(input.productId);
         } else {
           showToast('Product not found', 'error');
         }
@@ -328,6 +339,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     cartItems,
     cartItemCount,
     isLoading,
+    cartLoaded,
     syncLocalCartToServer,
   };
 

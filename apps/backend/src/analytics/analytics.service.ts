@@ -27,6 +27,7 @@ import {
   ProductDocument,
   ProductModel,
 } from '../products/schemas/product.schema.js';
+import { Types } from 'mongoose';
 type DateRange = { start?: Date | null; end?: Date | null };
 type KeyValueAggregation = { _id: string; total: number };
 type LeanUserDoc = {
@@ -178,7 +179,6 @@ export class AnalyticsService {
     }
 
     const match: Record<string, unknown> = {
-      userId: { $ne: null },
       createdAt: { $gte: start },
     };
     if (range.end) {
@@ -210,27 +210,39 @@ export class AnalyticsService {
         {
           $group: {
             _id: dateExpression,
-            activeSet: {
-              $addToSet: {
-                $cond: [{ $ifNull: ['$userId', false] }, '$userId', '$$REMOVE'],
-              },
+            userSet: {
+              $addToSet: '$userId',
             },
-            sessions: {
-              $addToSet: {
-                $cond: [
-                  { $ifNull: ['$sessionId', false] },
-                  '$sessionId',
-                  '$$REMOVE',
-                ],
-              },
+            sessionSet: {
+              $addToSet: '$sessionId',
             },
           },
         },
         {
           $project: {
             _id: 1,
-            activeUsers: { $size: '$activeSet' },
-            sessions: { $size: '$sessions' },
+            activeUsers: {
+              $size: {
+                $filter: {
+                  input: '$userSet',
+                  as: 'uid',
+                  cond: {
+                    $and: [{ $ne: ['$$uid', null] }, { $ne: ['$$uid', ''] }],
+                  },
+                },
+              },
+            },
+            sessions: {
+              $size: {
+                $filter: {
+                  input: '$sessionSet',
+                  as: 'sid',
+                  cond: {
+                    $and: [{ $ne: ['$$sid', null] }, { $ne: ['$$sid', ''] }],
+                  },
+                },
+              },
+            },
           },
         },
         { $sort: { _id: 1 } },
@@ -391,11 +403,17 @@ export class AnalyticsService {
     const productIds = aggregation
       .map((item) => item._id)
       .filter((id): id is string => typeof id === 'string');
+    const productObjectIds = productIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+
     const productDocs =
-      (await this.productModel
-        .find({ _id: { $in: productIds } })
-        .select('_id name')
-        .lean<Array<ProductDocument & { name?: string }>>()) ?? [];
+      productObjectIds.length > 0
+        ? await this.productModel
+            .find({ _id: { $in: productObjectIds } })
+            .select('_id name')
+            .lean<Array<ProductDocument & { name?: string }>>()
+        : [];
     const nameMap = new Map(
       productDocs.map((doc) => [String(doc._id), doc.name ?? '']),
     );

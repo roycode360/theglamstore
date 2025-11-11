@@ -40,20 +40,18 @@ export const Footer = () => {
             <li>
               <Link to="/privacy-policy">Privacy Policy</Link>
             </li>
-            {/* <li>
-              <a href="#">Size Guide</a>
-            </li> */}
-            {/* <li>
-              <a href="#">Returns</a>
-            </li> */}
           </ul>
         </div>
       </div>
-      <div
-        className="px-4 pb-10 mx-auto text-xs text-center mt-7 max-w-7xl sm:px-6"
-        style={{ color: 'rgb(var(--muted))' }}
-      >
-        © 2025 TheGlamStore. All rights reserved.
+      <div className="border-t border-zinc-200 bg-white/70">
+        <div className="flex flex-col gap-2 px-4 py-6 mx-auto text-xs text-center max-w-7xl text-zinc-500 sm:flex-row sm:items-center sm:justify-between sm:text-sm">
+          <span>© 2025 TheGlamStore. All rights reserved.</span>
+          <span className="flex items-center justify-center gap-2 text-xs text-zinc-400 sm:text-sm">
+            <span>Made with</span>
+            <span className="text-rose-500">♡</span>
+            <span>by Roycode</span>
+          </span>
+        </div>
       </div>
     </footer>
   );

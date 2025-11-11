@@ -19,8 +19,8 @@ export type AdminOrderCustomer = {
 export type AdminOrderItemDraft = {
   productId: string;
   name?: string;
-  price?: number;
-  quantity?: number;
+  price?: number | null;
+  quantity?: number | null;
   selectedSize?: string;
   selectedColor?: string;
   image?: string;
@@ -37,6 +37,9 @@ export type AdminOrderPricing = {
   amountPaid?: number;
   paymentReference?: string;
   paymentProofUrl?: string;
+  deliveryLocationId?: string;
+  deliveryLocationName?: string;
+  deliveryFee?: number;
 };
 
 export type AdminOrderComposerState = {
@@ -78,6 +81,9 @@ function createDefaultState(): AdminOrderComposerState {
       amountPaid: undefined,
       paymentReference: '',
       paymentProofUrl: '',
+      deliveryLocationId: undefined,
+      deliveryLocationName: undefined,
+      deliveryFee: undefined,
     },
     notes: '',
   };

@@ -88,6 +88,8 @@ export const LIST_PRODUCTS_PAGE = gql`
         colors
         active
         featured
+        reviewCount
+        reviewAverage
       }
       total
       page
@@ -108,6 +110,8 @@ export const LIST_FEATURED = gql`
       images
       category
       featured
+      reviewCount
+      reviewAverage
     }
   }
 `;
@@ -153,6 +157,9 @@ export const LIST_PRODUCTS_BY_CATEGORY = gql`
       salePrice
       stockQuantity
       images
+      colors
+      reviewCount
+      reviewAverage
     }
   }
 `;

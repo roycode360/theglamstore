@@ -60,7 +60,17 @@ export class Order {
   total!: number;
 
   @Field(() => Number, { nullable: true })
-  shippingFee?: number | null;
+  shippingFee?: number | null; // kept for compatibility
+
+  // Delivery fields
+  @Field(() => Number, { nullable: true })
+  deliveryFee?: number | null;
+
+  @Field(() => String, { nullable: true })
+  deliveryLocationId?: string | null;
+
+  @Field(() => String, { nullable: true })
+  deliveryLocationName?: string | null;
 
   @Field({ nullable: true })
   couponCode?: string;

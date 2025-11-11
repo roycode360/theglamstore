@@ -117,6 +117,9 @@ input CreateAdminOrderInput {
   city: String!
   couponCode: String
   couponDiscount: Float
+  deliveryFee: Float
+  deliveryLocationId: ID
+  deliveryLocationName: String
   email: String!
   firstName: String!
   items: [AdminOrderItemInput!]!
@@ -192,6 +195,14 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type DeliveryLocation {
+  _id: ID!
+  active: Boolean!
+  isDefault: Boolean!
+  name: String!
+  price: Float!
+}
+
 enum EditOp {
   ADD
   REMOVE
@@ -263,6 +274,7 @@ type Mutation {
   createProduct(input: CreateProductInput!): Product!
   deleteCategory(id: ID!): Boolean!
   deleteCoupon(id: ID!): Boolean!
+  deleteDeliveryLocation(id: ID!): Boolean!
   deleteOrder(id: String!): Boolean!
   deleteProduct(id: ID!): Boolean!
   editOrderItems(input: EditOrderItemsInput!): Order
@@ -282,6 +294,7 @@ type Mutation {
   updateOrderStatus(id: String!, status: String!): Order
   updateProduct(id: ID!, input: UpdateProductInput!): Product
   upsertCompanySettings(input: UpsertCompanySettingsInput!): CompanySettings!
+  upsertDeliveryLocation(input: UpsertDeliveryLocationInput!): DeliveryLocation!
 }
 
 type Order {
@@ -294,6 +307,9 @@ type Order {
   couponCode: String
   couponDiscount: Float
   createdAt: DateTime!
+  deliveryFee: Float
+  deliveryLocationId: String
+  deliveryLocationName: String
   email: String!
   firstName: String!
   items: [OrderItem!]!
@@ -377,6 +393,7 @@ type Query {
   getCartItemCount: Float!
   getCartItems: [CartItemType!]!
   getDashboardStats: DashboardStats!
+  getDeliveryLocations: [DeliveryLocation!]!
   getOrder(id: String!): Order
   getPendingOrdersCount: Int!
   getProduct(id: ID!): Product
@@ -384,16 +401,17 @@ type Query {
   getRevenueTrend(period: String): RevenueTrend!
   getReviewEligibility(productId: String!): ReviewEligibility!
   getTopSellingProducts(limit: Int): TopSellingProducts!
-  getUserActivityTrend(days: Float, period: String! = "daily", range: UserAnalyticsRangeInput): [UserActivityPoint!]!
+  getUserActivityTrend(days: Int, period: String! = "daily", range: UserAnalyticsRangeInput): [UserActivityPoint!]!
   getUserAnalyticsSummary: UserAnalyticsSummary!
   getUserAnalyticsUser(userId: String!): UserAnalyticsDetail
   getUserBehaviorFunnel(range: UserAnalyticsRangeInput): [UserFunnelStep!]!
   getUserPageVisitTrend(range: UserAnalyticsRangeInput): [UserPageMetricPoint!]!
-  getUserTopProducts(limit: Float, range: UserAnalyticsRangeInput): [UserAnalyticsTopProduct!]!
+  getUserTopProducts(limit: Int, range: UserAnalyticsRangeInput): [UserAnalyticsTopProduct!]!
   getUserTrafficOverview(range: UserAnalyticsRangeInput): UserTrafficBreakdown!
   health: String!
   listCategories: [Category!]!
   listCoupons: [Coupon!]!
+  listDeliveryLocations: [DeliveryLocation!]!
   listFeaturedProducts: [Product!]!
   listOrders: [Order!]!
   listOrdersPage(email: String, page: Int!, pageSize: Int!, status: String): OrderPage!
@@ -587,6 +605,14 @@ input UpsertCompanySettingsInput {
   promoMessage: String
   promoSubtitle: String
   promoTitle: String
+}
+
+input UpsertDeliveryLocationInput {
+  _id: ID
+  active: Boolean! = true
+  isDefault: Boolean! = false
+  name: String!
+  price: Float!
 }
 
 type User {
