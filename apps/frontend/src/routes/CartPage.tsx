@@ -20,6 +20,7 @@ export default function CartPage() {
 
   const { showToast } = useToast();
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [removingItems, setRemovingItems] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   // Convert cart items to a consistent format
@@ -87,12 +88,19 @@ export default function CartPage() {
   };
 
   const handleRemoveItem = async (cartItemId: string | undefined) => {
+    if (!cartItemId) return;
+    setRemovingItems((prev) => new Set(prev).add(cartItemId));
     try {
-      if (!cartItemId) return;
       await removeFromCart(cartItemId);
       showToast('Item removed from cart', 'success');
     } catch (error) {
       showToast('Failed to remove item', 'error');
+    } finally {
+      setRemovingItems((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(cartItemId);
+        return newSet;
+      });
     }
   };
 
@@ -403,23 +411,32 @@ export default function CartPage() {
                             {/* Remove Button */}
                             <button
                               onClick={() => handleRemoveItem(itemId)}
-                              className="text-gray-700 transition-colors hover:text-gray-800"
+                              className="flex items-center justify-center text-gray-700 transition-colors hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
                               title="Remove item"
+                              disabled={removingItems.has(itemId || '')}
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className="w-5 h-5"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              {removingItems.has(itemId || '') ? (
+                                <Spinner
+                                  label=""
+                                  size={16}
+                                  className="w-5 h-5"
                                 />
-                              </svg>
+                              ) : (
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                              )}
                             </button>
                           </div>
                         </div>
