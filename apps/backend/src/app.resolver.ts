@@ -1,5 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { EmailService } from './auth/email.service';
+import { isPublic } from './auth/decorators';
 
 @Resolver()
 export class AppResolver {
@@ -9,6 +10,7 @@ export class AppResolver {
     return 'ok';
   }
 
+  @isPublic()
   @Mutation(() => Boolean)
   async sendContactMessage(
     @Args('name') name: string,
