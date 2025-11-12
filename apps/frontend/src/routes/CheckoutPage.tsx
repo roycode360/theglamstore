@@ -14,9 +14,9 @@ import { VALIDATE_COUPON } from '../graphql/coupons';
 import { GET_COMPANY_SETTINGS } from '../graphql/settings';
 import { getAnalyticsRefetches } from '../graphql/refetches';
 import { useAnalyticsTracker } from '../hooks/useAnalyticsTracker';
-import CheckoutShippingForm, {
+import CheckoutDeliveryForm, {
   CheckoutFormValues,
-} from './checkout/components/CheckoutShippingForm';
+} from '../routes/checkout/components/CheckoutDeliveryForm';
 import CheckoutOrderSummary from './checkout/components/CheckoutOrderSummary';
 import BankTransferModal from './checkout/components/BankTransferModal';
 import { LIST_DELIVERY_LOCATIONS } from '../graphql/delivery';
@@ -109,9 +109,7 @@ export default function CheckoutPage() {
   });
   const deliveries = useMemo(
     () =>
-      (deliveryData?.listDeliveryLocations ?? []).filter(
-        (d: any) => d.active,
-      ),
+      (deliveryData?.listDeliveryLocations ?? []).filter((d: any) => d.active),
     [deliveryData],
   );
   const defaultDelivery = useMemo(
@@ -133,6 +131,16 @@ export default function CheckoutPage() {
   const deliveryFee = Number(selectedDelivery?.price ?? 0);
   const baseAfterDiscount = appliedCoupon?.newTotal ?? totalBeforeDiscount;
   const payableTotal = Math.max(0, baseAfterDiscount + deliveryFee);
+
+  const canContinueToPayment = useMemo(
+    () =>
+      form.firstName.trim().length > 0 &&
+      form.lastName.trim().length > 0 &&
+      form.address1.trim().length > 0 &&
+      form.city.trim().length > 0 &&
+      form.state.trim().length > 0,
+    [form.firstName, form.lastName, form.address1, form.city, form.state],
+  );
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -179,7 +187,7 @@ export default function CheckoutPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <Spinner label="Loading checkout" />
       </div>
     );
@@ -189,16 +197,16 @@ export default function CheckoutPage() {
   if (!isUserAuthenticated) {
     return (
       <>
-        <div className="flex min-h-screen items-center justify-center">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="mb-4 text-6xl">🔒</div>
             <h1 className="mb-4 text-3xl font-bold">Login Required</h1>
-            <p className="text-muted mb-8">
+            <p className="mb-8 text-muted">
               You need to be logged in to access the checkout page.
             </p>
             <button
               onClick={login}
-              className="btn-primary rounded-lg px-8 py-3 text-lg"
+              className="px-8 py-3 text-lg rounded-lg btn-primary"
             >
               Login to Continue
             </button>
@@ -224,7 +232,7 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-7xl px-2 py-8 sm:px-4">
+      <div className="px-2 py-8 mx-auto max-w-7xl sm:px-4">
         <div className="mb-6">
           <Link to="/cart" className="text-brand hover:text-brand-700">
             ← Back to Cart
@@ -233,17 +241,17 @@ export default function CheckoutPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* Shipping form */}
           <div className="lg:col-span-2">
-            <CheckoutShippingForm
+            <CheckoutDeliveryForm
               values={form}
               onChange={update}
               onContinue={() => {
-                  if (validate()) {
-                    setInfo(form);
-                    setShowBankModal(true);
-                  }
-                }}
+                if (validate()) {
+                  setInfo(form);
+                  setShowBankModal(true);
+                }
+              }}
+              canContinue={canContinueToPayment}
             />
           </div>
 
@@ -320,61 +328,60 @@ export default function CheckoutPage() {
         whatsappClicked={whatsappClicked}
         onWhatsappClick={() => setWhatsappClicked(true)}
         onPaymentSubmitted={async ({ transferProofUrl }) => {
-                  const payload = {
-                    email: form.email,
-                    firstName: form.firstName,
-                    lastName: form.lastName,
-                    phone: form.phone,
-                    address1: form.address1,
-                    city: form.city,
-                    state: form.state,
-                    subtotal,
+          const payload = {
+            email: form.email,
+            firstName: form.firstName,
+            lastName: form.lastName,
+            phone: form.phone,
+            address1: form.address1,
+            city: form.city,
+            state: form.state,
+            subtotal,
             total: payableTotal,
-                    paymentMethod: 'bank_transfer',
-                    status: 'awaiting_review',
+            paymentMethod: 'bank_transfer',
+            status: 'awaiting_review',
             transferProofUrl,
-                    items: items.map((it) => ({
-                      productId: it.product?._id,
-                      name: it.product?.name,
-                      price: it.product?.salePrice ?? it.product?.price ?? 0,
-                      quantity: it.quantity,
-                      selectedSize: it.selectedSize,
-                      selectedColor: it.selectedColor,
-                      image: it.product?.images?.[0],
-                    })),
+            items: items.map((it) => ({
+              productId: it.product?._id,
+              name: it.product?.name,
+              price: it.product?.salePrice ?? it.product?.price ?? 0,
+              quantity: it.quantity,
+              selectedSize: it.selectedSize,
+              selectedColor: it.selectedColor,
+              image: it.product?.images?.[0],
+            })),
             couponCode: appliedCoupon?.code,
             couponDiscount: discountAmount,
             // Delivery fields
             deliveryLocationId: deliveryId || undefined,
             deliveryLocationName: selectedDelivery?.name || undefined,
             deliveryFee,
-            // For compatibility with backend totals
-            shippingFee: deliveryFee,
-                  };
+            amountPaid: payableTotal,
+          };
           const { data: orderResponse } = await createOrder({
-                    variables: { payload: JSON.stringify(payload) },
-                  });
+            variables: { payload: JSON.stringify(payload) },
+          });
           if (orderResponse?.createBankTransferOrder) {
             trackPurchase();
-                  setShowBankModal(false);
-                  clearCart();
-                  reset();
-                  setForm({
-                    firstName: '',
-                    lastName: '',
-                    email: user?.email || '',
-                    phone: '',
-                    address1: '',
-                    city: '',
-                    state: '',
-                  });
+            setShowBankModal(false);
+            clearCart();
+            reset();
+            setForm({
+              firstName: '',
+              lastName: '',
+              email: user?.email || '',
+              phone: '',
+              address1: '',
+              city: '',
+              state: '',
+            });
             setTransferFile(null);
             setWhatsappClicked(false);
             setAppliedCoupon(null);
             setCouponCode('');
-                  navigate('/checkout/confirmation');
+            navigate('/checkout/confirmation');
           } else {
-                  showToast('Failed to submit order', 'error');
+            showToast('Failed to submit order', 'error');
           }
         }}
       />

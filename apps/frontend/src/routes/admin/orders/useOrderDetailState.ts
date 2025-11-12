@@ -28,7 +28,7 @@ type CustomerDraftState = {
 type PricingDraftState = {
   couponCode: string;
   couponDiscount: string;
-  shippingFee: string;
+  deliveryFee: string;
   amountPaid: string;
   amountRefunded: string;
   paymentReference: string;
@@ -47,7 +47,7 @@ type OrderLike = {
   items?: Array<Record<string, unknown>>;
   couponCode?: string | null;
   couponDiscount?: number | null;
-  shippingFee?: number | null;
+  deliveryFee?: number | null;
   amountPaid?: number | null;
   amountRefunded?: number | null;
   paymentReference?: string | null;
@@ -72,7 +72,7 @@ export function useOrderDetailState({
   const [pricingDraft, setPricingDraft] = useState<PricingDraftState>({
     couponCode: '',
     couponDiscount: '',
-    shippingFee: '',
+    deliveryFee: '',
     amountPaid: '',
     amountRefunded: '',
     paymentReference: '',
@@ -217,7 +217,8 @@ export function useOrderDetailState({
         couponCode: order.couponCode ?? '',
         couponDiscount:
           order.couponDiscount != null ? String(order.couponDiscount) : '',
-        shippingFee: order.shippingFee != null ? String(order.shippingFee) : '',
+        deliveryFee:
+          order.deliveryFee != null ? String(order.deliveryFee) : '',
         amountPaid: order.amountPaid != null ? String(order.amountPaid) : '',
         amountRefunded:
           order.amountRefunded != null ? String(order.amountRefunded) : '',
@@ -373,10 +374,10 @@ export function useOrderDetailState({
       payload.couponDiscount = Math.max(0, couponDiscountCurrent);
     }
 
-    const shippingFeeCurrent = Number(pricingDraft.shippingFee || 0);
-    const shippingFeeOriginal = Number(original.shippingFee || 0);
-    if (shippingFeeCurrent !== shippingFeeOriginal) {
-      payload.shippingFee = Math.max(0, shippingFeeCurrent);
+    const deliveryFeeCurrent = Number(pricingDraft.deliveryFee || 0);
+    const deliveryFeeOriginal = Number(original.deliveryFee || 0);
+    if (deliveryFeeCurrent !== deliveryFeeOriginal) {
+      payload.deliveryFee = Math.max(0, deliveryFeeCurrent);
     }
 
     const amountPaidCurrent = Number(pricingDraft.amountPaid || 0);
@@ -442,11 +443,11 @@ export function useOrderDetailState({
     return Math.min(value, subtotal);
   }, [pricingDraft.couponDiscount, subtotal]);
 
-  const shippingFeeValue = useMemo(() => {
-    const value = Number(pricingDraft.shippingFee || 0);
+  const deliveryFeeValue = useMemo(() => {
+    const value = Number(pricingDraft.deliveryFee || 0);
     if (!Number.isFinite(value) || value <= 0) return 0;
     return value;
-  }, [pricingDraft.shippingFee]);
+  }, [pricingDraft.deliveryFee]);
 
   const amountPaidValue = useMemo(() => {
     const value = Number(pricingDraft.amountPaid || 0);
@@ -461,8 +462,8 @@ export function useOrderDetailState({
   }, [pricingDraft.amountRefunded]);
 
   const computedTotal = useMemo(
-    () => Math.max(0, subtotal - discountAmount + shippingFeeValue),
-    [subtotal, discountAmount, shippingFeeValue],
+    () => Math.max(0, subtotal - discountAmount + deliveryFeeValue),
+    [subtotal, discountAmount, deliveryFeeValue],
   );
 
   const balanceDuePreview = useMemo(
@@ -494,7 +495,7 @@ export function useOrderDetailState({
   };
 
   const handlePricingNumberChange = (
-    field: 'couponDiscount' | 'shippingFee' | 'amountPaid' | 'amountRefunded',
+    field: 'couponDiscount' | 'deliveryFee' | 'amountPaid' | 'amountRefunded',
     value: string,
   ) => {
     const sanitized = value.replace(/[^\d.]/g, '');
@@ -725,7 +726,7 @@ export function useOrderDetailState({
     setProductSearchTerm,
     subtotal,
     discountAmount,
-    shippingFeeValue,
+    deliveryFeeValue,
     amountPaidValue,
     amountRefundedValue,
     computedTotal,

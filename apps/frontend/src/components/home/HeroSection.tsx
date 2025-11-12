@@ -6,36 +6,40 @@ const HERO_PAIRS: Array<{
   right: string[];
   title: string;
   desc: string;
+  category: string;
 }> = [
-  {
-    left: [
-      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2940',
-    ],
-    right: [
-      'https://images.unsplash.com/photo-1512201078372-9c6b2a0d528a?ixlib=rb-4.0.3&auto=format&fit=crop&q=80&w=2073',
-    ],
-    title: 'DENIM JACKET WITH DECORATIVE EMBROIDERY',
-    desc: 'Relaxed design, classic denim jacket made from rich cotton fabric with elastic blend.',
-  },
-  {
-    left: [
-      'https://plus.unsplash.com/premium_photo-1712844068865-4e44f800f5c6?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2816',
-    ],
-    right: [
-      'https://images.unsplash.com/photo-1582142407894-ec85a1260a46?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070',
-    ],
-    title: 'ELEVATED ESSENTIALS FOR EVERYDAY',
-    desc: 'Timeless silhouettes in premium fabrics designed for modern versatility.',
-  },
   {
     left: [
       'https://images.unsplash.com/photo-1646083774155-2a40b675641d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070',
     ],
     right: [
+      'https://images.unsplash.com/photo-1582142407894-ec85a1260a46?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070',
+    ],
+    title: 'SEE STYLE DIFFERENTLY',
+    desc: 'Modern frames that speak confidence. Crafted for every face and every moment.',
+    category: 'Glasses',
+  },
+  {
+    left: [
+      'https://images.unsplash.com/photo-1590703160416-5b17d229e381?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2232',
+    ],
+    right: [
       'https://images.unsplash.com/photo-1727991053349-7985a6155ff4?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070',
     ],
-    title: 'NEW SEASON, NEW TEXTURES',
-    desc: 'Discover refined layers handpicked by our editors for the season ahead.',
+    title: 'EVERY DETAIL TELLS A STORY',
+    desc: 'Classic jewelry reimagined for today’s muse — simple, sophisticated, unforgettable.',
+    category: 'jewelries',
+  },
+  {
+    left: [
+      'https://images.unsplash.com/photo-1519415943484-9fa1873496d4?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2070',
+    ],
+    right: [
+      'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&q=80&w=2071',
+    ],
+    title: 'MODERN ESSENTIALS FOR EVERY OCCASION',
+    desc: 'Designed for versatility and confidence. Elevate your daily style with thoughtful finishing touches.',
+    category: 'Other accessories',
   },
 ];
 
@@ -129,18 +133,18 @@ export function HeroSection() {
           </div>
 
           {/* Single unified overlay to avoid center seam */}
-          <div className="pointer-events-none absolute inset-0 bg-black/10" />
+          <div className="absolute inset-0 pointer-events-none bg-black/10" />
         </div>
 
         {/* Centered messaging (desktop/tablet) */}
-        <div className="pointer-events-none absolute inset-0 mx-auto hidden max-w-5xl items-center justify-center px-4 md:flex">
+        <div className="absolute inset-0 items-center justify-center hidden max-w-5xl px-4 mx-auto pointer-events-none md:flex">
           <div
             className={`pointer-events-auto rounded bg-none p-6 text-center text-black shadow-sm backdrop-blur-sm transition-opacity duration-500 md:p-8 ${
               isSliding ? 'opacity-0' : 'opacity-100'
             }`}
           >
-            <div className="text-xs tracking-widest text-black/70">
-              OVERSIZED
+            <div className="text-xs tracking-widest uppercase text-black/70">
+              {HERO_PAIRS[heroIndex].category}
             </div>
             <h1 className="mt-2 text-xl font-extrabold leading-tight md:text-3xl">
               {HERO_PAIRS[heroIndex].title}
@@ -148,10 +152,10 @@ export function HeroSection() {
             <p className="mt-2 text-sm text-black/70 md:text-base">
               {HERO_PAIRS[heroIndex].desc}
             </p>
-            <div className="mt-4 flex items-center justify-center">
+            <div className="flex items-center justify-center mt-4">
               <Link
                 to={`/products`}
-                className="group inline-flex items-center justify-center border border-black bg-white px-8 py-3 font-extrabold tracking-wide text-black transition-colors duration-300 hover:bg-black hover:text-white"
+                className="inline-flex items-center justify-center px-8 py-3 font-extrabold tracking-wide text-black transition-colors duration-300 bg-white border border-black group hover:bg-black hover:text-white"
               >
                 <span className="text-sm transition-transform duration-300 group-hover:-translate-x-0.5">
                   SHOP NOW
@@ -164,7 +168,7 @@ export function HeroSection() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="ml-3 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                  className="w-4 h-4 ml-3 transition-transform duration-300 group-hover:translate-x-1"
                 >
                   <path d="M5 12h14" />
                   <path d="M13 5l7 7-7 7" />
@@ -175,18 +179,18 @@ export function HeroSection() {
         </div>
 
         {/* Hero controls */}
-        <div className="absolute bottom-4 left-4 flex items-center gap-3">
+        <div className="absolute flex items-center gap-3 bottom-4 left-4">
           <button
             aria-label="Previous"
             onClick={goToPrevious}
-            className="rounded-full bg-black/60 px-3 py-1 text-white backdrop-blur-sm hover:bg-black"
+            className="px-3 py-1 text-white rounded-full bg-black/60 backdrop-blur-sm hover:bg-black"
           >
             ‹
           </button>
           <button
             aria-label="Next"
             onClick={goToNext}
-            className="rounded-full bg-black/60 px-3 py-1 text-white backdrop-blur-sm hover:bg-black"
+            className="px-3 py-1 text-white rounded-full bg-black/60 backdrop-blur-sm hover:bg-black"
           >
             ›
           </button>
@@ -207,10 +211,10 @@ export function HeroSection() {
           <p className="mt-2 text-sm text-black/70">
             {HERO_PAIRS[heroIndex].desc}
           </p>
-          <div className="mt-4 flex items-center justify-center">
+          <div className="flex items-center justify-center mt-4">
             <Link
               to={`/products`}
-              className="group inline-flex items-center justify-center border border-black px-6 py-2 font-extrabold tracking-wide text-black transition-colors duration-300 hover:bg-black hover:text-white"
+              className="inline-flex items-center justify-center px-6 py-2 font-extrabold tracking-wide text-black transition-colors duration-300 border border-black group hover:bg-black hover:text-white"
             >
               <span className="text-xs transition-transform duration-300 group-hover:-translate-x-0.5">
                 SHOP NOW
@@ -223,7 +227,7 @@ export function HeroSection() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1"
               >
                 <path d="M5 12h14" />
                 <path d="M13 5l7 7-7 7" />

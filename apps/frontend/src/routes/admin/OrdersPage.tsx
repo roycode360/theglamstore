@@ -115,7 +115,7 @@ export default function OrdersPage() {
     productSearchLoading,
     subtotal,
     discountAmount,
-    shippingFeeValue,
+    deliveryFeeValue,
     amountPaidValue,
     amountRefundedValue,
     computedTotal,
@@ -391,7 +391,7 @@ export default function OrdersPage() {
               isDirty={isDirty}
               subtotal={subtotal}
               discountAmount={discountAmount}
-              shippingFeeValue={shippingFeeValue}
+              deliveryFeeValue={deliveryFeeValue}
               amountPaidValue={amountPaidValue}
               amountRefundedValue={amountRefundedValue}
               computedTotal={computedTotal}

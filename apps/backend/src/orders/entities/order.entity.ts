@@ -60,10 +60,6 @@ export class Order {
   total!: number;
 
   @Field(() => Number, { nullable: true })
-  shippingFee?: number | null; // kept for compatibility
-
-  // Delivery fields
-  @Field(() => Number, { nullable: true })
   deliveryFee?: number | null;
 
   @Field(() => String, { nullable: true })

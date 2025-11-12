@@ -33,7 +33,7 @@ export class UpdateAdminOrderInput {
   couponDiscount?: number;
 
   @Field(() => Float, { nullable: true })
-  shippingFee?: number;
+  deliveryFee?: number;
 
   @Field(() => Float, { nullable: true })
   amountPaid?: number;

@@ -54,10 +54,10 @@ export default function TermsOfService() {
 
           <section>
             <h2 className="mb-2 text-lg font-semibold text-black">
-              4. Shipping, Returns & Refunds
+              4. Delivery, Returns & Refunds
             </h2>
             <p>
-              Shipping times are estimates and may vary. Please see our returns
+              Delivery times are estimates and may vary. Please see our returns
               policy for eligibility, timelines and non‑returnable items.
               Refunds are issued to the original payment method once items are
               received and inspected.
@@ -72,7 +72,7 @@ export default function TermsOfService() {
               We use secure third‑party processors. By submitting a payment, you
               represent you are authorized to use the selected method and
               authorize us to charge the order total, including taxes, fees and
-              shipping.
+              delivery fees.
             </p>
           </section>
 
@@ -80,7 +80,7 @@ export default function TermsOfService() {
             <h2 className="mb-2 text-lg font-semibold text-black">
               6. Prohibited Uses
             </h2>
-            <ul className="list-inside list-disc space-y-1">
+            <ul className="space-y-1 list-disc list-inside">
               <li>Illegal, infringing or fraudulent activity.</li>
               <li>
                 Interfering with the security or operation of the Service.

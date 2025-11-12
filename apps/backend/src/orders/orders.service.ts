@@ -32,7 +32,7 @@ export type OrderDTO = {
   state: string;
   subtotal: number;
   total: number;
-  shippingFee?: number;
+  deliveryFee?: number;
   paymentMethod: 'bank_transfer';
   status:
     | 'pending'
@@ -114,7 +114,6 @@ export class OrdersService {
   ): Promise<OrderDTO> {
     const orderNumber = await this.generateOrderNumber();
 
-    let shippingFee = Number(payload.shippingFee ?? 0) || 0;
     let deliveryFee = Number(payload.deliveryFee ?? 0) || 0;
     let deliveryLocationId: string | null =
       (payload.deliveryLocationId as string | undefined) ?? null;
@@ -128,7 +127,6 @@ export class OrdersService {
         .lean<{ _id: unknown; name?: string; price?: number; active?: boolean } | null>();
       if (loc && (loc.active ?? true)) {
         deliveryFee = Number(loc.price ?? 0) || 0;
-        shippingFee = deliveryFee; // keep compatibility
         deliveryLocationName = loc.name ?? deliveryLocationName;
       }
     }
@@ -150,7 +148,6 @@ export class OrdersService {
             )
           : 0,
       source: payload.source ?? 'customer',
-      shippingFee,
       deliveryFee,
       deliveryLocationId,
       deliveryLocationName,
@@ -189,12 +186,12 @@ export class OrdersService {
       }
     }
 
-    const shippingFee = Number(order.shippingFee ?? 0);
+    const deliveryFee = Number(order.deliveryFee ?? 0);
     const total = Math.max(
       0,
       subtotal -
         (isFinite(discount) ? discount : 0) +
-        (isFinite(shippingFee) ? shippingFee : 0),
+        (isFinite(deliveryFee) ? deliveryFee : 0),
     );
     const amountPaid = order.amountPaid || 0;
     const amountRefunded = order.amountRefunded || 0;
@@ -205,7 +202,7 @@ export class OrdersService {
       balanceDue,
       couponCode,
       couponDiscount: discount,
-      shippingFee,
+      deliveryFee,
     };
   }
 
@@ -368,7 +365,7 @@ export class OrdersService {
           subtotal: totals.subtotal,
           total: totals.total,
           balanceDue: totals.balanceDue,
-          shippingFee: totals.shippingFee,
+          deliveryFee: totals.deliveryFee,
           status: nextStatus,
         },
         $push: {
@@ -408,9 +405,7 @@ export class OrdersService {
       image: it.image,
     }));
     let deliveryFee =
-      input.deliveryFee != null
-        ? Number(input.deliveryFee)
-        : Number(input.shippingFee ?? 0);
+      input.deliveryFee != null ? Number(input.deliveryFee) : 0;
     if (!Number.isFinite(deliveryFee) || deliveryFee < 0) {
       deliveryFee = 0;
     }
@@ -443,7 +438,6 @@ export class OrdersService {
       }
     }
 
-    let shippingFee = deliveryFee;
     const amountPaid = input.amountPaid || 0;
     const amountRefunded = 0;
 
@@ -511,7 +505,7 @@ export class OrdersService {
         state: input.state,
         subtotal: 0,
         total: 0,
-        shippingFee,
+        deliveryFee,
         paymentMethod: 'bank_transfer',
         status: 'pending',
         items,
@@ -570,8 +564,7 @@ export class OrdersService {
         amountPaid,
         amountRefunded,
         balanceDue: totals.balanceDue,
-        shippingFee: totals.shippingFee,
-        deliveryFee: totals.shippingFee,
+        deliveryFee: totals.deliveryFee,
         deliveryLocationId: deliveryLocationIdValue,
         deliveryLocationName: deliveryLocationNameValue,
         source: 'admin',
@@ -1529,14 +1522,14 @@ export class OrdersService {
       payload.notes = updates.notes;
     }
 
-    let shippingFee = Number(
-      input.shippingFee != null ? input.shippingFee : (order.shippingFee ?? 0),
+    let deliveryFee = Number(
+      input.deliveryFee != null ? input.deliveryFee : (order.deliveryFee ?? 0),
     );
-    if (!Number.isFinite(shippingFee) || shippingFee < 0) {
-      shippingFee = 0;
+    if (!Number.isFinite(deliveryFee) || deliveryFee < 0) {
+      deliveryFee = 0;
     }
-    updates.shippingFee = shippingFee;
-    payload.shippingFee = shippingFee;
+    updates.deliveryFee = deliveryFee;
+    payload.deliveryFee = deliveryFee;
 
     let couponCode =
       input.couponCode === undefined
@@ -1579,7 +1572,7 @@ export class OrdersService {
       state: (updates.state as string) || order.state,
       couponCode: couponCode ?? undefined,
       couponDiscount,
-      shippingFee,
+      deliveryFee,
       amountPaid,
       amountRefunded,
       items: order.items,

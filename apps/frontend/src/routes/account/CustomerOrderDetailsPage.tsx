@@ -237,7 +237,7 @@ export default function CustomerOrderDetailsPage() {
 
             <div className="space-y-6">
               <div className="p-6 text-sm border rounded-lg theme-card theme-border">
-                <div className="mb-2 font-medium">Shipping</div>
+                <div className="mb-2 font-medium">Delivery</div>
                 <div>
                   {order.firstName} {order.lastName}
                 </div>
@@ -275,7 +275,7 @@ export default function CustomerOrderDetailsPage() {
                     {formatCurrency(order.subtotal ?? 0)}
                   </span>
                 </div>
-                
+
                 <div className="pt-2 mt-2 text-lg font-semibold border-t">
                   Total
                   <span className="float-right">

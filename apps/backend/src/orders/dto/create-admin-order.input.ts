@@ -44,9 +44,6 @@ export class CreateAdminOrderInput {
   couponDiscount?: number;
 
   @Field(() => Float, { nullable: true })
-  shippingFee?: number;
-
-  @Field(() => Float, { nullable: true })
   deliveryFee?: number;
 
   @Field(() => ID, { nullable: true })

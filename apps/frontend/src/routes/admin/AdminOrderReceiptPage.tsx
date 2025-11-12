@@ -41,8 +41,8 @@ export default function AdminOrderReceiptPage() {
 
   if (!id) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-100">
-        <div className="rounded-lg border border-rose-200 bg-white px-6 py-4 text-sm text-rose-600 shadow-sm">
+      <div className="flex items-center justify-center min-h-screen bg-neutral-100">
+        <div className="px-6 py-4 text-sm bg-white border rounded-lg shadow-sm border-rose-200 text-rose-600">
           Missing order ID in URL.
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function AdminOrderReceiptPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-100">
+      <div className="flex items-center justify-center min-h-screen bg-neutral-100">
         <Spinner label="Loading receipt" />
       </div>
     );
@@ -59,8 +59,8 @@ export default function AdminOrderReceiptPage() {
 
   if (error || !data?.getOrder) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-100">
-        <div className="rounded-lg border border-rose-200 bg-white px-6 py-4 text-sm text-rose-600 shadow-sm">
+      <div className="flex items-center justify-center min-h-screen bg-neutral-100">
+        <div className="px-6 py-4 text-sm bg-white border rounded-lg shadow-sm border-rose-200 text-rose-600">
           Unable to load order details.
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function AdminOrderReceiptPage() {
   const discount = order.couponDiscount ?? 0;
 
   return (
-    <div className="min-h-screen bg-neutral-100 py-12 print:bg-white print:py-6">
+    <div className="min-h-screen py-12 bg-neutral-100 print:bg-white print:py-6">
       <style>
         {`
           @page { size: A4; margin: 16mm; }
@@ -122,12 +122,12 @@ export default function AdminOrderReceiptPage() {
           a[href]:after { content: '' !important; }
         `}
       </style>
-      <div className="mx-auto max-w-3xl rounded-3xl border border-neutral-200 bg-white p-10 shadow-xl print:max-w-none print:border print:border-neutral-200 print:p-10 print:shadow-none">
-        <header className="flex flex-col gap-6 border-b border-neutral-200 pb-6 md:flex-row md:items-center md:justify-between">
+      <div className="max-w-3xl p-10 mx-auto bg-white border shadow-xl rounded-3xl border-neutral-200 print:max-w-none print:border print:border-neutral-200 print:p-10 print:shadow-none">
+        <header className="flex flex-col gap-6 pb-6 border-b border-neutral-200 md:flex-row md:items-center md:justify-between">
           <img
             src={brandLogo}
             alt={company.businessName}
-            className="-mb-5 w-48 object-contain"
+            className="object-contain w-48 -mb-5"
           />
           <div className="flex items-center">
             <div>
@@ -138,18 +138,18 @@ export default function AdminOrderReceiptPage() {
               </div>
             </div>
           </div>
-          <div className="rounded-2xl bg-neutral-50 p-4 text-sm text-neutral-600">
+          <div className="p-4 text-sm rounded-2xl bg-neutral-50 text-neutral-600">
             <div className="flex items-center justify-between gap-6">
               <span className="font-semibold text-neutral-400">Invoice #</span>
               <span className="font-mono text-neutral-900">
                 {displayOrderNumber}
               </span>
             </div>
-            <div className="mt-2 flex items-center justify-between gap-6">
+            <div className="flex items-center justify-between gap-6 mt-2">
               <span className="font-semibold text-neutral-400">Date</span>
               <span>{createdDate}</span>
             </div>
-            <div className="mt-2 flex items-center justify-between gap-6">
+            <div className="flex items-center justify-between gap-6 mt-2">
               <span className="font-semibold text-neutral-400">Status</span>
               <span className="capitalize text-emerald-600">
                 {order.status.replace(/_/g, ' ')}
@@ -158,9 +158,9 @@ export default function AdminOrderReceiptPage() {
           </div>
         </header>
 
-        <section className="mt-6 grid gap-6 text-sm text-neutral-700 md:grid-cols-2">
-          <div className="rounded-2xl border border-neutral-200 p-5">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+        <section className="grid gap-6 mt-6 text-sm text-neutral-700 md:grid-cols-2">
+          <div className="p-5 border rounded-2xl border-neutral-200">
+            <h2 className="text-xs font-semibold tracking-wide uppercase text-neutral-500">
               Bill to
             </h2>
             <div className="mt-3 space-y-1 text-neutral-800">
@@ -171,9 +171,9 @@ export default function AdminOrderReceiptPage() {
               {order.phone ? <div>{order.phone}</div> : null}
             </div>
           </div>
-          <div className="rounded-2xl border border-neutral-200 p-5">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-              Shipping address
+          <div className="p-5 border rounded-2xl border-neutral-200">
+            <h2 className="text-xs font-semibold tracking-wide uppercase text-neutral-500">
+              Delivery address
             </h2>
             <div className="mt-3 space-y-1 text-neutral-800">
               <div>{order.address1}</div>
@@ -184,9 +184,9 @@ export default function AdminOrderReceiptPage() {
           </div>
         </section>
 
-        <section className="mt-6 grid gap-6 text-sm text-neutral-700 md:grid-cols-2">
-          <div className="rounded-2xl border border-neutral-200 p-5">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+        <section className="grid gap-6 mt-6 text-sm text-neutral-700 md:grid-cols-2">
+          <div className="p-5 border rounded-2xl border-neutral-200">
+            <h2 className="text-xs font-semibold tracking-wide uppercase text-neutral-500">
               Payment summary
             </h2>
             <div className="mt-3 space-y-2 text-neutral-800">
@@ -215,7 +215,7 @@ export default function AdminOrderReceiptPage() {
                     href={order.transferProofUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-brand font-medium print:text-neutral-900"
+                    className="font-medium text-brand print:text-neutral-900"
                   >
                     Click here
                   </a>
@@ -223,8 +223,8 @@ export default function AdminOrderReceiptPage() {
               ) : null}
             </div>
           </div>
-          <div className="rounded-2xl border border-neutral-200 p-5">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          <div className="p-5 border rounded-2xl border-neutral-200">
+            <h2 className="text-xs font-semibold tracking-wide uppercase text-neutral-500">
               Order summary
             </h2>
             <div className="mt-3 space-y-2 text-neutral-800">
@@ -249,12 +249,12 @@ export default function AdminOrderReceiptPage() {
         </section>
 
         <section className="mt-8">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          <h2 className="text-xs font-semibold tracking-wide uppercase text-neutral-500">
             Order items
           </h2>
-          <div className="mt-3 overflow-hidden rounded-2xl border border-neutral-200">
-            <table className="w-full border-collapse text-sm text-neutral-800">
-              <thead className="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500">
+          <div className="mt-3 overflow-hidden border rounded-2xl border-neutral-200">
+            <table className="w-full text-sm border-collapse text-neutral-800">
+              <thead className="text-xs tracking-wide uppercase bg-neutral-50 text-neutral-500">
                 <tr>
                   <th className="px-4 py-3 text-left">Item description</th>
                   <th className="px-4 py-3 text-left">Options</th>
@@ -284,7 +284,7 @@ export default function AdminOrderReceiptPage() {
                       <td className="px-4 py-4 text-right">
                         {formatCurrency(unit)}
                       </td>
-                      <td className="px-4 py-4 text-right font-semibold text-neutral-900">
+                      <td className="px-4 py-4 font-semibold text-right text-neutral-900">
                         {formatCurrency(lineTotal)}
                       </td>
                     </tr>
@@ -295,7 +295,7 @@ export default function AdminOrderReceiptPage() {
           </div>
         </section>
 
-        <footer className="mt-10 rounded-2xl border border-neutral-200 bg-neutral-50 p-5 text-center text-xs text-neutral-500">
+        <footer className="p-5 mt-10 text-xs text-center border rounded-2xl border-neutral-200 bg-neutral-50 text-neutral-500">
           Thank you for choosing {company.businessName}. For questions, contact
           us at {company.email}.
         </footer>

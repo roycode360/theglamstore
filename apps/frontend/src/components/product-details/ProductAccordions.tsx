@@ -1,6 +1,6 @@
 export function ProductAccordions() {
   return (
-    <section className="theme-border divide-y rounded-md border bg-white">
+    <section className="bg-white border divide-y rounded-md theme-border">
       {[
         {
           k: 'Full Description',
@@ -10,11 +10,10 @@ export function ProductAccordions() {
           k: 'Materials & Care',
           d: 'Premium materials. Dry clean recommended.',
         },
-        { k: 'Shipping', d: 'Ships within 3-5 business days.' },
-        { k: 'Returns', d: '30-day return policy.' },
+        { k: 'Delivery', d: 'Delivery available across Nigeria.' },
       ].map((item, i) => (
         <details key={i} className="group">
-          <summary className="flex cursor-pointer items-center justify-between px-4 py-3">
+          <summary className="flex items-center justify-between px-4 py-3 cursor-pointer">
             <span className="font-medium">{item.k}</span>
             <span className="opacity-60">▾</span>
           </summary>

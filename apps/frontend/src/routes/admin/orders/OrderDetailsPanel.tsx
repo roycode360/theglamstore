@@ -16,7 +16,7 @@ type CustomerDraft = {
 type PricingDraft = {
   couponCode: string;
   couponDiscount: string;
-  shippingFee: string;
+  deliveryFee: string;
   amountPaid: string;
   amountRefunded: string;
   paymentReference: string;
@@ -45,7 +45,7 @@ type OrderDetailsPanelProps = {
   isDirty: boolean;
   subtotal: number;
   discountAmount: number;
-  shippingFeeValue: number;
+  deliveryFeeValue: number;
   amountPaidValue: number;
   amountRefundedValue: number;
   computedTotal: number;
@@ -68,7 +68,7 @@ type OrderDetailsPanelProps = {
   ) => void;
   onCouponCodeChange: (value: string) => void;
   onPricingNumberChange: (
-    field: 'couponDiscount' | 'shippingFee' | 'amountPaid' | 'amountRefunded',
+    field: 'couponDiscount' | 'deliveryFee' | 'amountPaid' | 'amountRefunded',
     value: string,
   ) => void;
   onPaymentReferenceChange: (value: string) => void;
@@ -94,7 +94,7 @@ export function OrderDetailsPanel({
   isDirty,
   subtotal,
   discountAmount,
-  shippingFeeValue,
+  deliveryFeeValue,
   amountPaidValue,
   amountRefundedValue,
   computedTotal,
@@ -180,7 +180,7 @@ export function OrderDetailsPanel({
         <div className="space-y-6">
           <section className="p-4 border rounded-lg">
             <div className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
-              Customer & Shipping
+              Customer & Delivery
             </div>
             <div className="grid gap-3 mt-4 md:grid-cols-2">
               <label className="flex flex-col gap-1 text-xs font-medium">
@@ -514,14 +514,14 @@ export function OrderDetailsPanel({
                 />
               </label>
               <label className="flex flex-col gap-1 text-xs font-medium">
-                Shipping fee
+                Delivery fee
                 <Input
                   type="number"
                   min="0"
                   step="0.01"
-                  value={pricingDraft.shippingFee}
+                  value={pricingDraft.deliveryFee}
                   onChange={(event) =>
-                    onPricingNumberChange('shippingFee', event.target.value)
+                    onPricingNumberChange('deliveryFee', event.target.value)
                   }
                   onWheel={(event) => {
                     (event.currentTarget as HTMLInputElement).blur();
@@ -609,9 +609,9 @@ export function OrderDetailsPanel({
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span>Shipping</span>
+              <span>Delivery</span>
               <span className="font-medium">
-                {formatCurrency(shippingFeeValue)}
+                {formatCurrency(deliveryFeeValue)}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">

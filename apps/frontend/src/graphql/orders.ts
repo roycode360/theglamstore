@@ -37,7 +37,7 @@ export const GET_ORDER = gql`
       state
       subtotal
       total
-      shippingFee
+      deliveryFee
       couponCode
       couponDiscount
       paymentMethod
@@ -135,7 +135,7 @@ export const UPDATE_ADMIN_ORDER = gql`
       orderNumber
       subtotal
       total
-      shippingFee
+      deliveryFee
       couponCode
       couponDiscount
       amountPaid
@@ -156,7 +156,7 @@ export const EDIT_ORDER_ITEMS = gql`
       orderNumber
       subtotal
       total
-      shippingFee
+      deliveryFee
       couponCode
       couponDiscount
       amountPaid

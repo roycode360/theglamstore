@@ -19,9 +19,6 @@ export class OrderModel {
   @Prop({ type: Number, required: true }) subtotal!: number;
   @Prop({ type: Number, required: true }) total!: number;
 
-  @Prop({ type: Number, default: 0 })
-  shippingFee?: number;
-
   // Delivery fields
   @Prop({ type: Number, default: 0 })
   deliveryFee?: number;

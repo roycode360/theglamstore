@@ -77,10 +77,6 @@ export default function CustomerService() {
                   q: 'How do I find the right size?',
                   a: 'Refer to our size guide on each product page.',
                 },
-                {
-                  q: 'What are the shipping options?',
-                  a: 'Standard and express shipping options are available.',
-                },
               ].map((it, i) => (
                 <details key={i} className="group">
                   <summary className="flex items-center justify-between px-4 py-4 cursor-pointer">

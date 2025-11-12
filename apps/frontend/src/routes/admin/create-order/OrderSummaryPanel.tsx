@@ -65,12 +65,11 @@ export function OrderSummaryPanel({
   );
 
   return (
-    <div className="theme-card theme-border rounded-lg border p-6 text-sm text-neutral-900">
-      <div className="mb-4 flex flex-col gap-1">
+    <div className="p-6 text-sm border rounded-lg theme-card theme-border text-neutral-900">
+      <div className="flex flex-col gap-1 mb-4">
         <h2 className="text-lg font-semibold">Order summary</h2>
         <p className="text-xs text-neutral-500">
-          Preview totals for this offline order. Taxes are excluded; adjust
-          discounts or shipping as needed.
+          Preview totals for this offline order.
         </p>
       </div>
 
@@ -81,7 +80,7 @@ export function OrderSummaryPanel({
             value={pricing.discountCode ?? ''}
             onChange={(event) => onDiscountCodeChange(event.target.value)}
             placeholder="Optional"
-            className="theme-border rounded-md border px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+            className="px-3 py-2 text-sm border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
           />
         </label>
         <label className="flex flex-col gap-1 text-xs font-medium">
@@ -102,7 +101,7 @@ export function OrderSummaryPanel({
               event.preventDefault();
             }}
             placeholder="Optional"
-            className="theme-border rounded-md border px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+            className="px-3 py-2 text-sm border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
           />
         </label>
         <label className="flex flex-col gap-1 text-xs font-medium">
@@ -125,11 +124,11 @@ export function OrderSummaryPanel({
             value={notes ?? ''}
             onChange={(event) => onNotesChange(event.target.value)}
             placeholder="Special instructions, delivery notes, etc."
-            className="theme-border h-24 rounded-md border px-3 py-2 text-sm focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+            className="h-24 px-3 py-2 text-sm border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
           />
         </label>
 
-        <div className="border-t border-dashed pt-4 text-xs font-semibold uppercase tracking-wide text-gray-500 md:col-span-2">
+        <div className="pt-4 text-xs font-semibold tracking-wide text-gray-500 uppercase border-t border-dashed md:col-span-2">
           Payment received
         </div>
         <label className="flex flex-col gap-1 text-xs font-medium">
@@ -158,11 +157,11 @@ export function OrderSummaryPanel({
         <label className="flex flex-col gap-1 text-xs font-medium md:col-span-2">
           Proof of payment
           <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <label className="theme-border inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-gray-50">
+            <label className="inline-flex items-center gap-2 px-3 py-2 text-sm border rounded-md cursor-pointer theme-border hover:bg-gray-50">
               {uploadingProof ? (
                 <>
                   <svg
-                    className="h-4 w-4 animate-spin text-neutral-600"
+                    className="w-4 h-4 animate-spin text-neutral-600"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -191,7 +190,7 @@ export function OrderSummaryPanel({
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.5"
-                    className="h-4 w-4"
+                    className="w-4 h-4"
                   >
                     <path
                       strokeLinecap="round"
@@ -224,7 +223,7 @@ export function OrderSummaryPanel({
                 href={pricing.paymentProofUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-brand underline"
+                className="underline text-brand"
               >
                 View uploaded proof
               </a>
@@ -244,7 +243,7 @@ export function OrderSummaryPanel({
         </label>
       </div>
 
-      <div className="mt-6 space-y-2 rounded-lg border border-dashed px-4 py-3 text-sm">
+      <div className="px-4 py-3 mt-6 space-y-2 text-sm border border-dashed rounded-lg">
         <div className="flex items-center justify-between">
           <span>Subtotal</span>
           <span>{formatCurrency(subtotal)}</span>
@@ -268,7 +267,7 @@ export function OrderSummaryPanel({
           <span>Balance due</span>
           <span>{formatCurrency(balanceDue)}</span>
         </div>
-        <div className="flex items-center justify-between border-t pt-2 text-base font-semibold">
+        <div className="flex items-center justify-between pt-2 text-base font-semibold border-t">
           <span>Total</span>
           <span>{formatCurrency(total)}</span>
         </div>

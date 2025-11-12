@@ -127,7 +127,6 @@ input CreateAdminOrderInput {
   notes: String
   paymentReference: String
   phone: String
-  shippingFee: Float
   state: String!
   transferProofUrl: String
 }
@@ -319,7 +318,6 @@ type Order {
   paymentMethod: String!
   paymentReference: String
   phone: String
-  shippingFee: Float
   source: String
   state: String!
   status: String!
@@ -530,6 +528,7 @@ input UpdateAdminOrderInput {
   city: String
   couponCode: String
   couponDiscount: Float
+  deliveryFee: Float
   email: String
   firstName: String
   id: ID!
@@ -537,7 +536,6 @@ input UpdateAdminOrderInput {
   notes: String
   paymentReference: String
   phone: String
-  shippingFee: Float
   state: String
   transferProofUrl: String
 }

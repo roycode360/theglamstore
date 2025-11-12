@@ -31,7 +31,6 @@ export type AdminOrderItemDraft = {
 };
 
 export type AdminOrderPricing = {
-  shippingFee?: number;
   discountAmount?: number;
   discountCode?: string;
   amountPaid?: number;
@@ -75,7 +74,6 @@ function createDefaultState(): AdminOrderComposerState {
     customer: createDefaultCustomer(),
     items: [],
     pricing: {
-      shippingFee: undefined,
       discountAmount: undefined,
       discountCode: '',
       amountPaid: undefined,

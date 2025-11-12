@@ -98,7 +98,6 @@ function AdminCreateOrderPageInner() {
       deliveryLocationId: preferred._id,
       deliveryLocationName: preferred.name,
       deliveryFee: fee,
-      shippingFee: fee,
     });
   }, [
     selectedDeliveryId,
@@ -113,7 +112,6 @@ function AdminCreateOrderPageInner() {
         deliveryLocationId: undefined,
         deliveryLocationName: undefined,
         deliveryFee: undefined,
-        shippingFee: undefined,
       });
       return;
     }
@@ -124,7 +122,6 @@ function AdminCreateOrderPageInner() {
       deliveryLocationId: location._id,
       deliveryLocationName: location.name,
       deliveryFee: fee,
-      shippingFee: fee,
     });
   };
 
@@ -418,12 +415,12 @@ function AdminCreateOrderPageInner() {
   }, [draft.pricing.discountAmount, subtotal]);
 
   const deliveryFee = useMemo(() => {
-    const raw = draft.pricing.deliveryFee ?? draft.pricing.shippingFee ?? null;
+    const raw = draft.pricing.deliveryFee ?? null;
     if (raw == null) return undefined;
     const fee = Number(raw);
     if (!Number.isFinite(fee) || fee < 0) return undefined;
     return fee;
-  }, [draft.pricing.deliveryFee, draft.pricing.shippingFee]);
+  }, [draft.pricing.deliveryFee]);
 
   const total = useMemo(() => {
     const base = Math.max(0, subtotal - discountAmount);
@@ -562,8 +559,7 @@ function AdminCreateOrderPageInner() {
       : undefined;
     const couponDiscount =
       discountAmount > 0 ? Number(discountAmount) : undefined;
-    const rawDeliveryFee =
-      draft.pricing.deliveryFee ?? draft.pricing.shippingFee;
+    const rawDeliveryFee = draft.pricing.deliveryFee;
     const deliveryFeePayload =
       rawDeliveryFee == null
         ? undefined
@@ -594,7 +590,6 @@ function AdminCreateOrderPageInner() {
       items,
       couponCode,
       couponDiscount,
-      shippingFee: deliveryFeePayload,
       deliveryFee: deliveryFeePayload,
       deliveryLocationId: deliveryLocationId || undefined,
       deliveryLocationName: deliveryLocationName || undefined,
