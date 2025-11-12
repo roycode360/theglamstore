@@ -55,7 +55,7 @@ export function FoundersSection({ founders, loading }: FoundersSectionProps) {
             >
               <div className="flex justify-center md:justify-start">
                 <div
-                  className="w-[450px] max-w-[560px] overflow-hidden rounded-2xl bg-zinc-100 sm:max-w-[420px] md:max-w-[1580px]"
+                  className="overflow-hidden rounded-2xl bg-zinc-100 sm:max-w-[420px] md:max-w-[1580px] xl:w-[450px] xl:max-w-[560px]"
                   style={{ aspectRatio: '1 / 1' }}
                 >
                   <img
