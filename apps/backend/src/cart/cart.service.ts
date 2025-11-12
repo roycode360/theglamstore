@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AddToCartInput } from './dto/add-to-cart.input';
@@ -20,30 +24,51 @@ export class CartService {
   ): Promise<CartItemType> {
     const { productId, quantity, selectedSize, selectedColor } = input;
 
-    // Find existing cart item
-    let cartItem = await this.cartItemModel
-      .findOne({
-        userId: new Types.ObjectId(userId),
-        productId: new Types.ObjectId(productId),
-        selectedSize,
-        selectedColor,
-      })
+    const normalizedQuantity = Number(quantity);
+    if (!Number.isFinite(normalizedQuantity) || normalizedQuantity <= 0) {
+      throw new BadRequestException('Quantity must be a positive number');
+    }
+
+    const userObjectId = new Types.ObjectId(userId);
+    const productObjectId = new Types.ObjectId(productId);
+
+    const filter: Record<string, unknown> = {
+      userId: userObjectId,
+      productId: productObjectId,
+      selectedSize: selectedSize ?? null,
+      selectedColor: selectedColor ?? null,
+    };
+
+    const setOnInsert: Partial<CartItem> = {
+      userId: userObjectId,
+      productId: productObjectId,
+    };
+
+    if (typeof selectedSize === 'string') {
+      setOnInsert.selectedSize = selectedSize;
+    }
+    if (typeof selectedColor === 'string') {
+      setOnInsert.selectedColor = selectedColor;
+    }
+
+    const cartItem = await this.cartItemModel
+      .findOneAndUpdate(
+        filter,
+        {
+          $inc: { quantity: normalizedQuantity },
+          $setOnInsert: setOnInsert,
+        },
+        {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true,
+        },
+      )
       .populate('productId')
       .exec();
 
-    if (cartItem) {
-      cartItem.quantity += quantity;
-      await cartItem.save();
-    } else {
-      cartItem = new this.cartItemModel({
-        userId: new Types.ObjectId(userId),
-        productId: new Types.ObjectId(productId),
-        quantity,
-        selectedSize,
-        selectedColor,
-      });
-      await cartItem.save();
-      await cartItem.populate('productId');
+    if (!cartItem) {
+      throw new Error('Failed to add item to cart');
     }
 
     const product = cartItem.productId as unknown as Product;

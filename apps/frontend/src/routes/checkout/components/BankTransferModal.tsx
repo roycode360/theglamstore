@@ -30,6 +30,27 @@ interface BankTransferModalProps {
   onWhatsappClick: () => void;
 }
 
+async function resolveUploadFn() {
+  const mod = await import('../../../utils/cloudinary');
+  const uploadFn =
+    (
+      mod as {
+        uploadToCloudinary?: typeof import('../../../utils/cloudinary').uploadToCloudinary;
+      }
+    ).uploadToCloudinary ||
+    (
+      mod as {
+        default?: typeof import('../../../utils/cloudinary').uploadToCloudinary;
+      }
+    ).default;
+
+  if (typeof uploadFn !== 'function') {
+    throw new Error('Cloudinary helper not available');
+  }
+
+  return uploadFn;
+}
+
 export default function BankTransferModal({
   open,
   onClose,
@@ -49,9 +70,8 @@ export default function BankTransferModal({
       setSubmitting(true);
       let proofUrl: string | undefined;
       if (transferFile) {
-        const { secure_url } = await import('../../../utils/cloudinary').then(
-          (mod) => mod.uploadToCloudinary(transferFile),
-        );
+        const uploadFn = await resolveUploadFn();
+        const { secure_url } = await uploadFn(transferFile);
         proofUrl = secure_url;
       }
       await onPaymentSubmitted({
