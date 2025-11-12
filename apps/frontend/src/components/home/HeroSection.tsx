@@ -7,6 +7,7 @@ const HERO_PAIRS: Array<{
   title: string;
   desc: string;
   category: string;
+  buttonText: string;
 }> = [
   {
     left: [
@@ -18,6 +19,7 @@ const HERO_PAIRS: Array<{
     title: 'SEE STYLE DIFFERENTLY',
     desc: 'Modern frames that speak confidence. Crafted for every face and every moment.',
     category: 'Glasses',
+    buttonText: 'Shop Glasses',
   },
   {
     left: [
@@ -29,6 +31,7 @@ const HERO_PAIRS: Array<{
     title: 'EVERY DETAIL TELLS A STORY',
     desc: 'Classic jewelry reimagined for today’s muse — simple, sophisticated, unforgettable.',
     category: 'jewelries',
+    buttonText: 'Shop Jewelries',
   },
   {
     left: [
@@ -40,12 +43,26 @@ const HERO_PAIRS: Array<{
     title: 'MODERN ESSENTIALS FOR EVERY OCCASION',
     desc: 'Designed for versatility and confidence. Elevate your daily style with thoughtful finishing touches.',
     category: 'Other accessories',
+    buttonText: 'Shop Accessories',
   },
 ];
+
+const slugify = (value: string): string =>
+  (value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[\s_]+/g, '-')
+    .replace(/-+/g, '-');
 
 export function HeroSection() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
+  const selectedCategory = HERO_PAIRS[heroIndex].category;
+  const selectedCategorySlug = slugify(selectedCategory);
+  const categoryQuery = selectedCategorySlug
+    ? `?category=${encodeURIComponent(selectedCategorySlug)}`
+    : '';
 
   // Auto-rotate hero slides with vertical opposing motion
   useEffect(() => {
@@ -154,11 +171,11 @@ export function HeroSection() {
             </p>
             <div className="flex items-center justify-center mt-4">
               <Link
-                to={`/products`}
+                to={`/products${categoryQuery}`}
                 className="inline-flex items-center justify-center px-8 py-3 font-extrabold tracking-wide text-black transition-colors duration-300 bg-white border border-black group hover:bg-black hover:text-white"
               >
-                <span className="text-sm transition-transform duration-300 group-hover:-translate-x-0.5">
-                  SHOP NOW
+                <span className="text-sm uppercase transition-transform duration-300 group-hover:-translate-x-0.5">
+                  {HERO_PAIRS[heroIndex].buttonText}
                 </span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -203,7 +220,7 @@ export function HeroSection() {
           className={`mx-auto max-w-2xl text-center transition-opacity duration-300 ${isSliding ? 'opacity-0' : 'opacity-100'}`}
         >
           <div className="text-[10px] tracking-widest text-black/70">
-            OVERSIZED
+            {selectedCategory}
           </div>
           <h1 className="mt-2 text-xl font-extrabold leading-tight">
             {HERO_PAIRS[heroIndex].title}
@@ -213,11 +230,11 @@ export function HeroSection() {
           </p>
           <div className="flex items-center justify-center mt-4">
             <Link
-              to={`/products`}
+              to={`/products${categoryQuery}`}
               className="inline-flex items-center justify-center px-6 py-2 font-extrabold tracking-wide text-black transition-colors duration-300 border border-black group hover:bg-black hover:text-white"
             >
               <span className="text-xs transition-transform duration-300 group-hover:-translate-x-0.5">
-                SHOP NOW
+                {HERO_PAIRS[heroIndex].buttonText.toUpperCase()}
               </span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
