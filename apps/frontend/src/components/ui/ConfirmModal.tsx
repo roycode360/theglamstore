@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Spinner from './Spinner';
 
 type Props = {
   open: boolean;
@@ -19,12 +20,33 @@ export default function ConfirmModal({
   onConfirm,
   onClose,
 }: Props) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    onClose();
+  };
+
+  const handleConfirmClick = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await Promise.resolve(onConfirm());
+      onClose();
+    } catch (error) {
+      // Let callers handle errors via onConfirm; keep modal open for retry
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/30" onClick={handleClose} />
       <div className="theme-border theme-card relative w-auto max-w-[90vw] rounded-lg border p-4 shadow-xl sm:max-w-md sm:p-6">
-        <div className="text-brand mb-2 text-lg font-semibold">{title}</div>
+        <div className="mb-2 text-lg font-semibold text-brand">{title}</div>
         {message && (
           <div className="mb-4 text-sm" style={{ color: 'rgb(var(--muted))' }}>
             {message}
@@ -32,19 +54,22 @@ export default function ConfirmModal({
         )}
         <div className="flex justify-end gap-2">
           <button
-            onClick={onClose}
-            className="btn-ghost h-9 rounded-md px-3 text-sm"
+            onClick={handleClose}
+            className="px-3 text-sm rounded-md btn-ghost h-9"
+            disabled={isSubmitting}
           >
             {cancelText}
           </button>
           <button
-            onClick={async () => {
-              await onConfirm();
-              onClose();
-            }}
-            className="btn-primary h-9 rounded-md px-3 text-sm"
+            onClick={handleConfirmClick}
+            className="px-3 text-sm rounded-md btn-primary h-9"
+            disabled={isSubmitting}
           >
-            {confirmText}
+            {isSubmitting ? (
+              <Spinner label="" size={16} className="w-4 h-4" />
+            ) : (
+              confirmText
+            )}
           </button>
         </div>
       </div>
