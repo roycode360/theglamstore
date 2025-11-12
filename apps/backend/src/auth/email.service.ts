@@ -11,8 +11,14 @@ export class EmailService {
     subject?: string;
     message: string;
   }): Promise<void> {
-    const toEmail = process.env.ADMIN_EMAIL_1 || '';
-    if (!toEmail) return;
+    const recipients = [
+      process.env.ADMIN_EMAIL_1,
+      process.env.ADMIN_EMAIL_2,
+    ].filter((value): value is string => Boolean(value && value.trim().length));
+
+    if (recipients.length === 0) {
+      return;
+    }
     const html = `
       <div style="font-family:Inter,system-ui,sans-serif;background:#fff;color:#111;padding:24px">
         <div style="font-weight:800;font-size:18px;margin-bottom:8px;">New Contact Message</div>
@@ -24,7 +30,7 @@ export class EmailService {
       </div>`;
 
     await this.plunk.emails.send({
-      to: toEmail,
+      to: recipients,
       from: process.env.MAIL_FROM || 'no-reply@theglamstore.ng',
       subject: `Customer Inquiry: ${params.subject || 'New message'}`,
       body: html,
@@ -341,8 +347,15 @@ export class EmailService {
     customerName: string;
     orderNumber?: string;
   }): Promise<void> {
-    const toEmail = process.env.ADMIN_EMAIL_1 || '';
-    if (!toEmail) return;
+    const recipients = [
+      process.env.ADMIN_EMAIL_1,
+      process.env.ADMIN_EMAIL_2,
+      process.env.ADMIN_EMAIL_3,
+    ].filter((value): value is string => Boolean(value && value.trim().length));
+
+    if (recipients.length === 0) {
+      return;
+    }
 
     const brandColor = '#e3b094';
     const mutedColor = '#6b7280';
@@ -381,9 +394,193 @@ export class EmailService {
     `;
 
     await this.plunk.emails.send({
-      to: toEmail,
+      to: recipients,
       from: process.env.MAIL_FROM || 'no-reply@theglamstore.ng',
       subject: `Review pending approval: ${params.productName}`,
+      body: html,
+    });
+  }
+
+  async sendOrderNotificationToAdmins(order: {
+    _id: string;
+    orderNumber?: string | null;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+    address1: string;
+    city: string;
+    state: string;
+    subtotal: number;
+    total: number;
+    deliveryFee?: number | null;
+    couponCode?: string | null;
+    paymentMethod: string;
+    transferProofUrl?: string | null;
+    items: Array<{
+      productId: string;
+      name?: string | null;
+      price?: number | null;
+      quantity?: number | null;
+      selectedSize?: string | null;
+      selectedColor?: string | null;
+    }>;
+  }): Promise<void> {
+    const recipients = [
+      process.env.ADMIN_EMAIL_1,
+      process.env.ADMIN_EMAIL_2,
+      process.env.ADMIN_EMAIL_3,
+    ].filter((value): value is string => Boolean(value && value.trim().length));
+
+    if (recipients.length === 0) {
+      return;
+    }
+
+    const orderNumberDisplay = order.orderNumber || order._id;
+    const paymentMethodDisplay =
+      order.paymentMethod?.replace(/_/g, ' ') || 'bank transfer';
+    const brandColor = '#111827';
+    const accentColor = '#fbbf24';
+    const borderColor = '#e5e7eb';
+    const mutedColor = '#6b7280';
+
+    const itemsMarkup =
+      (order.items || [])
+        .map((item) => {
+          const qty = item.quantity ?? 0;
+          const price = item.price ?? 0;
+          const lineTotal = price * qty;
+          const formatPrice = new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN',
+            minimumFractionDigits: 2,
+          });
+          return `
+            <tr>
+              <td style="padding:8px 12px;border-bottom:1px solid ${borderColor}">
+                <div style="font-weight:600;">${item.name || 'Untitled product'}</div>
+                <div style="color:${mutedColor};font-size:12px;">ID: ${item.productId}</div>
+                ${
+                  item.selectedSize || item.selectedColor
+                    ? `<div style="color:${mutedColor};font-size:12px;margin-top:4px;">
+                        ${item.selectedSize ? `<span>Size: ${item.selectedSize}</span>` : ''}
+                        ${
+                          item.selectedColor
+                            ? `<span style="margin-left:8px;">Color: ${item.selectedColor}</span>`
+                            : ''
+                        }
+                      </div>`
+                    : ''
+                }
+              </td>
+              <td style="padding:8px 12px;border-bottom:1px solid ${borderColor};text-align:center;">${qty}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid ${borderColor};text-align:right;">${formatPrice.format(
+                price,
+              )}</td>
+              <td style="padding:8px 12px;border-bottom:1px solid ${borderColor};text-align:right;font-weight:600;">${formatPrice.format(
+                lineTotal,
+              )}</td>
+            </tr>
+          `;
+        })
+        .join('') ||
+      `
+        <tr>
+          <td colspan="4" style="padding:12px;text-align:center;color:${mutedColor};border-bottom:1px solid ${borderColor};">
+            No items were attached to this order.
+          </td>
+        </tr>
+      `;
+
+    const formatPrice = new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 2,
+    });
+
+    const html = `
+      <div style="font-family:Inter,system-ui,sans-serif;background:#fff;color:#111;padding:24px;">
+        <div style="font-size:18px;font-weight:800;margin-bottom:16px;">
+          New order placed #${orderNumberDisplay}
+        </div>
+        <div style="margin-bottom:20px;color:${mutedColor};font-size:14px;">
+          Placed by <strong>${order.firstName} ${order.lastName}</strong> (${order.email}) ${
+            order.phone ? `• ${order.phone}` : ''
+          }
+        </div>
+        <div style="border:1px solid ${borderColor};border-radius:12px;overflow:hidden;margin-bottom:24px;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="background:${accentColor};color:#111;">
+                <th style="padding:10px 12px;text-align:left;">Item</th>
+                <th style="padding:10px 12px;text-align:center;width:80px;">Qty</th>
+                <th style="padding:10px 12px;text-align:right;width:120px;">Price</th>
+                <th style="padding:10px 12px;text-align:right;width:140px;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsMarkup}
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:220px;">
+            <div style="font-weight:600;margin-bottom:6px;">Delivery Details</div>
+            <div style="color:${mutedColor};font-size:13px;">
+              ${order.address1}, ${order.city}, ${order.state}
+            </div>
+          </div>
+          <div style="flex:1;min-width:220px;">
+            <div style="font-weight:600;margin-bottom:6px;">Payment</div>
+            <div style="color:${mutedColor};font-size:13px;">
+              ${paymentMethodDisplay}
+              ${
+                order.transferProofUrl
+                  ? `<div style="margin-top:4px;"><a href="${order.transferProofUrl}" style="color:${brandColor};">View transfer proof</a></div>`
+                  : ''
+              }
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:24px;border-top:1px solid ${borderColor};padding-top:16px;">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <tr>
+              <td style="padding:6px 0;color:${mutedColor};">Subtotal</td>
+              <td style="padding:6px 0;color:${mutedColor};text-align:right;">${formatPrice.format(order.subtotal)}</td>
+            </tr>
+            <tr>
+              <td style="padding:6px 0;color:${mutedColor};">Delivery</td>
+              <td style="padding:6px 0;color:${mutedColor};text-align:right;">${formatPrice.format(order.deliveryFee ?? 0)}</td>
+            </tr>
+            ${
+              order.couponCode
+                ? `<tr>
+                    <td style="padding:6px 0;color:${mutedColor};">Coupon (${order.couponCode})</td>
+                    <td style="padding:6px 0;color:${mutedColor};text-align:right;">-</td>
+                  </tr>`
+                : ''
+            }
+            <tr>
+              <td style="padding:10px 0;border-top:1px solid ${borderColor};font-weight:800;">Total</td>
+              <td style="padding:10px 0;border-top:1px solid ${borderColor};font-weight:800;text-align:right;">${formatPrice.format(order.total)}</td>
+            </tr>
+          </table>
+        </div>
+        <div style="margin-top:24px;">
+          <a href="${process.env.ADMIN_APP_ORIGIN || 'https://admin.theglamstore.ng'}/admin/orders?id=${
+            order._id
+          }"
+             style="display:inline-block;background:${brandColor};color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:600;">
+            View order in admin
+          </a>
+        </div>
+      </div>
+    `;
+
+    await this.plunk.emails.send({
+      to: recipients,
+      from: process.env.MAIL_FROM || 'no-reply@theglamstore.ng',
+      subject: `New order #${orderNumberDisplay} received`,
       body: html,
     });
   }

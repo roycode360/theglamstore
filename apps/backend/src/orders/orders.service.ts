@@ -115,7 +115,7 @@ export class OrdersService {
     const orderNumber = await this.generateOrderNumber();
 
     let deliveryFee = Number(payload.deliveryFee ?? 0) || 0;
-    let deliveryLocationId: string | null =
+    const deliveryLocationId: string | null =
       (payload.deliveryLocationId as string | undefined) ?? null;
     let deliveryLocationName: string | null =
       (payload.deliveryLocationName as string | undefined) ?? null;
@@ -124,7 +124,12 @@ export class OrdersService {
     if (deliveryLocationId) {
       const loc = await this.deliveryLocationModel
         .findById(deliveryLocationId)
-        .lean<{ _id: unknown; name?: string; price?: number; active?: boolean } | null>();
+        .lean<{
+          _id: unknown;
+          name?: string;
+          price?: number;
+          active?: boolean;
+        } | null>();
       if (loc && (loc.active ?? true)) {
         deliveryFee = Number(loc.price ?? 0) || 0;
         deliveryLocationName = loc.name ?? deliveryLocationName;
@@ -158,6 +163,24 @@ export class OrdersService {
       _id: unknown;
     };
     const order = { ...obj, _id: String(obj._id) } as OrderDTO;
+    await this.email.sendOrderNotificationToAdmins({
+      _id: order._id,
+      orderNumber: order.orderNumber,
+      email: order.email,
+      firstName: order.firstName,
+      lastName: order.lastName,
+      phone: order.phone,
+      address1: order.address1,
+      city: order.city,
+      state: order.state,
+      subtotal: order.subtotal,
+      total: order.total,
+      deliveryFee: order.deliveryFee,
+      couponCode: order.couponCode,
+      paymentMethod: order.paymentMethod,
+      transferProofUrl: order.transferProofUrl,
+      items: order.items,
+    });
     return order;
   }
 
@@ -404,19 +427,21 @@ export class OrdersService {
       selectedColor: it.selectedColor,
       image: it.image,
     }));
-    let deliveryFee =
-      input.deliveryFee != null ? Number(input.deliveryFee) : 0;
+    let deliveryFee = input.deliveryFee != null ? Number(input.deliveryFee) : 0;
     if (!Number.isFinite(deliveryFee) || deliveryFee < 0) {
       deliveryFee = 0;
     }
-    let deliveryLocationId =
-      typeof input.deliveryLocationId === 'string'
-        ? input.deliveryLocationId
-        : null;
-    let deliveryLocationName =
-      typeof input.deliveryLocationName === 'string'
-        ? input.deliveryLocationName
-        : null;
+    const rawDeliveryLocationId: unknown = input.deliveryLocationId;
+    let deliveryLocationId: string | null = null;
+    if (typeof rawDeliveryLocationId === 'string') {
+      deliveryLocationId = rawDeliveryLocationId;
+    }
+
+    const rawDeliveryLocationName: unknown = input.deliveryLocationName;
+    let deliveryLocationName: string | null = null;
+    if (typeof rawDeliveryLocationName === 'string') {
+      deliveryLocationName = rawDeliveryLocationName;
+    }
 
     if (deliveryLocationId) {
       const deliveryLocation = await this.deliveryLocationModel
@@ -536,9 +561,8 @@ export class OrdersService {
       const notesValue = sanitizeOptionalString(
         (input as { notes?: unknown }).notes,
       );
-      const deliveryLocationNameValue = sanitizeOptionalString(
-        deliveryLocationName,
-      );
+      const deliveryLocationNameValue =
+        sanitizeOptionalString(deliveryLocationName);
       const deliveryLocationIdValue =
         typeof deliveryLocationId === 'string' &&
         deliveryLocationId.trim().length > 0
@@ -643,6 +667,26 @@ export class OrdersService {
     }
 
     const created = (await this.getById(createdId))!;
+
+    await this.email.sendOrderNotificationToAdmins({
+      _id: created._id,
+      orderNumber: created.orderNumber,
+      email: created.email,
+      firstName: created.firstName,
+      lastName: created.lastName,
+      phone: created.phone,
+      address1: created.address1,
+      city: created.city,
+      state: created.state,
+      subtotal: created.subtotal,
+      total: created.total,
+      deliveryFee: created.deliveryFee,
+      couponCode: created.couponCode,
+      paymentMethod: created.paymentMethod,
+      transferProofUrl: created.transferProofUrl,
+      items: created.items,
+    });
+
     // If fully paid, trigger stock deduction via status change to confirmed
     if (initialStatus === 'confirmed') {
       await this.updateStatus(created._id, 'confirmed');

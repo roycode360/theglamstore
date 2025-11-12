@@ -9,6 +9,12 @@ export const Header = () => {
   const isActive = (to: string) =>
     (to === '/' && pathname === '/') || (to !== '/' && pathname.startsWith(to));
 
+  const primaryNavLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/products', label: 'Products' },
+    { href: '/categories', label: 'Categories' },
+  ];
+
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -33,11 +39,7 @@ export const Header = () => {
           <img src={brandLogo} alt="TheGlamStore" className="w-52" />
         </Link>
         <nav className="items-center hidden gap-3 text-sm md:flex">
-          {[
-            { href: '/', label: 'Home' },
-            { href: '/products', label: 'Products' },
-            { href: '/categories', label: 'Categories' },
-          ].map((item) => (
+          {primaryNavLinks.map((item) => (
             <Link
               key={item.href}
               to={item.href}
@@ -99,17 +101,29 @@ export const Header = () => {
               aria-label="Account"
               onClick={() => setMenuOpen((v) => !v)}
             >
+              <span className="inline-flex md:hidden">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  className="w-6 h-6"
+                >
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </span>
               {isUserAuthenticated ? (
                 user?.avatar ? (
                   <img
                     src={user.avatar}
                     // alt={user.fullName || 'User avatar'}
-                    className="object-cover w-6 h-6 border rounded-full theme-border"
+                    className="hidden object-cover w-6 h-6 border rounded-full theme-border md:block"
                     loading="lazy"
                     decoding="async"
                   />
                 ) : (
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-black text-[10px] font-semibold text-white">
+                  <div className="hidden h-6 w-6 items-center justify-center rounded-full bg-black text-[10px] font-semibold text-white md:flex">
                     {(user?.fullName || 'U')
                       .split(' ')
                       .map((name) => name[0])
@@ -124,7 +138,7 @@ export const Header = () => {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="1.5"
-                  className="w-5 h-5"
+                  className="hidden w-5 h-5 md:block"
                 >
                   <circle cx="12" cy="8" r="3" />
                   <path d="M6 20a6 6 0 0 1 12 0" />
@@ -176,6 +190,63 @@ export const Header = () => {
                       className="my-2 border-t"
                       style={{ borderColor: 'rgb(var(--border))' }}
                     />
+                    {primaryNavLinks
+                      .filter((item) => !isActive(item.href))
+                      .map((item) => (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        role="menuitem"
+                        className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-brand-50 xl:hidden"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <span className="flex items-center justify-center w-4 h-4">
+                          {item.href === '/' && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              className="w-4 h-4"
+                            >
+                              <path d="M3 9l9-7 9 7v11a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-4H9v4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
+                            </svg>
+                          )}
+                          {item.href === '/products' && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              className="w-4 h-4"
+                            >
+                              <path d="M6 3h12l3 7H3l3-7z" />
+                              <path d="M3 10h18v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8z" />
+                              <path d="M16 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                              <path d="M8 19a2 2 0 1 1-4 0 2 2 0 0 1 4 0z" />
+                            </svg>
+                          )}
+                          {item.href === '/categories' && (
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.5"
+                              className="w-4 h-4"
+                            >
+                              <rect x="3" y="3" width="7" height="7" rx="1" />
+                              <rect x="14" y="3" width="7" height="7" rx="1" />
+                              <rect x="14" y="14" width="7" height="7" rx="1" />
+                              <rect x="3" y="14" width="7" height="7" rx="1" />
+                            </svg>
+                          )}
+                        </span>
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
                     <Link
                       to="/orders"
                       role="menuitem"
@@ -241,28 +312,48 @@ export const Header = () => {
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      navigate('/login', { state: { from: pathname } });
-                    }}
-                    role="menuitem"
-                    className="flex items-center w-full gap-2 px-3 py-2 text-sm rounded hover:bg-brand-50"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      className="w-4 h-4"
+                  <>
+                    <Link
+                      to="/wishlist"
+                      role="menuitem"
+                      className="flex items-center gap-2 px-3 py-2 text-sm rounded hover:bg-brand-50"
+                      onClick={() => setMenuOpen(false)}
                     >
-                      <path d="M15 12H3" />
-                      <path d="M7 16l-4-4 4-4" />
-                      <path d="M21 19V5" />
-                    </svg>
-                    <span>Login</span>
-                  </button>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        className="w-4 h-4"
+                      >
+                        <path d="M12 21s-6.716-4.39-9.193-7.63C1.49 11.66 1 9.93 1 8.5 1 6.015 3.015 4 5.5 4c1.54 0 3.04.79 3.9 2.06C10.46 4.79 11.96 4 13.5 4 15.985 4 18 6.015 18 8.5c0 1.43-.49 3.16-1.807 4.87C18.716 16.61 12 21 12 21z" />
+                      </svg>
+                      <span>Wishlist</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        navigate('/login', { state: { from: pathname } });
+                      }}
+                      role="menuitem"
+                      className="flex items-center w-full gap-2 px-3 py-2 text-sm rounded hover:bg-brand-50"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        className="w-4 h-4"
+                      >
+                        <path d="M15 12H3" />
+                        <path d="M7 16l-4-4 4-4" />
+                        <path d="M21 19V5" />
+                      </svg>
+                      <span>Login</span>
+                    </button>
+                  </>
                 )}
               </div>
             )}

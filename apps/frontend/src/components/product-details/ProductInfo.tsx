@@ -41,7 +41,7 @@ export function ProductInfo({ product: p, categoryInfo }: ProductInfoProps) {
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
-              className="w-3 h-3"
+              className="h-3 w-3"
             >
               <path
                 fillRule="evenodd"
@@ -58,8 +58,24 @@ export function ProductInfo({ product: p, categoryInfo }: ProductInfoProps) {
         {p.brand ? p.brand.toUpperCase() : 'LUXE COLLECTION'}
       </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-4xl font-extrabold tracking-tight">{p.name}</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-4xl font-extrabold tracking-tight">{p.name}</h1>
+          {p.salePrice != null && p.salePrice < p.price ? (
+            <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-rose-500 via-red-500 to-orange-500 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-white shadow-md shadow-rose-500/20">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-3 w-3"
+                aria-hidden="true"
+              >
+                <path d="M12 2c2.5 2.4 3.76 4.8 3.76 7.2 0 1.62-.64 2.7-1.91 3.3 2.04-.18 3.64-1.86 3.64-4.38 0-1.44-.56-2.82-1.68-4.14 2.7 1.5 4.05 3.72 4.05 6.66 0 4.2-3.12 7.86-9.36 10.98C4.44 17.52 1.32 13.86 1.32 9.66c0-2.94 1.35-5.16 4.05-6.66C4.26 5.1 3.7 6.48 3.7 7.92c0 2.52 1.6 4.2 3.62 4.38C6.06 11.1 5.42 10.02 5.42 8.4 5.42 6 6.68 4.4 9.2 2c.28-.26.58-.39.9-.39s.62.13.9.39Z" />
+              </svg>
+              Sale
+            </span>
+          ) : null}
+        </div>
         {typeof p.stockQuantity === 'number' && (
           <span
             className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium sm:px-3 sm:py-1.5 sm:text-sm ${
@@ -89,7 +105,7 @@ export function ProductInfo({ product: p, categoryInfo }: ProductInfoProps) {
         )}
       </div>
 
-      <p className="text-sm max-w-prose" style={{ color: 'rgb(var(--muted))' }}>
+      <p className="max-w-prose text-sm" style={{ color: 'rgb(var(--muted))' }}>
         {p.description || 'A luxurious piece crafted with attention to detail.'}
       </p>
     </div>

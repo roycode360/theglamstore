@@ -178,6 +178,7 @@ const router = createBrowserRouter([
           { path: 'cart', element: <CartPage /> },
           { path: 'checkout', element: <CheckoutPage /> },
           { path: 'checkout/confirmation', element: <OrderConfirmation /> },
+          { path: 'wishlist', element: <WishlistPage /> },
           { path: 'not-authorized', element: <NotAuthorized /> },
           { path: 'customer-service', element: <CustomerService /> },
         ],
