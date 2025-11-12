@@ -40,7 +40,7 @@ type ReviewEligibilityState = {
 export default function ProductDetails() {
   const [params] = useSearchParams();
   const id = params.get('id') ?? '';
-  const { user, login } = useAuth();
+  const { user, isUserAuthenticated } = useAuth();
   const { trackProductView } = useAnalyticsTracker();
 
   const { data, loading } = useQuery<{ getProduct: TProduct }>(GET_PRODUCT, {
@@ -85,11 +85,11 @@ export default function ProductDetails() {
   );
 
   const refreshEligibility = useCallback(async () => {
-    if (!id || !user?.email) return;
+    if (!id || !isUserAuthenticated || user?.role !== 'customer') return;
     await loadEligibility({
       variables: { productId: id },
     });
-  }, [id, loadEligibility, user?.email]);
+  }, [id, loadEligibility, isUserAuthenticated, user?.role]);
 
   useEffect(() => {
     void refreshEligibility();
@@ -200,17 +200,17 @@ export default function ProductDetails() {
 
     const stock = Number((p as any)?.stockQuantity ?? 0);
     const productId = p._id;
-    const existingForProduct = (Array.isArray(cartItems) ? cartItems : []).filter(
-      (ci: any) => {
-        if (ci?.product?._id) {
-          return ci.product._id === productId;
-        }
-        if (ci?.productId) {
-          return ci.productId === productId;
-        }
-        return false;
-      },
-    );
+    const existingForProduct = (
+      Array.isArray(cartItems) ? cartItems : []
+    ).filter((ci: any) => {
+      if (ci?.product?._id) {
+        return ci.product._id === productId;
+      }
+      if (ci?.productId) {
+        return ci.productId === productId;
+      }
+      return false;
+    });
     const totalInCart = existingForProduct.reduce(
       (sum: number, ci: any) => sum + (ci?.quantity || 0),
       0,
