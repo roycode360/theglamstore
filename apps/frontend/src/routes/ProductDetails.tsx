@@ -7,7 +7,6 @@ import { useWishlist } from '../contexts/WishlistContext';
 import { useToast } from '../components/ui/Toast';
 import { TProduct, TReview } from 'src/types';
 import { LIST_PRODUCTS_BY_CATEGORY, GET_PRODUCT } from 'src/graphql/products';
-import { GET_CART_ITEMS } from '../graphql/cart';
 import { LIST_CATEGORIES } from '../graphql/categories';
 import {
   LIST_PRODUCT_REVIEWS,
@@ -62,7 +61,6 @@ export default function ProductDetails() {
     nextFetchPolicy: 'cache-first',
   });
 
-  const { data: cartData } = useQuery(GET_CART_ITEMS);
   const { data: categoriesData } = useQuery(LIST_CATEGORIES);
 
   const {
@@ -161,7 +159,7 @@ export default function ProductDetails() {
   const [activeSize, setActiveSize] = useState<string | null>(null);
   const [qty, setQty] = useState(1);
 
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { showToast } = useToast();
   const { items: wishlist, add: addWish, remove: removeWish } = useWishlist();
 
@@ -202,8 +200,16 @@ export default function ProductDetails() {
 
     const stock = Number((p as any)?.stockQuantity ?? 0);
     const productId = p._id;
-    const existingForProduct = (cartData?.getCartItems ?? []).filter(
-      (ci: any) => ci?.product?._id === productId,
+    const existingForProduct = (Array.isArray(cartItems) ? cartItems : []).filter(
+      (ci: any) => {
+        if (ci?.product?._id) {
+          return ci.product._id === productId;
+        }
+        if (ci?.productId) {
+          return ci.productId === productId;
+        }
+        return false;
+      },
     );
     const totalInCart = existingForProduct.reduce(
       (sum: number, ci: any) => sum + (ci?.quantity || 0),
