@@ -6,6 +6,7 @@ import { formatCurrency } from '../utils/currency';
 import { TCartItem } from 'src/types';
 import { LocalCartItem } from '../utils/localCart';
 import ConfirmModal from '../components/ui/ConfirmModal';
+import Spinner from '../components/ui/Spinner';
 import { Skeleton } from '../components/ui/Skeleton';
 
 export default function CartPage() {
@@ -142,16 +143,16 @@ export default function CartPage() {
 
   if (cartItemsData?.getCartItems?.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-4 text-6xl">🛒</div>
           <h1 className="mb-4 text-3xl font-bold">Your cart is empty</h1>
-          <p className="mb-8 text-muted">
+          <p className="text-muted mb-8">
             Looks like you haven't added any items to your cart yet.
           </p>
           <Link
             to="/products"
-            className="px-8 py-3 text-lg rounded-lg btn-primary"
+            className="btn-primary rounded-lg px-8 py-3 text-lg"
           >
             Start Shopping
           </Link>
@@ -166,14 +167,14 @@ export default function CartPage() {
 
   return (
     <>
-      <div className="min-h-screen py-6 bg-gray-50 sm:py-8">
-        <div className="px-4 mx-auto max-w-7xl sm:px-6">
+      <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
+            <div className="mb-4 flex items-center gap-4">
               <Link
                 to="/products"
-                className="flex items-center gap-2 transition-colors text-brand hover:text-brand-700"
+                className="text-brand hover:text-brand-700 flex items-center gap-2 transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -181,7 +182,7 @@ export default function CartPage() {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
-                  className="w-5 h-5"
+                  className="h-5 w-5"
                 >
                   <path
                     strokeLinecap="round"
@@ -198,8 +199,8 @@ export default function CartPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Cart Items */}
             <div className="lg:col-span-2">
-              <div className="px-2 py-4 bg-white border rounded-lg shadow-sm sm:px-4 sm:py-6">
-                <div className="flex items-center justify-between mb-6">
+              <div className="rounded-lg border bg-white px-2 py-4 shadow-sm sm:px-4 sm:py-6">
+                <div className="mb-6 flex items-center justify-between">
                   <h2 className="text-2xl font-semibold">
                     Cart Items ({cartItemCount})
                   </h2>
@@ -219,35 +220,35 @@ export default function CartPage() {
                       return (
                         <div
                           key={itemId}
-                          className="flex flex-col gap-3 px-2 py-3 border rounded-lg sm:flex-row sm:gap-4 sm:px-4 sm:py-4"
+                          className="flex flex-col gap-3 rounded-lg border px-2 py-3 sm:flex-row sm:gap-4 sm:px-4 sm:py-4"
                         >
                           {/* Product Image */}
-                          <div className="flex-shrink-0 w-20 h-20 overflow-hidden bg-gray-100 rounded-lg sm:h-24 sm:w-24">
+                          <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:h-24 sm:w-24">
                             {item?.product?.images?.[0] && (
                               <img
                                 src={item?.product.images[0]}
                                 alt={item?.product?.name}
-                                className="object-cover w-full h-full"
+                                className="h-full w-full object-cover"
                               />
                             )}
                           </div>
 
                           {/* Product Details */}
-                          <div className="flex-1 min-w-0">
+                          <div className="min-w-0 flex-1">
                             <h3 className="mb-1 text-lg font-semibold">
                               <Link
                                 to={`/ProductDetails?id=${item?.product?._id ?? ''}`}
-                                className="transition-colors hover:text-brand-700"
+                                className="hover:text-brand-700 transition-colors"
                               >
                                 {item?.product?.name}
                               </Link>
                             </h3>
-                            <p className="mb-2 text-sm text-muted">
+                            <p className="text-muted mb-2 text-sm">
                               {item?.product?.brand}
                             </p>
 
                             {/* Size and Color Tags */}
-                            <div className="flex flex-wrap gap-2 mb-3">
+                            <div className="mb-3 flex flex-wrap gap-2">
                               <span className="bg-brand-100 text-brand-800 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
                                 Size: {item?.selectedSize}
                               </span>
@@ -293,7 +294,7 @@ export default function CartPage() {
                                   <span className="text-gray-700">
                                     {formatCurrency(item?.product?.salePrice)}
                                   </span>
-                                  <span className="ml-2 text-sm line-through text-muted">
+                                  <span className="text-muted ml-2 text-sm line-through">
                                     {formatCurrency(item?.product?.price)}
                                   </span>
                                 </>
@@ -304,13 +305,13 @@ export default function CartPage() {
                           </div>
 
                           {/* Quantity and Actions */}
-                          <div className="flex flex-row flex-wrap items-center justify-between w-full gap-3 mt-1 sm:mt-0 sm:w-auto sm:flex-col sm:items-end">
+                          <div className="mt-1 flex w-full flex-row flex-wrap items-center justify-between gap-3 sm:mt-0 sm:w-auto sm:flex-col sm:items-end">
                             {/* Quantity Selector */}
                             <div className="flex items-center gap-2">
-                              <span className="hidden text-sm text-muted sm:inline">
+                              <span className="text-muted hidden text-sm sm:inline">
                                 Qty:
                               </span>
-                              <div className="flex items-center border rounded-md">
+                              <div className="flex items-center rounded-md border">
                                 <button
                                   onClick={() =>
                                     handleQuantityChange(
@@ -415,7 +416,7 @@ export default function CartPage() {
                                 <Spinner
                                   label=""
                                   size={16}
-                                  className="w-5 h-5"
+                                  className="h-5 w-5"
                                 />
                               ) : (
                                 <svg
@@ -424,7 +425,7 @@ export default function CartPage() {
                                   fill="none"
                                   stroke="currentColor"
                                   strokeWidth="2"
-                                  className="w-5 h-5"
+                                  className="h-5 w-5"
                                 >
                                   <path
                                     strokeLinecap="round"
@@ -445,7 +446,7 @@ export default function CartPage() {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="p-4 bg-white border rounded-lg shadow-sm sm:p-6 lg:sticky lg:top-8">
+              <div className="rounded-lg border bg-white p-4 shadow-sm sm:p-6 lg:sticky lg:top-8">
                 <h2 className="mb-4 text-xl font-semibold sm:mb-6 sm:text-2xl">
                   Order Summary
                 </h2>
@@ -459,7 +460,7 @@ export default function CartPage() {
                     </span>
                   </div>
 
-                  <div className="pt-3 border-t">
+                  <div className="border-t pt-3">
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
                       <span>{formatCurrency(total)}</span>
@@ -470,20 +471,20 @@ export default function CartPage() {
                 {/* Checkout Button */}
                 <Link
                   to="/checkout"
-                  className="block w-full px-6 py-3 mb-6 font-semibold text-center text-white transition-colors rounded-lg bg-brand hover:bg-brand-700"
+                  className="bg-brand hover:bg-brand-700 mb-6 block w-full rounded-lg px-6 py-3 text-center font-semibold text-white transition-colors"
                 >
                   Proceed to Checkout
                 </Link>
 
                 {/* Additional Info Cards */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-100">
+                  <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
+                    <div className="bg-brand-100 flex h-8 w-8 items-center justify-center rounded-full">
                       🛡️
                     </div>
                     <div>
                       <div className="font-medium">Secure Payment</div>
-                      <div className="text-sm text-muted">Bank transfer </div>
+                      <div className="text-muted text-sm">Bank transfer </div>
                     </div>
                   </div>
                 </div>
