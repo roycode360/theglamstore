@@ -4,7 +4,7 @@ import Input from '../../components/ui/Input';
 import CategoryModal, { type Category } from './CategoryModal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useToast } from '../../components/ui/Toast';
-import Spinner from '../../components/ui/Spinner';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export default function AdminCategoriesPage() {
   const { showToast } = useToast();
@@ -134,6 +134,8 @@ export default function AdminCategoriesPage() {
     }
   }
 
+  const initialLoading = loading && !data?.listCategories;
+
   return (
     <div className="px-2 py-6 border rounded-lg theme-card theme-border">
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -162,10 +164,8 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
       <div className="overflow-hidden rounded-md">
-        {loading ? (
-          <div className="py-10">
-            <Spinner label="Loading categories" />
-          </div>
+        {initialLoading ? (
+          <CategoriesSkeleton />
         ) : (
           <>
             {/* Desktop Table View */}
@@ -360,5 +360,72 @@ export default function AdminCategoriesPage() {
         onClose={() => setToDelete(null)}
       />
     </div>
+  );
+}
+
+function CategoriesSkeleton() {
+  const rows = Array.from({ length: 6 });
+  return (
+    <>
+      <div className="hidden md:block">
+        <div className="rounded-md border border-dashed border-gray-200 bg-white">
+          <div className="grid grid-cols-[2fr_1fr_auto_auto] items-center gap-4 border-b border-gray-100 px-4 py-3 text-xs uppercase text-gray-400">
+            <Skeleton className="h-3 w-28 rounded-full" />
+            <Skeleton className="h-3 w-20 rounded-full" />
+            <Skeleton className="h-3 w-16 rounded-full" />
+            <Skeleton className="h-3 w-20 rounded-full justify-self-end" />
+          </div>
+          <div className="divide-y divide-gray-100">
+            {rows.map((_, idx) => (
+              <div
+                key={idx}
+                className="grid grid-cols-[2fr_1fr_auto_auto] items-center gap-4 px-4 py-4"
+              >
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-md" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-36 rounded-md" />
+                    <Skeleton className="h-3 w-48 rounded-full" />
+                  </div>
+                </div>
+                <Skeleton className="h-4 w-24 rounded-md" />
+                <Skeleton className="h-6 w-6 rounded-full justify-self-start" />
+                <div className="flex justify-end gap-2">
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                  <Skeleton className="h-8 w-8 rounded-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="space-y-3 md:hidden">
+        {rows.map((_, idx) => (
+          <div
+            key={idx}
+            className="rounded-lg border border-dashed border-gray-200 bg-white p-4"
+          >
+            <div className="mb-3 flex items-start gap-3">
+              <Skeleton className="h-16 w-16 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-32 rounded-md" />
+                <Skeleton className="h-3 w-20 rounded-full" />
+              </div>
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-3 w-16 rounded-full" />
+                <Skeleton className="h-6 w-6 rounded-full" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-8 w-8 rounded-md" />
+                <Skeleton className="h-8 w-8 rounded-md" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

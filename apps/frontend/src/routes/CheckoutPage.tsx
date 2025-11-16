@@ -1,5 +1,4 @@
 import { Link, useNavigate } from 'react-router-dom';
-import Spinner from '../components/ui/Spinner';
 import { TCartItem } from 'src/types';
 import { LocalCartItem } from '../utils/localCart';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
@@ -22,6 +21,7 @@ import BankTransferModal from './checkout/components/BankTransferModal';
 import { LIST_DELIVERY_LOCATIONS } from '../graphql/delivery';
 import Input from '../components/ui/Input';
 import { formatCurrency } from '../utils/currency';
+import { Skeleton } from '../components/ui/Skeleton';
 
 export default function CheckoutPage() {
   const { cartItems, isLoading, cartLoaded } = useCart();
@@ -186,11 +186,7 @@ export default function CheckoutPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner label="Loading checkout" />
-      </div>
-    );
+    return <CheckoutPageSkeleton />;
   }
 
   // Show login modal for unauthenticated users
@@ -400,5 +396,84 @@ export default function CheckoutPage() {
         cancelText="Cancel"
       />
     </>
+  );
+}
+
+function CheckoutPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50 py-10">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 space-y-3">
+          <Skeleton className="h-4 w-32 rounded-full" />
+          <Skeleton className="h-8 w-72 rounded-md" />
+          <Skeleton className="h-4 w-40 rounded-full" />
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr_1fr]">
+          <div className="space-y-6">
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <Skeleton className="h-5 w-40 rounded-md" />
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <Skeleton className="h-3 w-24 rounded-full" />
+                    <Skeleton className="h-10 w-full rounded-md" />
+                  </div>
+                ))}
+                <div className="md:col-span-2 space-y-2">
+                  <Skeleton className="h-3 w-28 rounded-full" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <Skeleton className="h-5 w-48 rounded-md" />
+              <div className="mt-4 space-y-3">
+                {Array.from({ length: 3 }).map((_, idx) => (
+                  <div key={idx} className="rounded-md border border-dashed p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <Skeleton className="h-4 w-40 rounded-md" />
+                      <Skeleton className="h-4 w-24 rounded-full" />
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      <Skeleton className="h-3 w-24 rounded-full" />
+                      <Skeleton className="h-3 w-24 rounded-full" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <Skeleton className="h-5 w-36 rounded-md" />
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-20 rounded-full" />
+                  <Skeleton className="h-4 w-24 rounded-md" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-28 rounded-full" />
+                  <Skeleton className="h-4 w-28 rounded-md" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-24 rounded-full" />
+                  <Skeleton className="h-5 w-32 rounded-md" />
+                </div>
+              </div>
+              <Skeleton className="mt-5 h-11 w-full rounded-md" />
+            </div>
+
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <Skeleton className="h-5 w-44 rounded-md" />
+              <Skeleton className="mt-3 h-10 w-full rounded-md" />
+              <Skeleton className="mt-3 h-10 w-full rounded-md" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

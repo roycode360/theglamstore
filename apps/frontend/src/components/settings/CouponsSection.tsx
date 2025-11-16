@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { formatDate } from '../../utils/date';
 import { formatCurrency } from '../../utils/currency';
-import Spinner from '../../components/ui/Spinner';
 import { StatusBadge } from './StatusBadge';
+import { Skeleton } from '../ui/Skeleton';
 
 type CouponDiscount = 'PERCENTAGE' | 'FIXED';
 
@@ -95,9 +95,7 @@ export function CouponsSection({
 
       <div className={openCoupons ? '' : 'hidden'}>
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Spinner />
-          </div>
+          <CouponsSkeleton />
         ) : coupons.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
@@ -313,5 +311,72 @@ export function CouponsSection({
         )}
       </div>
     </section>
+  );
+}
+
+function CouponsSkeleton() {
+  const rows = Array.from({ length: 5 });
+  return (
+    <div className="space-y-6">
+      <div className="overflow-x-auto rounded-xl border border-neutral-200">
+        <table className="min-w-full divide-y divide-neutral-200 text-sm">
+          <thead className="bg-neutral-50">
+            <tr>
+              {Array.from({ length: 9 }).map((_, idx) => (
+                <th key={idx} className="px-4 py-3 text-left">
+                  <Skeleton className="h-3 w-24 rounded-full" />
+                </th>
+              ))}
+              <th className="px-4 py-3 text-right">
+                <Skeleton className="ml-auto h-3 w-16 rounded-full" />
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-neutral-200 bg-white">
+            {rows.map((_, idx) => (
+              <tr key={idx}>
+                <td className="px-4 py-3">
+                  <Skeleton className="h-4 w-24 rounded-md" />
+                </td>
+                <td className="px-4 py-3">
+                  <Skeleton className="h-4 w-20 rounded-md" />
+                </td>
+                <td className="px-4 py-3">
+                  <Skeleton className="h-4 w-16 rounded-md" />
+                </td>
+                <td className="px-4 py-3">
+                  <Skeleton className="h-4 w-16 rounded-md" />
+                </td>
+                <td className="px-4 py-3">
+                  <Skeleton className="h-4 w-16 rounded-md" />
+                </td>
+                <td className="px-4 py-3">
+                  <Skeleton className="h-4 w-20 rounded-md" />
+                </td>
+                <td className="px-4 py-3">
+                  <Skeleton className="h-4 w-16 rounded-full" />
+                </td>
+                <td className="px-4 py-3">
+                  <Skeleton className="h-4 w-20 rounded-md" />
+                </td>
+                <td className="px-4 py-3">
+                  <Skeleton className="h-4 w-20 rounded-md" />
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex justify-end gap-2">
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex items-center justify-end gap-2">
+        <Skeleton className="h-9 w-24 rounded-md" />
+        <Skeleton className="h-9 w-24 rounded-md" />
+      </div>
+    </div>
   );
 }

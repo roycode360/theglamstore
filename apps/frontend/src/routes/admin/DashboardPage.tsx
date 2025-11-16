@@ -1,10 +1,10 @@
 import { useQuery } from '@apollo/client';
-import Spinner from '../../components/ui/Spinner';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { formatDateOnly } from '../../utils/date';
 import { formatCurrency } from '../../utils/currency';
 import { GET_DASHBOARD_STATS } from '../../graphql/orders';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -90,6 +90,8 @@ export default function DashboardPage() {
     return id.length > max ? id.slice(0, max) + '…' : id;
   }
 
+  const initialLoading = statsLoading && !stats;
+
   return (
     <div className="space-y-6">
       <div>
@@ -101,115 +103,133 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="theme-card theme-border rounded-lg border p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
-                Total Revenue
+          {initialLoading ? (
+            <MetricSkeleton />
+          ) : (
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
+                  Total Revenue
+                </div>
+                <div className="mt-2 text-2xl font-semibold">
+                  {formatCurrency(totalRevenue)}
+                </div>
               </div>
-              <div className="mt-2 text-2xl font-semibold">
-                {formatCurrency(totalRevenue)}
+              <div className="theme-border text-brand flex h-9 w-9 items-center justify-center rounded-full border bg-white">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  className="h-5 w-5"
+                >
+                  <rect x="2.75" y="6.75" width="18.5" height="10.5" rx="2" />
+                  <circle cx="12" cy="12" r="2.5" />
+                </svg>
               </div>
             </div>
-            <div className="theme-border text-brand flex h-9 w-9 items-center justify-center rounded-full border bg-white">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="h-5 w-5"
-              >
-                <rect x="2.75" y="6.75" width="18.5" height="10.5" rx="2" />
-                <circle cx="12" cy="12" r="2.5" />
-              </svg>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="theme-card theme-border rounded-lg border p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
-                Total Orders
+          {initialLoading ? (
+            <MetricSkeleton />
+          ) : (
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
+                  Total Orders
+                </div>
+                <div className="mt-2 text-2xl font-semibold">{totalOrders}</div>
               </div>
-              <div className="mt-2 text-2xl font-semibold">{totalOrders}</div>
+              <div className="theme-border text-brand flex h-9 w-9 items-center justify-center rounded-full border bg-white">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  className="h-5 w-5"
+                >
+                  <path d="M3 6h2l2.4 9.6A2 2 0 0 0 9.35 17H17a2 2 0 0 0 1.94-1.52L20.5 9H6" />
+                  <circle cx="9.5" cy="19" r="1.5" />
+                  <circle cx="17.5" cy="19" r="1.5" />
+                </svg>
+              </div>
             </div>
-            <div className="theme-border text-brand flex h-9 w-9 items-center justify-center rounded-full border bg-white">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="h-5 w-5"
-              >
-                <path d="M3 6h2l2.4 9.6A2 2 0 0 0 9.35 17H17a2 2 0 0 0 1.94-1.52L20.5 9H6" />
-                <circle cx="9.5" cy="19" r="1.5" />
-                <circle cx="17.5" cy="19" r="1.5" />
-              </svg>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="theme-card theme-border rounded-lg border p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
-                Total Products
+          {initialLoading ? (
+            <MetricSkeleton />
+          ) : (
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
+                  Total Products
+                </div>
+                <div className="mt-2 text-2xl font-semibold">
+                  {totalProducts}
+                </div>
               </div>
-              <div className="mt-2 text-2xl font-semibold">{totalProducts}</div>
+              <div className="theme-border text-brand flex h-9 w-9 items-center justify-center rounded-full border bg-white">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  className="h-5 w-5"
+                >
+                  <path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z" />
+                  <path d="M12 12 20 8" />
+                  <path d="M12 12v9" />
+                  <path d="M12 12 4 8" />
+                </svg>
+              </div>
             </div>
-            <div className="theme-border text-brand flex h-9 w-9 items-center justify-center rounded-full border bg-white">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="h-5 w-5"
-              >
-                <path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z" />
-                <path d="M12 12 20 8" />
-                <path d="M12 12v9" />
-                <path d="M12 12 4 8" />
-              </svg>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="theme-card theme-border rounded-lg border p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
-                Low Stock Items
+          {initialLoading ? (
+            <MetricSkeleton />
+          ) : (
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
+                  Low Stock Items
+                </div>
+                <div className="mt-2 text-2xl font-semibold">
+                  {lowStockItems}
+                </div>
               </div>
-              <div className="mt-2 text-2xl font-semibold">{lowStockItems}</div>
+              <div className="theme-border text-brand flex h-9 w-9 items-center justify-center rounded-full border bg-white">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  className="h-5 w-5"
+                >
+                  <path d="M12 9v4" />
+                  <path d="M12 17h.01" />
+                  <path d="M10.29 3.86 1.82 18.14A2 2 0 0 0 3.55 21h16.9a2 2 0 0 0 1.73-2.86L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+                </svg>
+              </div>
             </div>
-            <div className="theme-border text-brand flex h-9 w-9 items-center justify-center rounded-full border bg-white">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                className="h-5 w-5"
-              >
-                <path d="M12 9v4" />
-                <path d="M12 17h.01" />
-                <path d="M10.29 3.86 1.82 18.14A2 2 0 0 0 3.55 21h16.9a2 2 0 0 0 1.73-2.86L13.71 3.86a2 2 0 0 0-3.42 0Z" />
-              </svg>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="theme-card theme-border rounded-lg border p-6 md:col-span-2">
           <div className="mb-3 text-lg font-semibold">Sales This Month</div>
-          {statsLoading ? (
-            <div className="py-10">
-              <Spinner label="Loading sales" />
-            </div>
+          {initialLoading ? (
+            <SalesCardSkeleton />
           ) : (
             <div className="overflow-x-auto">
               <svg width={width} height={height} className="text-brand">
@@ -417,10 +437,8 @@ export default function DashboardPage() {
         </div>
         <div className="theme-card theme-border rounded-lg border p-6">
           <div className="mb-3 text-lg font-semibold">Top Selling Products</div>
-          {statsLoading ? (
-            <div className="py-6">
-              <Spinner label="Loading products" />
-            </div>
+          {initialLoading ? (
+            <TopSellingSkeleton />
           ) : (
             <div className="space-y-3">
               {topSelling.slice(0, 3).map((row: any) => (
@@ -477,10 +495,8 @@ export default function DashboardPage() {
 
       <div className="theme-card theme-border rounded-lg border px-2 py-6">
         <div className="mb-3 text-lg font-semibold">Recent Orders</div>
-        {statsLoading ? (
-          <div className="py-6">
-            <Spinner label="Loading orders" />
-          </div>
+        {initialLoading ? (
+          <RecentOrdersSkeleton />
         ) : (
           <>
             {/* Desktop Table View */}
@@ -600,5 +616,104 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function MetricSkeleton() {
+  return (
+    <div className="flex items-start justify-between">
+      <div className="space-y-2">
+        <Skeleton className="h-3 w-24 rounded-full" />
+        <Skeleton className="h-6 w-20 rounded-md" />
+      </div>
+      <Skeleton className="h-9 w-9 rounded-full" />
+    </div>
+  );
+}
+
+function SalesCardSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-4 w-32 rounded-full" />
+      <div className="flex flex-col gap-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-6">
+        <Skeleton className="h-3 w-16 rounded-full" />
+        <Skeleton className="h-32 w-full rounded-xl" />
+        <div className="flex justify-between">
+          <Skeleton className="h-3 w-12 rounded-full" />
+          <Skeleton className="h-3 w-12 rounded-full" />
+          <Skeleton className="h-3 w-12 rounded-full" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TopSellingSkeleton() {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: 3 }).map((_, idx) => (
+        <div
+          key={idx}
+          className="flex items-center justify-between gap-3 rounded-md border border-dashed border-gray-200 bg-white px-3 py-2"
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <Skeleton className="h-10 w-10 flex-shrink-0 rounded-md" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-32 rounded-md" />
+              <Skeleton className="h-3 w-20 rounded-full" />
+            </div>
+          </div>
+          <Skeleton className="hidden h-3 w-16 rounded-full sm:block" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RecentOrdersSkeleton() {
+  const rows = Array.from({ length: 4 });
+  return (
+    <>
+      <div className="hidden md:block">
+        <div className="theme-border overflow-hidden rounded-md border">
+          <div className="bg-gray-50 px-4 py-3">
+            <Skeleton className="h-3 w-32 rounded-full" />
+          </div>
+          <div className="divide-y divide-gray-100">
+            {rows.map((_, idx) => (
+              <div
+                key={idx}
+                className="flex items-center justify-between gap-4 px-4 py-4"
+              >
+                <Skeleton className="h-4 w-32 rounded-md" />
+                <Skeleton className="h-4 w-20 rounded-md" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-4 w-16 rounded-md" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="space-y-3 md:hidden">
+        {rows.map((_, idx) => (
+          <div
+            key={idx}
+            className="rounded-lg border border-dashed border-gray-200 bg-white p-4"
+          >
+            <div className="mb-3 flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-20 rounded-full" />
+                <Skeleton className="h-4 w-28 rounded-md" />
+              </div>
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-4 w-20 rounded-md" />
+              <Skeleton className="h-4 w-16 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

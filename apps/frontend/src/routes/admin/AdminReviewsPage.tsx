@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import Spinner from '../../components/ui/Spinner';
 import { useToast } from '../../components/ui/Toast';
 import {
   LIST_PENDING_REVIEWS,
@@ -9,6 +8,7 @@ import {
 import Modal from '../../components/ui/Modal';
 import Textarea from '../../components/ui/Textarea';
 import { formatDate } from '../../utils/date';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 type PendingReview = {
   _id: string;
@@ -127,9 +127,7 @@ export default function AdminReviewsPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <Spinner label="Fetching pending reviews" />
-          </div>
+          <PendingReviewsSkeleton />
         ) : reviews.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-gray-500">
             No reviews are waiting for moderation right now.
@@ -264,6 +262,40 @@ export default function AdminReviewsPage() {
           </div>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+function PendingReviewsSkeleton() {
+  const rows = Array.from({ length: 3 });
+  return (
+    <div className="divide-y divide-gray-100">
+      {rows.map((_, idx) => (
+        <div key={idx} className="space-y-4 px-6 py-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex flex-1 gap-4">
+              <Skeleton className="h-20 w-20 rounded-lg" />
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-48 rounded-md" />
+                <div className="flex flex-wrap gap-3">
+                  <Skeleton className="h-4 w-24 rounded-full" />
+                  <Skeleton className="h-4 w-32 rounded-full" />
+                  <Skeleton className="h-4 w-28 rounded-full" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-7 w-20 rounded-full" />
+                  <Skeleton className="h-4 w-48 rounded-md" />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-28 rounded-md" />
+              <Skeleton className="h-9 w-28 rounded-md" />
+            </div>
+          </div>
+          <Skeleton className="h-16 w-full rounded-md" />
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import Spinner from '../../components/ui/Spinner';
+import { Skeleton } from '../ui/Skeleton';
 
 type CategoriesSectionProps = {
   categories: any[];
@@ -14,11 +14,11 @@ export function CategoriesSection({
     <section className="w-full py-20" style={{ backgroundColor: '#f5f3ee' }}>
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <h2 className="text-2xl font-extrabold tracking-wide uppercase">
+          <h2 className="text-2xl font-extrabold uppercase tracking-wide">
             SHOP THE LOOKS
           </h2>
           <p
-            className="max-w-3xl mx-auto mt-2 text-sm"
+            className="mx-auto mt-2 max-w-3xl text-sm"
             style={{ color: 'rgb(var(--muted))' }}
           >
             Our latest endeavour features designs from around the world with
@@ -27,16 +27,14 @@ export function CategoriesSection({
           </p>
         </div>
         {loading ? (
-          <div className="py-10">
-            <Spinner label="Loading categories" />
-          </div>
+          <CategoriesSkeleton />
         ) : (
-          <div className="grid grid-cols-1 gap-6 mt-10 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {categories.slice(0, 4).map((c: any) => (
               <Link
                 key={c._id}
                 to={`/products?category=${c.slug}`}
-                className="block overflow-hidden group rounded-2xl"
+                className="group block overflow-hidden rounded-2xl"
               >
                 <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gray-100">
                   {c.image && (
@@ -47,7 +45,7 @@ export function CategoriesSection({
                   )}
                   {/* Centered category name overlay */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="px-4 py-2 text-sm font-medium tracking-wide text-white uppercase transition-all duration-300 rounded-full shadow-sm bg-black/40 ring-1 ring-white/30 backdrop-blur-sm group-hover:bg-black/60 group-hover:shadow-lg sm:text-base">
+                    <span className="rounded-full bg-black/40 px-4 py-2 text-sm font-medium uppercase tracking-wide text-white shadow-sm ring-1 ring-white/30 backdrop-blur-sm transition-all duration-300 group-hover:bg-black/60 group-hover:shadow-lg sm:text-base">
                       {c.name}
                     </span>
                   </div>
@@ -58,5 +56,26 @@ export function CategoriesSection({
         )}
       </div>
     </section>
+  );
+}
+
+function CategoriesSkeleton() {
+  const placeholders = Array.from({ length: 4 });
+  return (
+    <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {placeholders.map((_, idx) => (
+        <div
+          key={idx}
+          className="block overflow-hidden rounded-2xl border border-dashed border-white/40 bg-white/50 p-1"
+        >
+          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[1.75rem] bg-white shadow-sm ring-1 ring-gray-100">
+            <Skeleton className="h-full w-full rounded-[1.75rem]" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Skeleton className="h-8 w-32 rounded-full" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

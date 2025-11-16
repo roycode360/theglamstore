@@ -7,8 +7,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import Spinner from '../../../components/ui/Spinner';
 import { formatNumber } from './utils';
+import { Skeleton } from '../../../components/ui/Skeleton';
 
 type FunnelStep = {
   label: string;
@@ -33,9 +33,7 @@ export function BehaviorFunnelCard({
     <div>
       <h2 className="text-lg font-semibold text-gray-900">Behavior funnel</h2>
       {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <Spinner />
-        </div>
+        <Skeleton className="h-64 w-full rounded-xl" />
       ) : chartData.length === 0 ? (
         <p className="py-8 text-sm text-gray-500">No funnel data yet</p>
       ) : (

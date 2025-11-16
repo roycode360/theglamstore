@@ -1,8 +1,8 @@
 import { useQuery } from '@apollo/client';
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '../../utils/currency';
-import Spinner from '../ui/Spinner';
 import { GET_TOP_SELLING_PRODUCTS } from '../../graphql/analytics';
+import { Skeleton } from '../ui/Skeleton';
 
 interface TopSellingProductsTableProps {
   limit?: number;
@@ -21,13 +21,7 @@ export default function TopSellingProductsTable({
   const products = data?.getTopSellingProducts?.products ?? [];
 
   if (loading) {
-    return (
-      <div className={className}>
-        <div className="flex items-center justify-center py-12">
-          <Spinner />
-        </div>
-      </div>
-    );
+    return <TopSellingProductsSkeleton className={className} />;
   }
 
   if (products.length === 0) {
@@ -52,10 +46,10 @@ export default function TopSellingProductsTable({
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <div className="inline-block min-w-full align-middle">
-          <div className="overflow-hidden border rounded-lg theme-border">
-            <table className="min-w-full divide-y theme-border">
+          <div className="theme-border overflow-hidden rounded-lg border">
+            <table className="theme-border min-w-full divide-y">
               <thead className="bg-gray-50">
                 <tr>
                   <th
@@ -81,35 +75,35 @@ export default function TopSellingProductsTable({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y theme-border bg-white">
+              <tbody className="theme-border divide-y bg-white">
                 {products.map((product: any, index: number) => (
                   <tr
                     key={product.productId}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="transition-colors hover:bg-gray-50"
                   >
                     <td className="px-4 py-3">
                       <Link
                         to={`/ProductDetails?id=${product.productId}`}
-                        className="flex items-center gap-3 group"
+                        className="group flex items-center gap-3"
                       >
-                        <div className="w-10 h-10 overflow-hidden bg-gray-100 border rounded theme-border flex-shrink-0">
+                        <div className="theme-border h-10 w-10 flex-shrink-0 overflow-hidden rounded border bg-gray-100">
                           {product.image ? (
                             <img
                               src={product.image}
                               alt={product.name}
-                              className="object-cover w-full h-full"
+                              className="h-full w-full object-cover"
                               loading="lazy"
                               decoding="async"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center">
+                            <div className="flex h-full w-full items-center justify-center">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 24 24"
                                 fill="none"
                                 stroke="currentColor"
                                 strokeWidth="1.5"
-                                className="w-5 h-5"
+                                className="h-5 w-5"
                                 style={{ color: 'rgb(var(--muted))' }}
                               >
                                 <path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z" />
@@ -125,7 +119,7 @@ export default function TopSellingProductsTable({
                             {product.name}
                           </div>
                           <div
-                            className="text-xs truncate"
+                            className="truncate text-xs"
                             style={{ color: 'rgb(var(--muted))' }}
                           >
                             #{index + 1} Top Seller
@@ -134,7 +128,9 @@ export default function TopSellingProductsTable({
                       </Link>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-semibold">{product.quantitySold}</span>
+                      <span className="font-semibold">
+                        {product.quantitySold}
+                      </span>
                       <span
                         className="ml-1 text-xs"
                         style={{ color: 'rgb(var(--muted))' }}
@@ -154,32 +150,32 @@ export default function TopSellingProductsTable({
       </div>
 
       {/* Mobile Card View */}
-      <div className="md:hidden space-y-3">
+      <div className="space-y-3 md:hidden">
         {products.map((product: any, index: number) => (
           <Link
             key={product.productId}
             to={`/ProductDetails?id=${product.productId}`}
-            className="block p-4 border rounded-lg theme-border bg-white hover:bg-gray-50 transition-colors"
+            className="theme-border block rounded-lg border bg-white p-4 transition-colors hover:bg-gray-50"
           >
             <div className="flex items-start gap-3">
-              <div className="w-16 h-16 overflow-hidden bg-gray-100 border rounded theme-border flex-shrink-0">
+              <div className="theme-border h-16 w-16 flex-shrink-0 overflow-hidden rounded border bg-gray-100">
                 {product.image ? (
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="object-cover w-full h-full"
+                    className="h-full w-full object-cover"
                     loading="lazy"
                     decoding="async"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
+                  <div className="flex h-full w-full items-center justify-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="1.5"
-                      className="w-6 h-6"
+                      className="h-6 w-6"
                       style={{ color: 'rgb(var(--muted))' }}
                     >
                       <path d="M12 3 4 7v10l8 4 8-4V7l-8-4Z" />
@@ -190,7 +186,7 @@ export default function TopSellingProductsTable({
                   </div>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="font-medium">{product.name}</div>
                 <div
                   className="mt-1 text-xs"
@@ -223,3 +219,78 @@ export default function TopSellingProductsTable({
   );
 }
 
+function TopSellingProductsSkeleton({ className }: { className?: string }) {
+  const rows = Array.from({ length: 5 });
+  return (
+    <div className={className}>
+      <div className="mb-4 space-y-2">
+        <Skeleton className="h-5 w-48 rounded-md" />
+        <Skeleton className="h-4 w-64 rounded-full" />
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
+        <div className="inline-block min-w-full align-middle">
+          <div className="theme-border overflow-hidden rounded-lg border border-dashed">
+            <table className="theme-border min-w-full divide-y">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left">
+                    <Skeleton className="h-3 w-24 rounded-full" />
+                  </th>
+                  <th className="px-4 py-3 text-left">
+                    <Skeleton className="h-3 w-24 rounded-full" />
+                  </th>
+                  <th className="px-4 py-3 text-right">
+                    <Skeleton className="ml-auto h-3 w-20 rounded-full" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="theme-border divide-y bg-white">
+                {rows.map((_, idx) => (
+                  <tr key={idx}>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-md" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-40 rounded-md" />
+                          <Skeleton className="h-3 w-24 rounded-full" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Skeleton className="h-4 w-20 rounded-md" />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Skeleton className="ml-auto h-4 w-24 rounded-md" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {rows.map((_, idx) => (
+          <div
+            key={idx}
+            className="theme-border rounded-lg border border-dashed p-4"
+          >
+            <div className="flex items-start gap-3">
+              <Skeleton className="h-16 w-16 rounded-md" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-40 rounded-md" />
+                <Skeleton className="h-3 w-24 rounded-full" />
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <Skeleton className="h-3 w-24 rounded-full" />
+              <Skeleton className="h-3 w-24 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

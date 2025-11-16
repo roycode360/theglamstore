@@ -5,10 +5,10 @@ import {
   UPSERT_DELIVERY_LOCATION,
   DELETE_DELIVERY_LOCATION,
 } from '../../graphql/delivery';
-import Spinner from '../ui/Spinner';
 import Input from '../ui/Input';
 import { useToast } from '../ui/Toast';
 import Checkbox from '../ui/Checkbox';
+import { Skeleton } from '../ui/Skeleton';
 
 type DeliveryLocationsSectionProps = {
   open: boolean;
@@ -161,9 +161,7 @@ export default function DeliveryLocationsSection({
 
       <div className={`${open ? 'block' : 'hidden'}`}>
         {loading ? (
-          <div className="py-6">
-            <Spinner label="Loading locations" />
-          </div>
+          <DeliveryLocationsSkeleton />
         ) : rows.length === 0 ? (
           <div
             className="p-4 m-4 text-sm bg-white border border-dashed rounded-lg border-neutral-200"
@@ -293,5 +291,43 @@ export default function DeliveryLocationsSection({
         </div>
       )}
     </section>
+  );
+}
+
+function DeliveryLocationsSkeleton() {
+  const rows = Array.from({ length: 4 });
+  return (
+    <div className="m-4 space-y-4">
+      <div className="rounded-lg border border-dashed border-neutral-200">
+        <div className="grid grid-cols-[2fr_1fr_auto_auto_auto] items-center gap-4 border-b border-neutral-200 px-4 py-3">
+          <Skeleton className="h-3 w-24 rounded-full" />
+          <Skeleton className="h-3 w-16 rounded-full" />
+          <Skeleton className="h-3 w-12 rounded-full" />
+          <Skeleton className="h-3 w-16 rounded-full" />
+          <Skeleton className="h-3 w-20 rounded-full justify-self-end" />
+        </div>
+        <div className="divide-y divide-neutral-200">
+          {rows.map((_, idx) => (
+            <div
+              key={idx}
+              className="grid grid-cols-[2fr_1fr_auto_auto_auto] items-center gap-4 px-4 py-4"
+            >
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-4 w-32 rounded-md" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-24 rounded-md" />
+              <Skeleton className="h-5 w-10 rounded-full" />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <div className="flex justify-end gap-2">
+                <Skeleton className="h-8 w-8 rounded-md" />
+                <Skeleton className="h-8 w-8 rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <Skeleton className="h-10 w-32 rounded-md" />
+    </div>
   );
 }

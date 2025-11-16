@@ -1,4 +1,4 @@
-import Spinner from '../../../components/ui/Spinner';
+import { Skeleton } from '../../../components/ui/Skeleton';
 import { formatNumber } from './utils';
 
 type TrafficEntry = {
@@ -37,9 +37,7 @@ export function TrafficOverviewCard({
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Traffic overview</h2>
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Spinner />
-          </div>
+          <TrafficOverviewSkeleton />
         ) : !overview ? (
           <p className="py-8 text-sm text-gray-500">No traffic data yet</p>
         ) : (
@@ -86,6 +84,32 @@ export function TrafficOverviewCard({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function TrafficOverviewSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      {sections.map((section) => (
+        <div key={section.key} className="space-y-3">
+          <Skeleton className="h-4 w-32 rounded-md" />
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, idx) => (
+              <div
+                key={idx}
+                className="rounded-md border border-dashed border-gray-200 bg-gray-50 p-3"
+              >
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-3 w-24 rounded-full" />
+                  <Skeleton className="h-3 w-10 rounded-full" />
+                </div>
+                <Skeleton className="mt-2 h-1.5 w-full rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

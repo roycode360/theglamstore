@@ -1,9 +1,9 @@
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
-import Spinner from '../../../components/ui/Spinner';
 import { formatCurrency } from '../../../utils/currency';
 import { formatDateOnly } from '../../../utils/date';
 import { formatNumber } from './utils';
+import { Skeleton } from '../../../components/ui/Skeleton';
 
 type CountryOption = { value: string; label: string };
 
@@ -122,11 +122,38 @@ export function UsersTable({
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
             {loading ? (
-              <tr>
-                <td colSpan={7} className="py-10 text-center">
-                  <Spinner />
-                </td>
-              </tr>
+              Array.from({ length: 6 }).map((_, idx) => (
+                <tr key={`skeleton-${idx}`}>
+                  <td className="px-4 py-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-40 rounded-md" />
+                      <Skeleton className="h-3 w-32 rounded-full" />
+                      <Skeleton className="h-3 w-28 rounded-full" />
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <Skeleton className="h-4 w-24 rounded-md" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <Skeleton className="h-4 w-12 rounded-md" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <Skeleton className="h-4 w-16 rounded-md" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-28 rounded-full" />
+                      <Skeleton className="h-3 w-28 rounded-full" />
+                    </div>
+                  </td>
+                </tr>
+              ))
             ) : users.length === 0 ? (
               <tr>
                 <td colSpan={7} className="py-10 text-center text-sm text-gray-500">

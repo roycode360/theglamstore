@@ -1,4 +1,4 @@
-import Spinner from '../../../components/ui/Spinner';
+import { Skeleton } from '../../../components/ui/Skeleton';
 import { formatNumber } from './utils';
 
 type TopProductsCardProps = {
@@ -21,9 +21,7 @@ export function TopProductsCard({ products, loading }: TopProductsCardProps) {
         </h2>
       </div>
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Spinner />
-        </div>
+        <TopProductsSkeleton />
       ) : products.length === 0 ? (
         <div className="flex items-center justify-center py-12 text-sm text-gray-500">
           No product engagement data available
@@ -55,6 +53,31 @@ export function TopProductsCard({ products, loading }: TopProductsCardProps) {
           </table>
         </div>
       )}
+    </div>
+  );
+}
+
+function TopProductsSkeleton() {
+  const rows = Array.from({ length: 5 });
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-4 w-40 rounded-md" />
+      <div className="space-y-3">
+        {rows.map((_, idx) => (
+          <div
+            key={idx}
+            className="grid grid-cols-[2fr_1fr_1fr_1fr] items-center gap-4 rounded-md border border-dashed border-gray-200 px-4 py-3"
+          >
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-40 rounded-md" />
+              <Skeleton className="h-3 w-28 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-16 rounded-md" />
+            <Skeleton className="h-4 w-16 rounded-md" />
+            <Skeleton className="h-4 w-16 rounded-md" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

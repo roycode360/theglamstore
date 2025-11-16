@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import Spinner from '../../components/ui/Spinner';
 import ProductCard from '../../components/ui/ProductCard';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Skeleton } from '../ui/Skeleton';
 
 type FeaturedProductsSectionProps = {
   products: any[];
@@ -77,7 +77,7 @@ export function FeaturedProductsSection({
     <section className="w-full py-16">
       <div className="mx-auto max-w-[1600px] px-4">
         {/* Tabs */}
-        <div className="items-center hidden grid-cols-3 gap-4 py-2 mb-8 md:grid">
+        <div className="mb-8 hidden grid-cols-3 items-center gap-4 py-2 md:grid">
           <div className="flex items-center gap-10 pl-2 text-xs uppercase tracking-[0.18em]">
             <div
               ref={tabsContainerRef}
@@ -107,7 +107,7 @@ export function FeaturedProductsSection({
               />
             </div>
           </div>
-          <h2 className="text-3xl font-bold tracking-tight text-center text-black">
+          <h2 className="text-center text-3xl font-bold tracking-tight text-black">
             FEATURED PRODUCTS
           </h2>
           <div className="flex items-center justify-end pr-2">
@@ -121,12 +121,12 @@ export function FeaturedProductsSection({
           </div>
         </div>
         {/* Mobile title */}
-        <div className="px-2 mb-6 md:hidden">
+        <div className="mb-6 px-2 md:hidden">
           <h2 className="text-2xl font-bold tracking-tight text-black">
             FEATURED PRODUCTS
           </h2>
           {/* Simple pill tabs on mobile */}
-          <div className="flex gap-2 mt-3 overflow-x-auto">
+          <div className="mt-3 flex gap-2 overflow-x-auto">
             {categories.map((c) => (
               <button
                 key={c}
@@ -146,9 +146,7 @@ export function FeaturedProductsSection({
 
       {/* Products Grid */}
       {loading ? (
-        <div className="py-10">
-          <Spinner label="Loading collection" />
-        </div>
+        <FeaturedProductsSkeleton />
       ) : (
         <div className="mx-auto max-w-[1600px]">
           <div
@@ -165,5 +163,38 @@ export function FeaturedProductsSection({
         </div>
       )}
     </section>
+  );
+}
+
+function FeaturedProductsSkeleton() {
+  const placeholders = Array.from({ length: 4 });
+  return (
+    <div className="mx-auto max-w-[1600px]">
+      <div className="grid grid-cols-1 divide-x divide-y divide-gray-100 sm:grid-cols-2 lg:grid-cols-4">
+        {placeholders.map((_, idx) => (
+          <div
+            key={idx}
+            className="group relative border border-transparent bg-white"
+          >
+            <div className="overflow-hidden bg-white p-6">
+              <div className="relative aspect-[3/4] w-full overflow-hidden">
+                <Skeleton className="h-full w-full" />
+                <Skeleton className="absolute left-4 top-4 h-7 w-16 rounded-full opacity-80" />
+                <div className="absolute bottom-6 right-6 flex flex-col gap-3">
+                  <Skeleton className="h-11 w-11 rounded-full opacity-90" />
+                  <Skeleton className="h-11 w-11 rounded-full opacity-80" />
+                  <Skeleton className="h-11 w-11 rounded-full opacity-70" />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-3 px-6 pb-8">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-5 w-3/4 rounded-lg" />
+              <Skeleton className="h-4 w-24 rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }

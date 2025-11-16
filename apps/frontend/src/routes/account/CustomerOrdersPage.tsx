@@ -1,10 +1,10 @@
 import { useQuery } from '@apollo/client';
 import { Link } from 'react-router-dom';
-import Spinner from '../../components/ui/Spinner';
 import { LIST_ORDERS_PAGE } from '../../graphql/orders';
 import { ME } from '../../graphql/auth';
 import { formatDate, formatDateOnly } from '../../utils/date';
 import { formatCurrency } from '../../utils/currency';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export default function CustomerOrdersPage() {
   const { data: meData } = useQuery(ME);
@@ -30,21 +30,19 @@ export default function CustomerOrdersPage() {
   };
 
   return (
-    <div className="px-4 py-10 space-y-6 sm:px-6 lg:px-8">
+    <div className="space-y-6 px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold theme-fg">My Orders</h1>
+          <h1 className="theme-fg text-2xl font-semibold">My Orders</h1>
           <p className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
             Track your purchases and view order details
           </p>
         </div>
       </div>
 
-      <div className="p-0 overflow-hidden border rounded-lg theme-card theme-border">
+      <div className="theme-card theme-border overflow-hidden rounded-lg border p-0">
         {loading ? (
-          <div className="py-10">
-            <Spinner label="Loading your orders" />
-          </div>
+          <CustomerOrdersSkeleton />
         ) : orders.length === 0 ? (
           <div
             className="py-16 text-center"
@@ -66,7 +64,7 @@ export default function CustomerOrdersPage() {
                     <th className="px-4 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y theme-border">
+                <tbody className="theme-border divide-y">
                   {orders.map((o: (typeof orders)[number]) => (
                     <tr key={o._id}>
                       <td className="px-4 py-3 font-mono text-xs">
@@ -88,7 +86,7 @@ export default function CustomerOrdersPage() {
                       <td className="px-4 py-3">
                         <div className="flex justify-end">
                           <Link
-                            className="inline-flex items-center h-8 gap-2 px-3 text-xs bg-white border rounded-md theme-border text-brand hover:bg-brand-50"
+                            className="theme-border text-brand hover:bg-brand-50 inline-flex h-8 items-center gap-2 rounded-md border bg-white px-3 text-xs"
                             to={`/orders/${o._id}`}
                           >
                             <span>View</span>
@@ -116,15 +114,15 @@ export default function CustomerOrdersPage() {
 
             {/* Mobile Card View */}
             <div className="md:hidden">
-              <div className="divide-y theme-border">
+              <div className="theme-border divide-y">
                 {orders.map((o: (typeof orders)[number]) => (
                   <div key={o._id} className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1 min-w-0">
+                    <div className="mb-3 flex items-start justify-between">
+                      <div className="min-w-0 flex-1">
                         <div className="mb-1 font-mono text-xs text-gray-500">
                           Order No
                         </div>
-                        <div className="font-mono text-sm truncate">
+                        <div className="truncate font-mono text-sm">
                           {o.orderNumber || o._id}
                         </div>
                       </div>
@@ -137,7 +135,7 @@ export default function CustomerOrdersPage() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div className="mb-3 grid grid-cols-2 gap-4">
                       <div>
                         <div className="mb-1 text-xs text-gray-500">Date</div>
                         <div className="text-sm">
@@ -154,7 +152,7 @@ export default function CustomerOrdersPage() {
 
                     <div className="flex justify-end">
                       <Link
-                        className="inline-flex items-center h-8 gap-2 px-3 text-xs bg-white border rounded-md theme-border text-brand hover:bg-brand-50"
+                        className="theme-border text-brand hover:bg-brand-50 inline-flex h-8 items-center gap-2 rounded-md border bg-white px-3 text-xs"
                         to={`/orders/${o._id}`}
                       >
                         <span>View Details</span>
@@ -181,5 +179,75 @@ export default function CustomerOrdersPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function CustomerOrdersSkeleton() {
+  const rows = Array.from({ length: 4 });
+  return (
+    <>
+      <div className="hidden md:block">
+        <div className="overflow-hidden rounded-lg">
+          <table className="theme-border w-full divide-y">
+            <thead className="table-head">
+              <tr className="text-left">
+                <th className="px-4 py-3">
+                  <Skeleton className="h-3 w-20 rounded-full" />
+                </th>
+                <th className="px-4 py-3">
+                  <Skeleton className="h-3 w-16 rounded-full" />
+                </th>
+                <th className="px-4 py-3">
+                  <Skeleton className="h-3 w-16 rounded-full" />
+                </th>
+                <th className="px-4 py-3">
+                  <Skeleton className="h-3 w-20 rounded-full" />
+                </th>
+                <th className="px-4 py-3 text-right">
+                  <Skeleton className="ml-auto h-3 w-16 rounded-full" />
+                </th>
+              </tr>
+            </thead>
+            <tbody className="theme-border divide-y bg-white">
+              {rows.map((_, idx) => (
+                <tr key={idx}>
+                  <td className="px-4 py-4">
+                    <Skeleton className="h-4 w-32 rounded-md" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <Skeleton className="h-4 w-24 rounded-md" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <Skeleton className="h-6 w-20 rounded-full" />
+                  </td>
+                  <td className="px-4 py-4">
+                    <Skeleton className="ml-auto h-8 w-20 rounded-md" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="space-y-4 p-4 md:hidden">
+        {rows.map((_, idx) => (
+          <div key={idx} className="theme-border rounded-lg border p-4">
+            <div className="mb-3 flex items-start justify-between">
+              <Skeleton className="h-4 w-32 rounded-md" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <div className="mb-3 grid grid-cols-2 gap-3">
+              <Skeleton className="h-4 w-24 rounded-md" />
+              <Skeleton className="h-4 w-20 rounded-md" />
+            </div>
+            <Skeleton className="h-8 w-24 rounded-md" />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

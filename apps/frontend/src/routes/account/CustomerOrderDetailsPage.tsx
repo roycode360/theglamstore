@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client';
 import { useParams, Link } from 'react-router-dom';
-import Spinner from '../../components/ui/Spinner';
 import { GET_ORDER } from '../../graphql/orders';
 import { formatDate } from '../../utils/date';
 import { formatCurrency } from '../../utils/currency';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export default function CustomerOrderDetailsPage() {
   const { id } = useParams();
@@ -50,9 +50,7 @@ export default function CustomerOrderDetailsPage() {
       </div>
 
       {loading ? (
-        <div className="py-10">
-          <Spinner label="Loading order" />
-        </div>
+        <CustomerOrderDetailsSkeleton />
       ) : !order ? (
         <div
           className="p-6 text-sm border rounded-lg theme-card theme-border"
@@ -287,6 +285,122 @@ export default function CustomerOrderDetailsPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function CustomerOrderDetailsSkeleton() {
+  const items = Array.from({ length: 3 });
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-dashed theme-border p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32 rounded-md" />
+            <Skeleton className="h-3 w-40 rounded-full" />
+          </div>
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="space-y-6 rounded-lg border border-dashed theme-border p-6 md:col-span-2">
+          <Skeleton className="h-4 w-24 rounded-md" />
+          <div className="hidden md:block">
+            <div className="overflow-hidden rounded-md border border-dashed theme-border">
+              <table className="w-full">
+                <thead className="table-head">
+                  <tr className="text-left">
+                    {['Product', 'Options', 'Qty', 'Price', 'Total'].map(
+                      (heading) => (
+                        <th key={heading} className="px-4 py-3">
+                          <Skeleton className="h-3 w-16 rounded-full" />
+                        </th>
+                      ),
+                    )}
+                  </tr>
+                </thead>
+                <tbody className="divide-y border-t border-dashed theme-border">
+                  {items.map((_, idx) => (
+                    <tr key={idx}>
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-10 w-10 rounded-md" />
+                          <div className="space-y-2">
+                            <Skeleton className="h-4 w-32 rounded-md" />
+                            <Skeleton className="h-3 w-24 rounded-full" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <Skeleton className="h-3 w-32 rounded-full" />
+                      </td>
+                      <td className="px-4 py-4">
+                        <Skeleton className="h-3 w-10 rounded-full" />
+                      </td>
+                      <td className="px-4 py-4">
+                        <Skeleton className="h-3 w-16 rounded-md" />
+                      </td>
+                      <td className="px-4 py-4">
+                        <Skeleton className="h-3 w-20 rounded-md" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="md:hidden space-y-4">
+            {items.map((_, idx) => (
+              <div key={idx} className="rounded-lg border border-dashed p-4">
+                <div className="mb-3 flex items-start gap-3">
+                  <Skeleton className="h-16 w-16 rounded-md" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32 rounded-md" />
+                    <Skeleton className="h-3 w-28 rounded-full" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Skeleton className="h-3 w-20 rounded-full" />
+                  <Skeleton className="h-3 w-16 rounded-full" />
+                  <Skeleton className="h-3 w-14 rounded-full" />
+                  <Skeleton className="h-3 w-16 rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="rounded-lg border border-dashed theme-border p-6">
+            <Skeleton className="h-4 w-32 rounded-md" />
+            <div className="mt-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-3 w-20 rounded-full" />
+                <Skeleton className="h-4 w-24 rounded-md" />
+              </div>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-3 w-28 rounded-full" />
+                <Skeleton className="h-4 w-24 rounded-md" />
+              </div>
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-3 w-24 rounded-full" />
+                <Skeleton className="h-5 w-28 rounded-md" />
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-dashed theme-border p-6">
+            <Skeleton className="h-4 w-32 rounded-md" />
+            <div className="mt-4 space-y-2">
+              <Skeleton className="h-3 w-40 rounded-full" />
+              <Skeleton className="h-3 w-44 rounded-full" />
+              <Skeleton className="h-3 w-36 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

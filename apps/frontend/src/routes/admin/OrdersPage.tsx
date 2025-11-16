@@ -5,7 +5,6 @@ import {
   UPDATE_ORDER_STATUS,
   DELETE_ORDER,
 } from '../../graphql/orders';
-import Spinner from '../../components/ui/Spinner';
 import Select from '../../components/ui/Select';
 import { useToast } from '../../components/ui/Toast';
 import Modal from '../../components/ui/Modal';
@@ -20,6 +19,7 @@ import { OrdersList } from './orders/OrdersList';
 import { OrderDetailsPanel } from './orders/OrderDetailsPanel';
 import { OrderListItem, ProductSearchResult } from './orders/types';
 import { useOrderDetailState } from './orders/useOrderDetailState';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export default function OrdersPage() {
   const [page, setPage] = useState(1);
@@ -286,11 +286,14 @@ export default function OrdersPage() {
       'bg-orange-50 border-orange-200 text-orange-800',
   };
 
+  const initialOrdersLoading = loading && !data?.listOrdersPage;
+  const initialDetailsLoading = orderLoading && !orderData?.getOrder;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-brand">Orders</h1>
+          <h1 className="text-brand text-2xl font-semibold">Orders</h1>
           <p className="text-sm" style={{ color: 'rgb(var(--muted))' }}>
             Track and fulfill customer orders.
           </p>
@@ -298,22 +301,22 @@ export default function OrdersPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate('/admin/orders/new')}
-            className="px-3 text-sm rounded-md btn-primary h-9"
+            className="btn-primary h-9 rounded-md px-3 text-sm"
           >
             + New offline order
           </button>
-        <button
-          onClick={() => refetch()}
-          className="px-3 text-sm rounded-md btn-ghost h-9"
-        >
-          Refresh
-        </button>
+          <button
+            onClick={() => refetch()}
+            className="btn-ghost h-9 rounded-md px-3 text-sm"
+          >
+            Refresh
+          </button>
         </div>
       </div>
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
           <label
-            className="block mb-1 text-xs"
+            className="mb-1 block text-xs"
             style={{ color: 'rgb(var(--muted))' }}
           >
             Status
@@ -341,10 +344,8 @@ export default function OrdersPage() {
           />
         </div>
       </div>
-      {loading ? (
-        <div className="py-10">
-          <Spinner label="Loading orders" />
-        </div>
+      {initialOrdersLoading ? (
+        <OrdersListSkeleton />
       ) : (
         <OrdersList
           orders={orders}
@@ -361,12 +362,10 @@ export default function OrdersPage() {
       {selectedId && (
         <div
           ref={detailsRef}
-          className="px-2 py-6 border rounded-lg theme-card theme-border"
+          className="theme-card theme-border rounded-lg border px-2 py-6"
         >
-          {orderLoading ? (
-            <div className="py-6">
-              <Spinner label="Loading order details" />
-            </div>
+          {initialDetailsLoading ? (
+            <OrderDetailsSkeleton />
           ) : !selectedOrder ? (
             <div
               className="py-6 text-sm"
@@ -462,6 +461,151 @@ export default function OrdersPage() {
           </div>
         )}
       </Modal>
+    </div>
+  );
+}
+
+function OrdersListSkeleton() {
+  const rows = Array.from({ length: 5 });
+  return (
+    <div className="space-y-4">
+      <div className="hidden md:block">
+        <div className="rounded-md border border-dashed border-gray-200 bg-white">
+          <div className="grid grid-cols-7 gap-4 border-b border-gray-100 px-4 py-3 text-xs uppercase text-gray-400">
+            <Skeleton className="h-3 w-20 rounded-full" />
+            <Skeleton className="h-3 w-24 rounded-full" />
+            <Skeleton className="h-3 w-16 rounded-full" />
+            <Skeleton className="h-3 w-20 rounded-full" />
+            <Skeleton className="h-3 w-20 rounded-full" />
+            <Skeleton className="h-3 w-24 rounded-full" />
+            <Skeleton className="h-3 w-14 justify-self-end rounded-full" />
+          </div>
+          <div className="divide-y divide-gray-100">
+            {rows.map((_, idx) => (
+              <div
+                key={idx}
+                className="grid grid-cols-7 items-center gap-4 px-4 py-4"
+              >
+                <Skeleton className="h-4 w-24 rounded-md" />
+                <div className="space-y-1">
+                  <Skeleton className="h-4 w-28 rounded-md" />
+                  <Skeleton className="h-3 w-32 rounded-full" />
+                </div>
+                <Skeleton className="h-4 w-16 rounded-md" />
+                <Skeleton className="h-3 w-20 rounded-full" />
+                <Skeleton className="h-8 w-28 rounded-full" />
+                <Skeleton className="h-3 w-24 rounded-full" />
+                <Skeleton className="h-8 w-20 justify-self-end rounded-md" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="space-y-3 md:hidden">
+        {rows.map((_, idx) => (
+          <div
+            key={idx}
+            className="rounded-lg border border-dashed border-gray-200 bg-white p-4"
+          >
+            <div className="mb-3 flex items-start justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-16 rounded-full" />
+                <Skeleton className="h-4 w-28 rounded-md" />
+                <Skeleton className="h-3 w-32 rounded-full" />
+              </div>
+              <Skeleton className="h-7 w-28 rounded-full" />
+            </div>
+            <div className="mb-3 grid grid-cols-2 gap-4">
+              <Skeleton className="h-4 w-24 rounded-md" />
+              <Skeleton className="h-4 w-24 rounded-md" />
+            </div>
+            <div className="mb-3">
+              <Skeleton className="h-3 w-16 rounded-full" />
+              <Skeleton className="mt-2 h-4 w-28 rounded-md" />
+            </div>
+            <div className="flex justify-end">
+              <Skeleton className="h-8 w-20 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between px-3 py-2">
+        <Skeleton className="h-3 w-24 rounded-full" />
+        <div className="flex gap-2">
+          <Skeleton className="h-9 w-20 rounded-md" />
+          <Skeleton className="h-9 w-20 rounded-md" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderDetailsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-36 rounded-md" />
+          <Skeleton className="h-3 w-24 rounded-full" />
+        </div>
+        <div className="flex gap-2 justify-self-end">
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
+          <Skeleton className="h-9 w-24 rounded-md" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.2fr_minmax(280px,0.8fr)]">
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="rounded-xl border border-dashed border-gray-200 bg-white p-4"
+            >
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-40 rounded-md" />
+                <Skeleton className="h-7 w-24 rounded-full" />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                <Skeleton className="h-3 w-24 rounded-full" />
+                <Skeleton className="h-3 w-24 rounded-full" />
+                <Skeleton className="h-3 w-20 rounded-full" />
+                <Skeleton className="h-3 w-20 rounded-full" />
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Skeleton className="h-8 w-20 rounded-md" />
+                <Skeleton className="h-8 w-20 rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="space-y-4">
+          <div className="rounded-xl border border-dashed border-gray-200 bg-white p-4">
+            <Skeleton className="h-4 w-32 rounded-md" />
+            <div className="mt-3 space-y-2">
+              <Skeleton className="h-3 w-28 rounded-full" />
+              <Skeleton className="h-3 w-24 rounded-full" />
+              <Skeleton className="h-3 w-20 rounded-full" />
+              <Skeleton className="h-3 w-28 rounded-full" />
+            </div>
+          </div>
+          <div className="rounded-xl border border-dashed border-gray-200 bg-white p-4">
+            <Skeleton className="h-4 w-32 rounded-md" />
+            <div className="mt-3 space-y-2">
+              <Skeleton className="h-3 w-24 rounded-full" />
+              <Skeleton className="h-3 w-20 rounded-full" />
+              <Skeleton className="h-3 w-20 rounded-full" />
+            </div>
+          </div>
+          <div className="rounded-xl border border-dashed border-gray-200 bg-white p-4">
+            <Skeleton className="h-4 w-36 rounded-md" />
+            <div className="mt-3 space-y-2">
+              <Skeleton className="h-3 w-28 rounded-full" />
+              <Skeleton className="h-3 w-28 rounded-full" />
+              <Skeleton className="h-3 w-24 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

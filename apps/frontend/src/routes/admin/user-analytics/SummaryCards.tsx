@@ -1,4 +1,4 @@
-import Spinner from '../../../components/ui/Spinner';
+import { Skeleton } from '../../../components/ui/Skeleton';
 import { formatNumber } from './utils';
 
 type SummaryCard = {
@@ -21,9 +21,7 @@ export function SummaryCards({ items, loading }: SummaryCardsProps) {
         >
           <p className="text-sm text-gray-500">{card.label}</p>
           {loading ? (
-            <div className="flex items-center justify-center py-6">
-              <Spinner />
-            </div>
+            <Skeleton className="mt-4 h-8 w-24 rounded-md" />
           ) : (
             <p className="mt-2 text-2xl font-semibold text-gray-900">
               {formatNumber(card.value)}

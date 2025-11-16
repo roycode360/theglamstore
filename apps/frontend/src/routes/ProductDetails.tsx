@@ -1,6 +1,5 @@
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
-import { useSearchParams } from 'react-router-dom';
-import Spinner from '../components/ui/Spinner';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
@@ -24,6 +23,7 @@ import { ProductActions } from '../components/product-details/ProductActions';
 import { ProductAccordions } from '../components/product-details/ProductAccordions';
 import { ProductReviews } from '../components/product-details/ProductReviews';
 import { ProductSuggestions } from '../components/product-details/ProductSuggestions';
+import { Skeleton } from '../components/ui/Skeleton';
 
 type ReviewEligibilityState = {
   hasPurchased: boolean;
@@ -164,16 +164,12 @@ export default function ProductDetails() {
   const { items: wishlist, add: addWish, remove: removeWish } = useWishlist();
 
   if (loading) {
-    return (
-      <div className="py-16">
-        <Spinner label="Loading product" />
-      </div>
-    );
+    return <ProductDetailsSkeleton />;
   }
   if (!p) {
     return (
       <div
-        className="flex items-center justify-center py-16 text-sm bg-white border rounded-lg theme-border"
+        className="theme-border flex items-center justify-center rounded-lg border bg-white py-16 text-sm"
         style={{ color: 'rgb(var(--muted))' }}
       >
         Product not found
@@ -279,8 +275,44 @@ export default function ProductDetails() {
     }
   };
 
+  const categoryHref = categoryInfo?.slug
+    ? `/products?category=${encodeURIComponent(categoryInfo.slug)}`
+    : null;
+
   return (
-    <div className="px-4 py-10 space-y-12 sm:px-6 lg:px-8">
+    <div className="space-y-12 px-4 py-10 sm:px-6 lg:px-8">
+      <nav
+        className="flex flex-wrap items-center gap-2 text-sm"
+        aria-label="Breadcrumb"
+      >
+        <Link
+          to="/"
+          className="text-gray-500 transition-colors hover:text-gray-900"
+        >
+          Home
+        </Link>
+        <span className="text-gray-400">/</span>
+        <Link
+          to="/products"
+          className="text-gray-500 transition-colors hover:text-gray-900"
+        >
+          Products
+        </Link>
+        {categoryInfo && (
+          <>
+            <span className="text-gray-400">/</span>
+            <Link
+              to={categoryHref ?? '/products'}
+              className="text-gray-500 transition-colors hover:text-gray-900"
+            >
+              {categoryInfo.name}
+            </Link>
+          </>
+        )}
+        <span className="text-gray-400">/</span>
+        <span className="font-semibold text-gray-900">{p.name}</span>
+      </nav>
+
       {/* Top section */}
       <section className="grid grid-cols-1 gap-8 md:grid-cols-2">
         <ProductImageGallery images={p.images ?? []} productName={p.name} />
@@ -321,6 +353,81 @@ export default function ProductDetails() {
       />
 
       <ProductSuggestions suggestions={suggestions} />
+    </div>
+  );
+}
+
+function ProductDetailsSkeleton() {
+  return (
+    <div className="space-y-12 px-4 py-10 sm:px-6 lg:px-8">
+      <nav className="flex flex-wrap items-center gap-2 text-sm">
+        <Skeleton className="h-4 w-16 rounded-full" />
+        <span className="text-gray-300">/</span>
+        <Skeleton className="h-4 w-20 rounded-full" />
+        <span className="text-gray-300">/</span>
+        <Skeleton className="h-4 w-24 rounded-full" />
+      </nav>
+
+      <section className="grid grid-cols-1 gap-8 md:grid-cols-2">
+        <div className="space-y-4">
+          <Skeleton className="h-[420px] w-full rounded-2xl" />
+          <div className="flex gap-3">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <Skeleton
+                key={idx}
+                className="h-16 w-16 rounded-xl border border-dashed border-gray-200"
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <Skeleton className="h-5 w-24 rounded-full" />
+          <Skeleton className="h-10 w-3/4 rounded-lg" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-14 rounded-full" />
+          </div>
+          <Skeleton className="h-7 w-32 rounded-md" />
+          <Skeleton className="h-16 w-full rounded-lg" />
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full rounded-md" />
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-11 w-32 rounded-md" />
+              <Skeleton className="h-11 w-11 rounded-md" />
+              <Skeleton className="h-11 w-11 rounded-md" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-6">
+        <Skeleton className="h-5 w-40 rounded-md" />
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-full rounded-md" />
+          <Skeleton className="h-4 w-4/5 rounded-md" />
+          <Skeleton className="h-4 w-2/3 rounded-md" />
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <Skeleton className="h-5 w-44 rounded-md" />
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <Skeleton className="h-24 w-full rounded-lg" />
+      </section>
+
+      <section className="space-y-4">
+        <Skeleton className="h-5 w-48 rounded-md" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, idx) => (
+            <div key={idx} className="space-y-3">
+              <Skeleton className="h-40 w-full rounded-lg" />
+              <Skeleton className="h-4 w-3/4 rounded-md" />
+              <Skeleton className="h-4 w-1/2 rounded-md" />
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

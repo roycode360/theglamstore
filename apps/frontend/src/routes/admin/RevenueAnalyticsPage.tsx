@@ -1,5 +1,4 @@
 import { useQuery } from '@apollo/client';
-import Spinner from '../../components/ui/Spinner';
 import { formatCurrency } from '../../utils/currency';
 import RevenueTrendChart from '../../components/charts/RevenueTrendChart';
 import ProfitCostChart from '../../components/charts/ProfitCostChart';
@@ -10,6 +9,7 @@ import {
   GET_PROFIT_COST_COMPARISON,
   GET_TOP_SELLING_PRODUCTS,
 } from '../../graphql/analytics';
+import { Skeleton } from '../../components/ui/Skeleton';
 
 export default function RevenueAnalyticsPage() {
   const { data: analyticsData, loading: analyticsLoading } = useQuery(
@@ -49,13 +49,12 @@ export default function RevenueAnalyticsPage() {
     profitCostLoading ||
     topProductsLoading;
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner />
-      </div>
-    );
-  }
+  const initialLoading =
+    isLoading &&
+    !analyticsData &&
+    !revenueTrendData &&
+    !profitCostData &&
+    !topProductsData;
 
   const analytics = analyticsData?.getAnalytics;
   const revenueTrend = revenueTrendData?.getRevenueTrend?.points ?? [];
@@ -104,7 +103,10 @@ export default function RevenueAnalyticsPage() {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {initialLoading ? (
+        <AnalyticsMetricsSkeleton />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Total Revenue */}
         <div className="theme-border rounded-lg border bg-white p-4">
           <div className="flex items-start justify-between">
@@ -323,22 +325,55 @@ export default function RevenueAnalyticsPage() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Revenue Trend Chart */}
       <div className="theme-border rounded-lg border bg-white p-6">
-        <RevenueTrendChart />
+        {initialLoading ? (
+          <Skeleton className="h-64 w-full rounded-xl" />
+        ) : (
+          <RevenueTrendChart />
+        )}
       </div>
 
       {/* Profit vs Cost Comparison Chart */}
       <div className="theme-border rounded-lg border bg-white p-6">
-        <ProfitCostChart />
+        {initialLoading ? (
+          <Skeleton className="h-64 w-full rounded-xl" />
+        ) : (
+          <ProfitCostChart />
+        )}
       </div>
 
       {/* Top Selling Products Table */}
       <div className="theme-border rounded-lg border bg-white p-6">
-        <TopSellingProductsTable limit={10} />
+        {initialLoading ? (
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-48 rounded-md" />
+            <Skeleton className="h-48 w-full rounded-xl" />
+          </div>
+        ) : (
+          <TopSellingProductsTable limit={10} />
+        )}
       </div>
+    </div>
+  );
+}
+
+function AnalyticsMetricsSkeleton() {
+  const cards = Array.from({ length: 8 });
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {cards.map((_, idx) => (
+        <div
+          key={idx}
+          className="rounded-lg border border-dashed border-gray-200 bg-white p-4"
+        >
+          <Skeleton className="h-3 w-24 rounded-full" />
+          <Skeleton className="mt-3 h-6 w-32 rounded-md" />
+        </div>
+      ))}
     </div>
   );
 }

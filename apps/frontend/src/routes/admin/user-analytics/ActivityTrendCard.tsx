@@ -8,8 +8,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import Spinner from '../../../components/ui/Spinner';
 import { ActivityPeriod, formatNumber } from './utils';
+import { Skeleton } from '../../../components/ui/Skeleton';
 
 type ActivityTrendCardProps = {
   period: ActivityPeriod;
@@ -81,9 +81,7 @@ export function ActivityTrendCard({
         </div>
       </div>
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Spinner />
-        </div>
+        <Skeleton className="h-80 w-full rounded-xl" />
       ) : data.length === 0 ? (
         <div className="flex items-center justify-center py-16 text-sm text-gray-500">
           No activity data available
