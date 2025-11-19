@@ -41,7 +41,7 @@ export default function ProductModal({
 
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
-  const [brand, setBrand] = useState('');
+  const [brand, setBrand] = useState('Theglamstore.ng');
   const [category, setCategory] = useState('');
   const [price, setPrice] = useState('');
   const [salePrice, setSalePrice] = useState('');
@@ -70,7 +70,7 @@ export default function ProductModal({
       // New product: hard reset all fields
       setName('');
       setSlug('');
-      setBrand('');
+      setBrand('Theglamstore.ng');
       setCategory('');
       setPrice('');
       setSalePrice('');
@@ -262,6 +262,7 @@ export default function ProductModal({
                 <div className="font-medium">Brand</div>
                 <Input
                   value={brand}
+                  defaultValue={brand}
                   onChange={(e) => setBrand(e.target.value)}
                   className="mt-1 w-full"
                 />

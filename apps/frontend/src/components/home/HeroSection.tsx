@@ -18,7 +18,7 @@ const HERO_PAIRS: Array<{
     ],
     title: 'SEE STYLE DIFFERENTLY',
     desc: 'Modern frames that speak confidence. Crafted for every face and every moment.',
-    category: 'Glasses',
+    category: 'glasses',
     buttonText: 'Shop Glasses',
   },
   {
@@ -42,7 +42,7 @@ const HERO_PAIRS: Array<{
     ],
     title: 'MODERN ESSENTIALS FOR EVERY OCCASION',
     desc: 'Designed for versatility and confidence. Elevate your daily style with thoughtful finishing touches.',
-    category: 'Other accessories',
+    category: 'others',
     buttonText: 'Shop Accessories',
   },
 ];
@@ -150,17 +150,17 @@ export function HeroSection() {
           </div>
 
           {/* Single unified overlay to avoid center seam */}
-          <div className="absolute inset-0 pointer-events-none bg-black/10" />
+          <div className="pointer-events-none absolute inset-0 bg-black/10" />
         </div>
 
         {/* Centered messaging (desktop/tablet) */}
-        <div className="absolute inset-0 items-center justify-center hidden max-w-5xl px-4 mx-auto pointer-events-none md:flex">
+        <div className="pointer-events-none absolute inset-0 mx-auto hidden max-w-5xl items-center justify-center px-4 md:flex">
           <div
             className={`pointer-events-auto rounded bg-none p-6 text-center text-black shadow-sm backdrop-blur-sm transition-opacity duration-500 md:p-8 ${
               isSliding ? 'opacity-0' : 'opacity-100'
             }`}
           >
-            <div className="text-xs tracking-widest uppercase text-black/70">
+            <div className="text-xs uppercase tracking-widest text-black/70">
               {HERO_PAIRS[heroIndex].category}
             </div>
             <h1 className="mt-2 text-xl font-extrabold leading-tight md:text-3xl">
@@ -169,10 +169,10 @@ export function HeroSection() {
             <p className="mt-2 text-sm text-black/70 md:text-base">
               {HERO_PAIRS[heroIndex].desc}
             </p>
-            <div className="flex items-center justify-center mt-4">
+            <div className="mt-4 flex items-center justify-center">
               <Link
                 to={`/products${categoryQuery}`}
-                className="inline-flex items-center justify-center px-8 py-3 font-extrabold tracking-wide text-black transition-colors duration-300 bg-white border border-black group hover:bg-black hover:text-white"
+                className="group inline-flex items-center justify-center border border-black bg-white px-8 py-3 font-extrabold tracking-wide text-black transition-colors duration-300 hover:bg-black hover:text-white"
               >
                 <span className="text-sm uppercase transition-transform duration-300 group-hover:-translate-x-0.5">
                   {HERO_PAIRS[heroIndex].buttonText}
@@ -185,7 +185,7 @@ export function HeroSection() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="w-4 h-4 ml-3 transition-transform duration-300 group-hover:translate-x-1"
+                  className="ml-3 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
                 >
                   <path d="M5 12h14" />
                   <path d="M13 5l7 7-7 7" />
@@ -196,18 +196,18 @@ export function HeroSection() {
         </div>
 
         {/* Hero controls */}
-        <div className="absolute flex items-center gap-3 bottom-4 left-4">
+        <div className="absolute bottom-4 left-4 flex items-center gap-3">
           <button
             aria-label="Previous"
             onClick={goToPrevious}
-            className="px-3 py-1 text-white rounded-full bg-black/60 backdrop-blur-sm hover:bg-black"
+            className="rounded-full bg-black/60 px-3 py-1 text-white backdrop-blur-sm hover:bg-black"
           >
             ‹
           </button>
           <button
             aria-label="Next"
             onClick={goToNext}
-            className="px-3 py-1 text-white rounded-full bg-black/60 backdrop-blur-sm hover:bg-black"
+            className="rounded-full bg-black/60 px-3 py-1 text-white backdrop-blur-sm hover:bg-black"
           >
             ›
           </button>
@@ -228,10 +228,10 @@ export function HeroSection() {
           <p className="mt-2 text-sm text-black/70">
             {HERO_PAIRS[heroIndex].desc}
           </p>
-          <div className="flex items-center justify-center mt-4">
+          <div className="mt-4 flex items-center justify-center">
             <Link
               to={`/products${categoryQuery}`}
-              className="inline-flex items-center justify-center px-6 py-2 font-extrabold tracking-wide text-black transition-colors duration-300 border border-black group hover:bg-black hover:text-white"
+              className="group inline-flex items-center justify-center border border-black px-6 py-2 font-extrabold tracking-wide text-black transition-colors duration-300 hover:bg-black hover:text-white"
             >
               <span className="text-xs transition-transform duration-300 group-hover:-translate-x-0.5">
                 {HERO_PAIRS[heroIndex].buttonText.toUpperCase()}
@@ -244,7 +244,7 @@ export function HeroSection() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1"
+                className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
               >
                 <path d="M5 12h14" />
                 <path d="M13 5l7 7-7 7" />

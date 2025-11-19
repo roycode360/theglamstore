@@ -88,7 +88,7 @@ export default function CategoryModal({
       description: description || undefined,
       image: image || undefined,
       sortOrder: Number(sortOrder || '0'),
-      parentId: parentId || undefined,
+      parentId: parentId ? parentId : null,
       active,
     };
     try {
@@ -107,13 +107,13 @@ export default function CategoryModal({
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
       <div className="theme-border theme-card relative mx-2 my-10 max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-lg border p-6 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div className="text-lg font-semibold">
             {isEdit ? 'Edit Category' : 'Add New Category'}
           </div>
           <button
             onClick={onClose}
-            className="flex items-center justify-center w-8 h-8 border rounded theme-border"
+            className="theme-border flex h-8 w-8 items-center justify-center rounded border"
             aria-label="close"
           >
             ×
@@ -127,13 +127,13 @@ export default function CategoryModal({
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full mt-1"
+                className="mt-1 w-full"
                 required
               />
             </label>
             <label className="block text-sm">
               <div className="font-medium">URL Slug</div>
-              <div className="flex gap-2 mt-1">
+              <div className="mt-1 flex gap-2">
                 <Input
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
@@ -143,7 +143,7 @@ export default function CategoryModal({
                 <button
                   type="button"
                   onClick={() => setSlug(generateSlug(name))}
-                  className="px-3 py-2 text-sm bg-white border rounded-md theme-border shrink-0 hover:bg-gray-50"
+                  className="theme-border shrink-0 rounded-md border bg-white px-3 py-2 text-sm hover:bg-gray-50"
                 >
                   Generate
                 </button>
@@ -154,7 +154,7 @@ export default function CategoryModal({
               <Input
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value)}
-                className="w-full mt-1"
+                className="mt-1 w-full"
               />
             </label>
             <label className="block text-sm">
@@ -175,13 +175,13 @@ export default function CategoryModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              className="w-full mt-1"
+              className="mt-1 w-full"
             />
           </label>
 
           <label className="block text-sm">
             <div className="font-medium">Image</div>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="mt-1 flex items-center gap-2">
               <Input
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
@@ -190,7 +190,7 @@ export default function CategoryModal({
               />
               <button
                 type="button"
-                className="px-3 py-2 rounded btn-primary"
+                className="btn-primary rounded px-3 py-2"
                 onClick={() => {
                   if (!imageUrl) return;
                   setImage(imageUrl);
@@ -199,7 +199,7 @@ export default function CategoryModal({
               >
                 Add
               </button>
-              <label className="px-3 py-2 rounded cursor-pointer btn-ghost">
+              <label className="btn-ghost cursor-pointer rounded px-3 py-2">
                 {uploadingImg ? 'Uploading…' : 'Upload'}
                 <input
                   type="file"
@@ -228,12 +228,12 @@ export default function CategoryModal({
                 <div className="relative inline-block">
                   <img
                     src={image}
-                    className="object-cover w-16 h-16 border rounded theme-border"
+                    className="theme-border h-16 w-16 rounded border object-cover"
                   />
                   <button
                     type="button"
                     onClick={() => setImage('')}
-                    className="absolute w-6 h-6 text-xs text-white bg-gray-900 rounded-full -right-2 -top-2"
+                    className="absolute -right-2 -top-2 h-6 w-6 rounded-full bg-gray-900 text-xs text-white"
                     aria-label="remove image"
                     title="Remove"
                   >
@@ -256,11 +256,11 @@ export default function CategoryModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded btn-ghost"
+              className="btn-ghost rounded px-4 py-2"
             >
               Cancel
             </button>
-            <button className="px-4 py-2 rounded btn-primary" disabled={saving}>
+            <button className="btn-primary rounded px-4 py-2" disabled={saving}>
               {saving
                 ? 'Saving...'
                 : isEdit
