@@ -8,6 +8,7 @@ export interface CheckoutFormValues {
   address1: string;
   city: string;
   state: string;
+  notes: string;
 }
 
 interface CheckoutDeliveryFormProps {
@@ -95,6 +96,21 @@ export default function CheckoutDeliveryForm({
             onChange={(e) => onChange('state', e.target.value)}
             required
           />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block mb-1 text-sm font-medium">
+            Additional Notes
+          </label>
+          <textarea
+            className="w-full px-3 py-2 bg-white border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+            rows={3}
+            value={values.notes}
+            onChange={(e) => onChange('notes', e.target.value)}
+            placeholder="Share delivery instructions, access codes, preferred delivery times, etc."
+          />
+          <p className="mt-1 text-xs text-muted">
+            Optional information to help our team fulfil your order.
+          </p>
         </div>
       </div>
 

@@ -20,6 +20,7 @@ interface CheckoutOrderSummaryProps {
   selectedDeliveryId: string;
   onChangeDelivery: (id: string) => void;
   deliveryFee: number;
+  notes?: string;
 }
 
 export default function CheckoutOrderSummary({
@@ -37,6 +38,7 @@ export default function CheckoutOrderSummary({
   selectedDeliveryId,
   onChangeDelivery,
   deliveryFee,
+  notes,
 }: CheckoutOrderSummaryProps) {
   const deliveryOptions = useMemo(
     () =>
@@ -181,6 +183,16 @@ export default function CheckoutOrderSummary({
               <span>{formatCurrency(payableTotal)}</span>
             </div>
           </div>
+          {notes && notes.trim().length > 0 ? (
+            <div className="pt-4 mt-4 border-t">
+              <div className="text-xs font-semibold tracking-wide text-gray-500 uppercase">
+                Additional Notes
+              </div>
+              <p className="mt-2 text-sm text-gray-600 whitespace-pre-wrap">
+                {notes}
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
     </aside>

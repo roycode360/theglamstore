@@ -266,6 +266,15 @@ export default function CustomerOrderDetailsPage() {
                 </div>
               </div>
 
+              {order.notes && order.notes.trim().length > 0 ? (
+                <div className="p-6 text-sm border rounded-lg theme-card theme-border">
+                  <div className="mb-2 font-medium">Order Notes</div>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                    {order.notes}
+                  </p>
+                </div>
+              ) : null}
+
               <div className="p-6 text-sm border rounded-lg theme-card theme-border">
                 <div className="mb-1">
                   Subtotal:{' '}

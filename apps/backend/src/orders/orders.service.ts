@@ -114,6 +114,11 @@ export class OrdersService {
   ): Promise<OrderDTO> {
     const orderNumber = await this.generateOrderNumber();
 
+    const notesValue =
+      typeof payload.notes === 'string' && payload.notes.trim().length > 0
+        ? payload.notes.trim()
+        : null;
+
     let deliveryFee = Number(payload.deliveryFee ?? 0) || 0;
     const deliveryLocationId: string | null =
       (payload.deliveryLocationId as string | undefined) ?? null;
@@ -157,7 +162,7 @@ export class OrdersService {
       deliveryLocationId,
       deliveryLocationName,
       paymentReference: payload.paymentReference ?? null,
-      notes: payload.notes ?? null,
+      notes: notesValue,
     });
     const obj = doc.toObject() as unknown as Omit<OrderDTO, '_id'> & {
       _id: unknown;
@@ -180,6 +185,7 @@ export class OrdersService {
       paymentMethod: order.paymentMethod,
       transferProofUrl: order.transferProofUrl,
       items: order.items,
+      notes: order.notes,
     });
     return order;
   }
@@ -685,6 +691,7 @@ export class OrdersService {
       paymentMethod: created.paymentMethod,
       transferProofUrl: created.transferProofUrl,
       items: created.items,
+      notes: created.notes,
     });
 
     // If fully paid, trigger stock deduction via status change to confirmed

@@ -425,6 +425,7 @@ export class EmailService {
       selectedSize?: string | null;
       selectedColor?: string | null;
     }>;
+    notes?: string | null;
   }): Promise<void> {
     const recipients = [
       process.env.ADMIN_EMAIL_1,
@@ -443,6 +444,24 @@ export class EmailService {
     const accentColor = '#fbbf24';
     const borderColor = '#e5e7eb';
     const mutedColor = '#6b7280';
+
+    const escapeHtml = (value: string) =>
+      value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const notesMarkup =
+      order.notes && order.notes.trim().length > 0
+        ? `<div style="margin-top:24px;">
+             <div style="font-weight:600;margin-bottom:6px;">Additional notes</div>
+             <div style="white-space:pre-wrap;border:1px solid ${borderColor};border-radius:10px;padding:12px;color:${mutedColor};background:#f9fafb;">
+               ${escapeHtml(order.notes.trim())}
+             </div>
+           </div>`
+        : '';
 
     const itemsMarkup =
       (order.items || [])
@@ -566,6 +585,7 @@ export class EmailService {
             </tr>
           </table>
         </div>
+        ${notesMarkup}
         <div style="margin-top:24px;">
           <a href="${process.env.ADMIN_APP_ORIGIN || 'https://admin.theglamstore.ng'}/admin/orders?id=${
             order._id

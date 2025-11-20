@@ -53,6 +53,7 @@ export default function CheckoutPage() {
     address1: info.address1 ?? '',
     city: info.city ?? '',
     state: info.state ?? '',
+    notes: info.notes ?? '',
   });
   const [createOrder] = useMutation(CREATE_BANK_TRANSFER_ORDER, {
     refetchQueries: getAnalyticsRefetches,
@@ -304,6 +305,7 @@ export default function CheckoutPage() {
             selectedDeliveryId={deliveryId}
             onChangeDelivery={setDeliveryId}
             deliveryFee={deliveryFee}
+          notes={form.notes}
           />
         </div>
       </div>
@@ -324,6 +326,8 @@ export default function CheckoutPage() {
         whatsappClicked={whatsappClicked}
         onWhatsappClick={() => setWhatsappClicked(true)}
         onPaymentSubmitted={async ({ transferProofUrl }) => {
+          const notesPayload =
+            form.notes.trim().length > 0 ? form.notes.trim() : undefined;
           const payload = {
             email: form.email,
             firstName: form.firstName,
@@ -353,6 +357,7 @@ export default function CheckoutPage() {
             deliveryLocationName: selectedDelivery?.name || undefined,
             deliveryFee,
             amountPaid: payableTotal,
+            notes: notesPayload,
           };
           const { data: orderResponse } = await createOrder({
             variables: { payload: JSON.stringify(payload) },
@@ -370,6 +375,7 @@ export default function CheckoutPage() {
               address1: '',
               city: '',
               state: '',
+              notes: '',
             });
             setTransferFile(null);
             setWhatsappClicked(false);

@@ -119,13 +119,16 @@ export function OrderSummaryPanel({
           </span>
         </label>
         <label className="flex flex-col gap-1 text-xs font-medium md:col-span-2">
-          Notes for this order
+          Additional notes (optional)
           <textarea
             value={notes ?? ''}
             onChange={(event) => onNotesChange(event.target.value)}
-            placeholder="Special instructions, delivery notes, etc."
+            placeholder="Special instructions, delivery details, or customer notes."
             className="h-24 px-3 py-2 text-sm border rounded-md theme-border focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
           />
+          <span className="text-xs text-neutral-500">
+            Visible to admins and auto-filled when customers add notes at checkout.
+          </span>
         </label>
 
         <div className="pt-4 text-xs font-semibold tracking-wide text-gray-500 uppercase border-t border-dashed md:col-span-2">

@@ -14,6 +14,7 @@ export type CheckoutInfo = {
   address1: string;
   city: string;
   state: string;
+  notes?: string;
 };
 
 type Ctx = {
@@ -30,6 +31,7 @@ const DEFAULT: CheckoutInfo = {
   address1: '',
   city: '',
   state: '',
+  notes: '',
 };
 
 const CheckoutContext = createContext<Ctx | undefined>(undefined);

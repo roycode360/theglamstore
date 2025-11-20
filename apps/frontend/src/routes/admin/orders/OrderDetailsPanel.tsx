@@ -587,9 +587,13 @@ export function OrderDetailsPanel({
             <textarea
               value={notesDraft}
               onChange={(event) => onNotesChange(event.target.value)}
-              placeholder="Internal notes visible to admins."
+            placeholder="Customer or admin notes for this order."
               className="w-full px-3 py-2 text-sm border rounded-md theme-border h-28 focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900/10"
             />
+          <p className="text-xs text-neutral-500">
+            If a customer leaves delivery instructions during checkout, they
+            appear here. Updates are visible to all admins.
+          </p>
           </section>
         </div>
 
