@@ -36,6 +36,12 @@ const HERO_PAIRS: Array<{
   },
 ];
 
+const heroAlt = (pairIndex: number, panel: 'left' | 'right'): string => {
+  const pair = HERO_PAIRS[pairIndex];
+  const panelCopy = panel === 'left' ? 'feature look' : 'styled detail';
+  return `${pair.title} ${panelCopy}`;
+};
+
 const slugify = (value: string): string =>
   (value || '')
     .trim()
@@ -82,6 +88,23 @@ export function HeroSection() {
     }, 750);
   };
 
+  // Preload the upcoming slide assets so lazy-loaded <img> elements never flash.
+  useEffect(() => {
+    const next = (heroIndex + 1) % HERO_PAIRS.length;
+    const sources = [...HERO_PAIRS[next].left, ...HERO_PAIRS[next].right];
+    const preloads = sources.map((src) => {
+      const image = new Image();
+      image.src = src;
+      image.decoding = 'async';
+      return image;
+    });
+    return () => {
+      preloads.forEach((image) => {
+        image.onload = null;
+      });
+    };
+  }, [heroIndex]);
+
   return (
     <>
       {/* Hero - dual column vertical slider - FULL WIDTH */}
@@ -97,6 +120,10 @@ export function HeroSection() {
                   <img
                     key={`left-cur-${cur}`}
                     src={HERO_PAIRS[cur].left[0]}
+                    alt={heroAlt(cur, 'left')}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                     className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out ${
                       isSliding ? '-translate-y-full' : 'translate-y-0'
                     }`}
@@ -104,6 +131,10 @@ export function HeroSection() {
                   <img
                     key={`left-next-${next}`}
                     src={HERO_PAIRS[next].left[0]}
+                    alt={heroAlt(next, 'left')}
+                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
                     className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out ${
                       isSliding ? 'translate-y-0' : 'translate-y-full'
                     }`}
@@ -122,6 +153,10 @@ export function HeroSection() {
                   <img
                     key={`right-cur-${cur}`}
                     src={HERO_PAIRS[cur].right[0]}
+                    alt={heroAlt(cur, 'right')}
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
                     className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out ${
                       isSliding ? 'translate-y-full' : 'translate-y-0'
                     }`}
@@ -129,6 +164,10 @@ export function HeroSection() {
                   <img
                     key={`right-next-${next}`}
                     src={HERO_PAIRS[next].right[0]}
+                    alt={heroAlt(next, 'right')}
+                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
                     className={`absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out ${
                       isSliding ? 'translate-y-0' : '-translate-y-full'
                     }`}
