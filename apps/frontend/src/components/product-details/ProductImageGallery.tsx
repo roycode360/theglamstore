@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
 type ProductImageGalleryProps = {
   images: string[];
@@ -10,13 +11,17 @@ export function ProductImageGallery({
   images,
   productName,
 }: ProductImageGalleryProps) {
+  const galleryImages = useMemo(
+    () => (images ?? []).map((src) => getOptimizedImageUrl(src) ?? src),
+    [images],
+  );
   const [activeImg, setActiveImg] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [thumbnailLoaded, setThumbnailLoaded] = useState<boolean[]>([]);
 
   // Initialize thumbnail loaded states
   useState(() => {
-    setThumbnailLoaded(new Array(images?.length || 0).fill(false));
+    setThumbnailLoaded(new Array(galleryImages.length || 0).fill(false));
   });
 
   // Reset image loaded state when active image changes
@@ -37,17 +42,17 @@ export function ProductImageGallery({
   return (
     <div>
       {/* Mobile Continue Shopping Button */}
-      <div className="mb-4 flex justify-end sm:hidden">
+      <div className="flex justify-end mb-4 sm:hidden">
         <Link
           to="/products"
-          className="theme-border text-brand hover:bg-brand-50 inline-flex h-10 w-10 items-center justify-center rounded-lg border bg-white transition-colors"
+          className="inline-flex items-center justify-center w-10 h-10 transition-colors bg-white border rounded-lg theme-border text-brand hover:bg-brand-50"
           title="Continue Shopping"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             fill="currentColor"
-            className="h-4 w-4"
+            className="w-4 h-4"
           >
             <path
               fillRule="evenodd"
@@ -58,53 +63,55 @@ export function ProductImageGallery({
         </Link>
       </div>
 
-      <div className="mb-3 flex gap-2">
-        {(images ?? []).slice(0, 4).map((src: string, i: number) => (
-          <button
-            key={i}
-            onClick={() => handleImageChange(i)}
-            className={`theme-border relative overflow-hidden rounded-md border bg-gray-50 ${i === activeImg ? 'ring-brand-400 ring-2' : ''}`}
-            style={{ width: 64, height: 64 }}
-            aria-label={`Image ${i + 1}`}
-          >
-            {/* Thumbnail loading skeleton */}
-            {!thumbnailLoaded[i] && (
-              <div className="absolute inset-0 animate-pulse bg-gray-200">
-                <div className="mx-auto mt-5 h-4 w-4 animate-pulse rounded-full bg-gray-300"></div>
-              </div>
-            )}
-            {src && (
-              <img
-                src={src}
-                className={`h-full w-full object-cover transition-opacity duration-300 ${
-                  thumbnailLoaded[i] ? 'opacity-100' : 'opacity-0'
-                }`}
-                loading="lazy"
-                decoding="async"
-                alt={`${productName} thumbnail ${i + 1}`}
-                onLoad={() => handleThumbnailLoad(i)}
-              />
-            )}
-          </button>
-        ))}
+      <div className="flex gap-2 mb-3">
+        {galleryImages
+          .slice(0, galleryImages.length ? galleryImages.length : 4)
+          .map((src, i) => (
+            <button
+              key={i}
+              onClick={() => handleImageChange(i)}
+              className={`theme-border relative overflow-hidden rounded-md border bg-gray-50 ${i === activeImg ? 'ring-brand-400 ring-2' : ''}`}
+              style={{ width: 64, height: 64 }}
+              aria-label={`Image ${i + 1}`}
+            >
+              {/* Thumbnail loading skeleton */}
+              {!thumbnailLoaded[i] && (
+                <div className="absolute inset-0 bg-gray-200 animate-pulse">
+                  <div className="w-4 h-4 mx-auto mt-5 bg-gray-300 rounded-full animate-pulse"></div>
+                </div>
+              )}
+              {src && (
+                <img
+                  src={src}
+                  className={`h-full w-full object-cover transition-opacity duration-300 ${
+                    thumbnailLoaded[i] ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  loading="lazy"
+                  decoding="async"
+                  alt={`${productName} thumbnail ${i + 1}`}
+                  onLoad={() => handleThumbnailLoad(i)}
+                />
+              )}
+            </button>
+          ))}
       </div>
 
       <div className="relative h-[60vh] overflow-hidden rounded-lg bg-gray-100 md:h-[70vh]">
         {/* Enhanced loading skeleton */}
         {!imageLoaded && (
           <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
-            <div className="flex h-full flex-col items-center justify-center space-y-4">
-              <div className="h-20 w-20 animate-pulse rounded-full bg-gray-300"></div>
+            <div className="flex flex-col items-center justify-center h-full space-y-4">
+              <div className="w-20 h-20 bg-gray-300 rounded-full animate-pulse"></div>
               <div className="space-y-2">
-                <div className="h-3 w-32 animate-pulse rounded bg-gray-300"></div>
-                <div className="h-2 w-24 animate-pulse rounded bg-gray-300"></div>
+                <div className="w-32 h-3 bg-gray-300 rounded animate-pulse"></div>
+                <div className="w-24 h-2 bg-gray-300 rounded animate-pulse"></div>
               </div>
             </div>
           </div>
         )}
-        {images?.[activeImg] && (
+        {galleryImages?.[activeImg] && (
           <img
-            src={images[activeImg]}
+            src={galleryImages[activeImg] ?? undefined}
             loading="lazy"
             decoding="async"
             alt={productName}

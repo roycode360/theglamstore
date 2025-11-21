@@ -8,6 +8,7 @@ import { GET_PRODUCT } from '../../graphql/products';
 import { ProductQuickViewModal } from './ProductQuickViewModal';
 import { useWishlist } from '../../contexts/WishlistContext';
 import { useToast } from './Toast';
+import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
 interface ProductCardProps {
   product: {
@@ -34,6 +35,12 @@ export default function ProductCard({ product }: ProductCardProps) {
       ? rawColor.split('|')[0] || rawColor.split('|')[1]
       : rawColor
     : '';
+  const primaryImage =
+    getOptimizedImageUrl(product.images?.[0]) ?? product.images?.[0];
+  const secondaryImage =
+    getOptimizedImageUrl(product.images?.[1] || product.images?.[0]) ??
+    product.images?.[1] ??
+    product.images?.[0];
 
   const [quickOpen, setQuickOpen] = useState(false);
   const [loadQuick, { data: quickData, loading: quickLoading }] = useLazyQuery(
@@ -48,7 +55,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div
-      className="group relative"
+      className="relative group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -65,7 +72,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
-                className="h-3 w-3"
+                className="w-3 h-3"
                 aria-hidden="true"
               >
                 <path d="M12 2c2.5 2.4 3.76 4.8 3.76 7.2 0 1.62-.64 2.7-1.91 3.3 2.04-.18 3.64-1.86 3.64-4.38 0-1.44-.56-2.82-1.68-4.14 2.7 1.5 4.05 3.72 4.05 6.66 0 4.2-3.12 7.86-9.36 10.98C4.44 17.52 1.32 13.86 1.32 9.66c0-2.94 1.35-5.16 4.05-6.66C4.26 5.1 3.7 6.48 3.7 7.92c0 2.52 1.6 4.2 3.62 4.38C6.06 11.1 5.42 10.02 5.42 8.4 5.42 6 6.68 4.4 9.2 2c.28-.26.58-.39.9-.39s.62.13.9.39Z" />
@@ -76,16 +83,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Loading skeleton */}
           {!imageLoaded && (
             <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200">
-              <div className="flex h-full flex-col items-center justify-center space-y-3">
-                <div className="h-16 w-16 animate-pulse rounded-full bg-gray-300"></div>
-                <div className="h-2 w-28 animate-pulse rounded bg-gray-300"></div>
+              <div className="flex flex-col items-center justify-center h-full space-y-3">
+                <div className="w-16 h-16 bg-gray-300 rounded-full animate-pulse"></div>
+                <div className="h-2 bg-gray-300 rounded w-28 animate-pulse"></div>
               </div>
             </div>
           )}
-          {product.images?.[0] && (
+          {primaryImage && (
             <>
               <img
-                src={product.images[0]}
+                src={primaryImage}
                 alt={product.name}
                 className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ease-out ${
                   isHovered || !imageLoaded ? 'opacity-0' : 'opacity-100'
@@ -94,23 +101,25 @@ export default function ProductCard({ product }: ProductCardProps) {
                 decoding="async"
                 onLoad={() => setImageLoaded(true)}
               />
-              <img
-                src={product.images?.[1] || product.images[0]}
-                alt={product.name}
-                className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] ease-out will-change-transform ${
-                  isHovered
-                    ? 'scale-[1.25] opacity-100 duration-700'
-                    : 'scale-100 opacity-0 duration-700'
-                }`}
-                loading="lazy"
-                decoding="async"
-              />
+              {secondaryImage && (
+                <img
+                  src={secondaryImage}
+                  alt={product.name}
+                  className={`absolute inset-0 h-full w-full object-cover transition-[opacity,transform] ease-out will-change-transform ${
+                    isHovered
+                      ? 'scale-[1.25] opacity-100 duration-700'
+                      : 'scale-100 opacity-0 duration-700'
+                  }`}
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
             </>
           )}
 
           {/* Action icons on hover - positioned on right side */}
           {isHovered && (
-            <div className="absolute bottom-3 right-3 z-10 flex flex-col items-center gap-4">
+            <div className="absolute z-10 flex flex-col items-center gap-4 bottom-3 right-3">
               {/* Heart icon */}
               <button
                 onClick={async (e) => {
@@ -142,7 +151,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 title={onWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
               >
                 {wishlistLoading ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  <span className="w-4 h-4 border-2 border-current rounded-full animate-spin border-t-transparent" />
                 ) : (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -168,7 +177,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                   setQuickOpen(true);
                   void loadQuick({ variables: { id: product._id } });
                 }}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-all duration-1000 ease-out hover:bg-black hover:text-white hover:shadow-lg"
+                className="flex items-center justify-center w-12 h-12 text-black transition-all duration-1000 ease-out bg-white rounded-full hover:bg-black hover:text-white hover:shadow-lg"
                 aria-label="Quick view"
               >
                 <svg
@@ -206,12 +215,12 @@ export default function ProductCard({ product }: ProductCardProps) {
                     setAddingToCart(false);
                   }
                 }}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-all duration-1000 ease-out hover:bg-black hover:text-white hover:shadow-lg"
+                className="flex items-center justify-center w-12 h-12 text-black transition-all duration-1000 ease-out bg-white rounded-full hover:bg-black hover:text-white hover:shadow-lg"
                 aria-disabled={addingToCart}
                 aria-label="Add to cart"
               >
                 {addingToCart ? (
-                  <span className="h-5 w-5 animate-spin rounded-full border-2 border-black border-t-transparent" />
+                  <span className="w-5 h-5 border-2 border-black rounded-full animate-spin border-t-transparent" />
                 ) : (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -236,7 +245,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Product Details */}
-        <div className="border-t border-gray-200 bg-white px-4 pb-4 pt-4 sm:px-5">
+        <div className="px-4 pt-4 pb-4 bg-white border-t border-gray-200 sm:px-5">
           {/* Product name */}
           <h3 className="text-sm font-medium leading-tight text-gray-900">
             {product.name}

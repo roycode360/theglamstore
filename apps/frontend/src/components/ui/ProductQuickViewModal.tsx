@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import Modal from './Modal';
 import { formatCurrency } from '../../utils/currency';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { useWishlist } from '../../contexts/WishlistContext';
 import { useToast } from './Toast';
 import { Skeleton } from './Skeleton';
+import { getOptimizedImageUrl } from '../../utils/cloudinary';
 
 export type QuickViewProduct = {
   _id: string;
@@ -53,7 +54,12 @@ export function ProductQuickViewModal({
 
   // Basic active image state so users can peek through multiple images
   const [activeIdx, setActiveIdx] = useState(0);
-  const mainImage = product?.images?.[activeIdx] || product?.images?.[0];
+  const optimizedImages = useMemo(
+    () =>
+      (product?.images ?? []).map((src) => getOptimizedImageUrl(src) ?? src),
+    [product?.images],
+  );
+  const mainImage = optimizedImages[activeIdx] || optimizedImages[0];
 
   // Selectors & actions
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
@@ -119,7 +125,7 @@ export function ProductQuickViewModal({
         <QuickViewSkeleton />
       ) : !product ? (
         <div
-          className="py-10 text-center text-sm"
+          className="py-10 text-sm text-center"
           style={{ color: 'rgb(var(--muted))' }}
         >
           Product details unavailable right now.
@@ -128,12 +134,12 @@ export function ProductQuickViewModal({
         <div className="grid gap-5 sm:grid-cols-[360px_1fr]">
           {/* Left: Image with small thumbnails */}
           <div className="space-y-3 sm:w-[360px]">
-            <div className="overflow-hidden rounded-xl bg-gray-100">
+            <div className="overflow-hidden bg-gray-100 rounded-xl">
               {mainImage ? (
                 <img
                   src={mainImage}
                   alt={product.name}
-                  className="h-56 w-full object-cover sm:h-96"
+                  className="object-cover w-full h-56 sm:h-96"
                 />
               ) : (
                 <div
@@ -144,9 +150,9 @@ export function ProductQuickViewModal({
                 </div>
               )}
             </div>
-            {product.images && product.images.length > 1 && (
+            {optimizedImages.length > 1 && (
               <div className="flex gap-2 overflow-x-auto overflow-y-visible px-2 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {product.images.slice(0, 8).map((src, i) => (
+                {optimizedImages.slice(0, 8).map((src, i) => (
                   <button
                     key={i}
                     onClick={() => setActiveIdx(i)}
@@ -156,11 +162,13 @@ export function ProductQuickViewModal({
                     style={{ width: 56, height: 56 }}
                     aria-label={`Preview image ${i + 1}`}
                   >
-                    <img
-                      src={src}
-                      className="h-full w-full object-cover"
-                      alt={`${product.name} preview ${i + 1}`}
-                    />
+                    {src && (
+                      <img
+                        src={src}
+                        className="object-cover w-full h-full"
+                        alt={`${product.name} preview ${i + 1}`}
+                      />
+                    )}
                   </button>
                 ))}
               </div>
@@ -184,7 +192,7 @@ export function ProductQuickViewModal({
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       fill="currentColor"
-                      className="h-3 w-3"
+                      className="w-3 h-3"
                       aria-hidden="true"
                     >
                       <path d="M12 2c2.5 2.4 3.76 4.8 3.76 7.2 0 1.62-.64 2.7-1.91 3.3 2.04-.18 3.64-1.86 3.64-4.38 0-1.44-.56-2.82-1.68-4.14 2.7 1.5 4.05 3.72 4.05 6.66 0 4.2-3.12 7.86-9.36 10.98C4.44 17.52 1.32 13.86 1.32 9.66c0-2.94 1.35-5.16 4.05-6.66C4.26 5.1 3.7 6.48 3.7 7.92c0 2.52 1.6 4.2 3.62 4.38C6.06 11.1 5.42 10.02 5.42 8.4 5.42 6 6.68 4.4 9.2 2c.28-.26.58-.39.9-.39s.62.13.9.39Z" />
@@ -211,7 +219,7 @@ export function ProductQuickViewModal({
                 const truncated =
                   text.length > 260 ? text.slice(0, 257) + '…' : text;
                 return (
-                  <div className="rounded-md bg-gray-50 p-3 text-sm leading-relaxed text-gray-700 ring-1 ring-gray-100">
+                  <div className="p-3 text-sm leading-relaxed text-gray-700 rounded-md bg-gray-50 ring-1 ring-gray-100">
                     {truncated}
                   </div>
                 );
@@ -224,7 +232,7 @@ export function ProductQuickViewModal({
                   <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">
                     Colors
                   </p>
-                  <div className="ml-1 mt-2 flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mt-2 ml-1">
                     {colors.map((color, idx) => (
                       <button
                         key={`${color.label}-${idx}`}
@@ -237,7 +245,7 @@ export function ProductQuickViewModal({
                         title={color.label}
                       >
                         <span
-                          className="inline-flex h-3 w-3 rounded-full border border-white/80"
+                          className="inline-flex w-3 h-3 border rounded-full border-white/80"
                           style={{
                             backgroundColor: color.swatch,
                             boxShadow: '0 0 0 1px rgba(15,23,42,0.08)',
@@ -255,7 +263,7 @@ export function ProductQuickViewModal({
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gray-400">
                   Sizes
                 </p>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {(sizes.length ? sizes : ['One size']).map((size) => (
                     <button
                       key={size}
@@ -278,7 +286,7 @@ export function ProductQuickViewModal({
             {/* Actions */}
             <div className="flex flex-col gap-3 pt-1">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="theme-border inline-flex w-fit items-center rounded-md border">
+                <div className="inline-flex items-center border rounded-md theme-border w-fit">
                   <button
                     onClick={() => setQty(Math.max(1, qty - 1))}
                     className="h-9 w-9"
@@ -286,7 +294,7 @@ export function ProductQuickViewModal({
                   >
                     −
                   </button>
-                  <div className="w-10 text-center text-sm">{qty}</div>
+                  <div className="w-10 text-sm text-center">{qty}</div>
                   <button
                     onClick={() => {
                       const stock = Number(product.stockQuantity ?? 0);
@@ -315,7 +323,7 @@ export function ProductQuickViewModal({
                   disabled={togglingWishlist}
                 >
                   {togglingWishlist ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    <span className="w-4 h-4 border-2 border-current rounded-full animate-spin border-t-transparent" />
                   ) : (
                     (() => {
                       const onList = !!wishlist.find(
@@ -325,7 +333,7 @@ export function ProductQuickViewModal({
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"
-                          className="h-5 w-5"
+                          className="w-5 h-5"
                           fill="none"
                           stroke="currentColor"
                           strokeWidth="1.5"
@@ -340,13 +348,13 @@ export function ProductQuickViewModal({
               </div>
 
               <button
-                className="btn-primary inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm disabled:opacity-70 sm:w-auto"
+                className="inline-flex items-center justify-center w-full gap-2 px-4 py-2 text-sm rounded-md btn-primary disabled:opacity-70 sm:w-auto"
                 onClick={handleAddToCart}
                 disabled={addingToCart}
               >
                 {addingToCart ? (
                   <>
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span className="w-4 h-4 border-2 border-white rounded-full animate-spin border-t-transparent" />
                     <span>Adding…</span>
                   </>
                 ) : (
@@ -375,14 +383,14 @@ function QuickViewSkeleton() {
   return (
     <div className="grid gap-5 sm:grid-cols-[360px_1fr]">
       <div className="space-y-3 sm:w-[360px]">
-        <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
-          <Skeleton className="h-56 w-full rounded-none sm:h-96" />
+        <div className="overflow-hidden bg-white shadow-sm rounded-xl ring-1 ring-gray-100">
+          <Skeleton className="w-full h-56 rounded-none sm:h-96" />
         </div>
         <div className="flex gap-2 overflow-x-auto overflow-y-visible px-2 py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {Array.from({ length: 5 }).map((_, idx) => (
             <Skeleton
               key={idx}
-              className="h-14 w-14 flex-shrink-0 rounded-md sm:h-16 sm:w-16"
+              className="flex-shrink-0 rounded-md h-14 w-14 sm:h-16 sm:w-16"
             />
           ))}
         </div>
@@ -390,26 +398,26 @@ function QuickViewSkeleton() {
 
       <div className="space-y-4">
         <div className="space-y-2">
-          <Skeleton className="h-3 w-24 rounded-full" />
-          <Skeleton className="h-7 w-3/4 rounded-lg" />
+          <Skeleton className="w-24 h-3 rounded-full" />
+          <Skeleton className="w-3/4 rounded-lg h-7" />
         </div>
-        <Skeleton className="h-8 w-32 rounded-md" />
-        <Skeleton className="h-20 w-full rounded-xl" />
+        <Skeleton className="w-32 h-8 rounded-md" />
+        <Skeleton className="w-full h-20 rounded-xl" />
 
         <div className="space-y-3">
           <div>
-            <Skeleton className="h-3 w-20 rounded-full" />
-            <div className="mt-2 flex gap-2">
+            <Skeleton className="w-20 h-3 rounded-full" />
+            <div className="flex gap-2 mt-2">
               {Array.from({ length: 3 }).map((_, idx) => (
-                <Skeleton key={idx} className="h-8 w-20 rounded-full" />
+                <Skeleton key={idx} className="w-20 h-8 rounded-full" />
               ))}
             </div>
           </div>
           <div>
-            <Skeleton className="h-3 w-16 rounded-full" />
-            <div className="mt-2 flex gap-2">
+            <Skeleton className="w-16 h-3 rounded-full" />
+            <div className="flex gap-2 mt-2">
               {Array.from({ length: 4 }).map((_, idx) => (
-                <Skeleton key={idx} className="h-8 w-16 rounded-md" />
+                <Skeleton key={idx} className="w-16 h-8 rounded-md" />
               ))}
             </div>
           </div>

@@ -3,6 +3,7 @@ import { formatCurrency } from '../../../utils/currency';
 import { TCartItem } from 'src/types';
 import { LocalCartItem } from '../../../utils/localCart';
 import Select from '../../../components/ui/Select';
+import { getOptimizedImageUrl } from '../../../utils/cloudinary';
 
 interface CheckoutOrderSummaryProps {
   items: Array<TCartItem | LocalCartItem>;
@@ -56,12 +57,15 @@ export default function CheckoutOrderSummary({
         <div className="mb-4 space-y-4">
           {items.map((it) => {
             const itemId = '_id' in it ? it._id : it.id;
+            const productImage =
+              getOptimizedImageUrl(it.product?.images?.[0]) ??
+              it.product?.images?.[0];
             return (
               <div key={itemId} className="flex items-center gap-3">
                 <div className="w-12 h-12 overflow-hidden bg-gray-100 rounded">
-                  {it.product?.images?.[0] && (
+                  {productImage && (
                     <img
-                      src={it.product.images[0]}
+                      src={productImage}
                       className="object-cover w-full h-full"
                     />
                   )}
