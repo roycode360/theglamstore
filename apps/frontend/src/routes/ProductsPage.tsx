@@ -16,7 +16,7 @@ export default function ProductsPage() {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [subcat, setSubcat] = useState('');
-  const [inStockOnly, setInStockOnly] = useState(true);
+  const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -257,7 +257,7 @@ export default function ProductsPage() {
   }, [loadNextPage, hasMore, filtered.length]);
 
   return (
-    <div className="px-4 py-10 space-y-8 sm:px-6 lg:px-8">
+    <div className="space-y-8 px-4 py-10 sm:px-6 lg:px-8">
       {/* Page header */}
       <div className="flex items-end justify-between">
         <div>
@@ -279,7 +279,7 @@ export default function ProductsPage() {
             placeholder="Search products..."
             className="w-full pl-10"
           />
-          <span className="absolute -translate-y-1/2 pointer-events-none left-3 top-1/2 opacity-60">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 opacity-60">
             🔍
           </span>
         </div>
@@ -288,7 +288,7 @@ export default function ProductsPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
         {/* Filters */}
         <aside className="lg:col-span-1">
-          <div className="p-4 bg-white border rounded-lg theme-border">
+          <div className="theme-border rounded-lg border bg-white p-4">
             <div className="mb-3 text-base font-semibold">Filters</div>
 
             <div className="space-y-5 text-sm">
@@ -366,7 +366,7 @@ export default function ProductsPage() {
             <ProductsGridSkeleton />
           ) : filtered.length === 0 ? (
             <div
-              className="flex items-center justify-center py-16 text-sm bg-white border rounded-lg theme-border"
+              className="theme-border flex items-center justify-center rounded-lg border bg-white py-16 text-sm"
               style={{ color: 'rgb(var(--muted))' }}
             >
               No products found
@@ -381,7 +381,7 @@ export default function ProductsPage() {
               {isFetchingMore && <LoadingMoreSkeletonRow />}
               <div
                 ref={loadMoreRef}
-                className="flex items-center justify-center mt-6 text-xs"
+                className="mt-6 flex items-center justify-center text-xs"
                 style={{ color: 'rgb(var(--muted))' }}
               >
                 {hasMore
@@ -408,10 +408,10 @@ function ProductsGridSkeleton() {
         ))}
       </div>
       <div className="flex items-center justify-between">
-        <Skeleton className="w-24 h-4" />
+        <Skeleton className="h-4 w-24" />
         <div className="flex items-center gap-2">
-          <Skeleton className="w-20 rounded-md h-9" />
-          <Skeleton className="w-20 rounded-md h-9" />
+          <Skeleton className="h-9 w-20 rounded-md" />
+          <Skeleton className="h-9 w-20 rounded-md" />
         </div>
       </div>
     </div>
@@ -421,7 +421,7 @@ function ProductsGridSkeleton() {
 function LoadingMoreSkeletonRow() {
   const placeholders = Array.from({ length: 3 });
   return (
-    <div className="grid grid-cols-1 gap-6 mt-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {placeholders.map((_, idx) => (
         <SkeletonProductCard key={idx} />
       ))}
@@ -431,15 +431,15 @@ function LoadingMoreSkeletonRow() {
 
 function SkeletonProductCard() {
   return (
-    <div className="relative group">
+    <div className="group relative">
       <div className="overflow-hidden bg-white shadow-sm ring-1 ring-gray-100/70">
         <div className="relative aspect-[3/4] w-full overflow-hidden">
-          <Skeleton className="w-full h-full rounded-none" />
+          <Skeleton className="h-full w-full rounded-none" />
         </div>
-        <div className="px-5 pt-4 pb-5 space-y-3">
-          <Skeleton className="w-16 h-3 rounded-full" />
-          <Skeleton className="w-3/4 h-5 rounded-lg" />
-          <Skeleton className="w-1/3 h-4 rounded-lg" />
+        <div className="space-y-3 px-5 pb-5 pt-4">
+          <Skeleton className="h-3 w-16 rounded-full" />
+          <Skeleton className="h-5 w-3/4 rounded-lg" />
+          <Skeleton className="h-4 w-1/3 rounded-lg" />
         </div>
       </div>
     </div>
