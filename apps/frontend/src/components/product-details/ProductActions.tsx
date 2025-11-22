@@ -23,9 +23,19 @@ export function ProductActions({
   const { showToast } = useToast();
   const [addingToCart, setAddingToCart] = useState(false);
   const [togglingWishlist, setTogglingWishlist] = useState(false);
+  const stockValue =
+    typeof (p as any)?.stockQuantity === 'number'
+      ? Number((p as any)?.stockQuantity)
+      : null;
+  const isOutOfStock = stockValue !== null ? stockValue <= 0 : false;
 
   const handleAddToCart = async () => {
-    if (addingToCart) return;
+    if (addingToCart || isOutOfStock) {
+      if (isOutOfStock) {
+        showToast('This item is currently out of stock', 'warning');
+      }
+      return;
+    }
     setAddingToCart(true);
     try {
       await onAddToCart();
@@ -46,10 +56,10 @@ export function ProductActions({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="inline-flex items-center border rounded-md theme-border">
+      <div className="theme-border inline-flex items-center rounded-md border">
         <button
           onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
-          className="w-10 h-10"
+          className="h-10 w-10"
           aria-label="Decrease quantity"
         >
           −
@@ -57,6 +67,10 @@ export function ProductActions({
         <div className="w-12 text-center">{quantity}</div>
         <button
           onClick={() => {
+            if (isOutOfStock) {
+              showToast('This item is currently out of stock', 'warning');
+              return;
+            }
             const stock = Number((p as any)?.stockQuantity ?? 0);
             const next = quantity + 1;
             if (stock > 0 && next > stock) {
@@ -66,28 +80,35 @@ export function ProductActions({
             }
             onQuantityChange(next);
           }}
-          className="w-10 h-10"
+          className="h-10 w-10"
           aria-label="Increase quantity"
         >
           +
         </button>
       </div>
       <button
-        className="btn-primary inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5"
+        className={`inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 ${
+          isOutOfStock
+            ? 'btn-primary cursor-not-allowed opacity-60'
+            : 'btn-primary'
+        }`}
         onClick={handleAddToCart}
-        disabled={addingToCart}
+        disabled={addingToCart || isOutOfStock}
+        aria-disabled={addingToCart || isOutOfStock}
       >
         {addingToCart ? (
           <>
-            <span className="w-4 h-4 border-2 border-white rounded-full animate-spin border-t-transparent" />
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
             <span>Adding…</span>
           </>
+        ) : isOutOfStock ? (
+          'Out of stock'
         ) : (
           'Add to Cart'
         )}
       </button>
       <button
-        className="inline-flex items-center justify-center w-10 h-10 transition-opacity border rounded-md theme-border hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
+        className="theme-border inline-flex h-10 w-10 items-center justify-center rounded-md border transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black"
         aria-label="Wishlist"
         title="Wishlist"
         aria-pressed={!!wishlistItems.find((w: any) => w._id === p._id)}
@@ -95,7 +116,7 @@ export function ProductActions({
         disabled={togglingWishlist}
       >
         {togglingWishlist ? (
-          <span className="w-4 h-4 border-2 border-current rounded-full animate-spin border-t-transparent" />
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
         ) : (
           (() => {
             const onList = !!wishlistItems.find((w: any) => w._id === p._id);
@@ -103,7 +124,7 @@ export function ProductActions({
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
-                className="w-5 h-5"
+                className="h-5 w-5"
                 fill={onList ? 'black' : 'none'}
                 stroke="black"
                 strokeWidth="1.5"

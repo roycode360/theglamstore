@@ -42,6 +42,7 @@ import CustomerService from './routes/CustomerService';
 import WishlistPage from './routes/account/WishlistPage';
 import { WishlistProvider } from './contexts/WishlistContext';
 import PageLoader from './components/ui/PageLoader';
+import ErrorPage from './routes/ErrorPage';
 
 const DashboardPage = lazy(() => import('./routes/admin/DashboardPage'));
 const AdminDashboard = lazy(() => import('./routes/admin/AdminDashboard'));
@@ -156,17 +157,22 @@ const withSuspense = (
   </Suspense>
 );
 
+const defaultErrorElement = <ErrorPage />;
+
 const router = createBrowserRouter([
   {
     path: '/orders/:id/receipt',
     element: withSuspense(AdminOrderReceiptPage),
+    errorElement: defaultErrorElement,
   },
   {
     element: <MainLayout />,
+    errorElement: defaultErrorElement,
     children: [
       {
         path: '/',
         element: <AppLayout />,
+        errorElement: defaultErrorElement,
         children: [
           { index: true, element: <HomePage /> },
           { path: 'categories', element: <ProductCategories /> },
@@ -186,9 +192,11 @@ const router = createBrowserRouter([
       {
         path: '/admin',
         element: <RequireAuth roles={['admin']} />,
+        errorElement: defaultErrorElement,
         children: [
           {
             element: <AdminLayout />,
+            errorElement: defaultErrorElement,
             children: [
               { index: true, element: withSuspense(DashboardPage) },
               { path: 'dashboard', element: withSuspense(DashboardPage) },
@@ -223,9 +231,11 @@ const router = createBrowserRouter([
       {
         path: '/orders',
         element: <RequireAuth roles={['customer', 'admin']} />,
+        errorElement: defaultErrorElement,
         children: [
           {
             element: <AppLayout />, // keep site header/footer
+            errorElement: defaultErrorElement,
             children: [
               { index: true, element: <CustomerOrdersPage /> },
               { path: ':id', element: <CustomerOrderDetailsPage /> },
@@ -236,9 +246,11 @@ const router = createBrowserRouter([
       {
         path: '/account',
         element: <RequireAuth roles={['customer', 'admin']} />,
+        errorElement: defaultErrorElement,
         children: [
           {
             element: <AppLayout />,
+            errorElement: defaultErrorElement,
             children: [{ path: 'wishlist', element: <WishlistPage /> }],
           },
         ],
