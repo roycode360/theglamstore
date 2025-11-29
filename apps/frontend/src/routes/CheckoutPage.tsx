@@ -15,6 +15,7 @@ import { getAnalyticsRefetches } from '../graphql/refetches';
 import { useAnalyticsTracker } from '../hooks/useAnalyticsTracker';
 import CheckoutDeliveryForm, {
   CheckoutFormValues,
+  CheckoutFieldErrors,
 } from '../routes/checkout/components/CheckoutDeliveryForm';
 import CheckoutOrderSummary from './checkout/components/CheckoutOrderSummary';
 import BankTransferModal from './checkout/components/BankTransferModal';
@@ -62,7 +63,7 @@ export default function CheckoutPage() {
   const { clearCart } = useCart();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<CheckoutFieldErrors>({});
   const [showBankModal, setShowBankModal] = useState(false);
   const [transferFile, setTransferFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -113,21 +114,7 @@ export default function CheckoutPage() {
       (deliveryData?.listDeliveryLocations ?? []).filter((d: any) => d.active),
     [deliveryData],
   );
-  const defaultDelivery = useMemo(
-    () => deliveries.find((d: any) => d.isDefault),
-    [deliveries],
-  );
   const [deliveryId, setDeliveryId] = useState<string>('');
-  useEffect(() => {
-    if (deliveryId) return;
-    if (defaultDelivery) {
-      setDeliveryId(defaultDelivery._id);
-      return;
-    }
-    if (deliveries.length) {
-      setDeliveryId(deliveries[0]._id);
-    }
-  }, [deliveryId, defaultDelivery, deliveries]);
   const selectedDelivery = deliveries.find((d: any) => d._id === deliveryId);
   const deliveryFee = Number(selectedDelivery?.price ?? 0);
   const baseAfterDiscount = appliedCoupon?.newTotal ?? totalBeforeDiscount;
@@ -137,10 +124,20 @@ export default function CheckoutPage() {
     () =>
       form.firstName.trim().length > 0 &&
       form.lastName.trim().length > 0 &&
+      form.phone.trim().length > 0 &&
       form.address1.trim().length > 0 &&
       form.city.trim().length > 0 &&
-      form.state.trim().length > 0,
-    [form.firstName, form.lastName, form.address1, form.city, form.state],
+      form.state.trim().length > 0 &&
+      deliveryId.trim().length > 0,
+    [
+      form.firstName,
+      form.lastName,
+      form.phone,
+      form.address1,
+      form.city,
+      form.state,
+      deliveryId,
+    ],
   );
 
   // Redirect if cart is empty
@@ -172,16 +169,36 @@ export default function CheckoutPage() {
     value: CheckoutFormValues[K],
   ) {
     setForm((f) => ({ ...f, [key]: value }));
+    setErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
+  const handleDeliveryChange = (id: string) => {
+    setDeliveryId(id);
+    setErrors((prev) => {
+      if (!prev.deliveryLocation) return prev;
+      const next = { ...prev };
+      delete next.deliveryLocation;
+      return next;
+    });
+  };
+
   function validate(): boolean {
-    const next: Record<string, string> = {};
+    const next: CheckoutFieldErrors = {};
     if (!form.firstName.trim()) next.firstName = 'First name is required';
     if (!form.lastName.trim()) next.lastName = 'Last name is required';
     // Email is pre-filled from user account, so no validation needed
+    if (!form.phone.trim()) next.phone = 'Phone number is required';
     if (!form.address1.trim()) next.address1 = 'Address is required';
     if (!form.city.trim()) next.city = 'City is required';
     if (!form.state.trim()) next.state = 'State is required';
+    if (!deliveryId.trim()) {
+      next.deliveryLocation = 'Delivery location is required';
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -242,13 +259,10 @@ export default function CheckoutPage() {
             <CheckoutDeliveryForm
               values={form}
               onChange={update}
-              onContinue={() => {
-                if (validate()) {
-                  setInfo(form);
-                  setShowBankModal(true);
-                }
-              }}
-              canContinue={canContinueToPayment}
+              deliveries={deliveries}
+              selectedDeliveryId={deliveryId}
+              onChangeDelivery={handleDeliveryChange}
+              errors={errors}
             />
           </div>
 
@@ -301,11 +315,15 @@ export default function CheckoutPage() {
             }}
             applyingCoupon={applyingCoupon}
             discountAmount={discountAmount}
-            deliveries={deliveries}
-            selectedDeliveryId={deliveryId}
-            onChangeDelivery={setDeliveryId}
             deliveryFee={deliveryFee}
-          notes={form.notes}
+            notes={form.notes}
+            onContinue={() => {
+              if (validate()) {
+                setInfo(form);
+                setShowBankModal(true);
+              }
+            }}
+            canContinue={canContinueToPayment}
           />
         </div>
       </div>

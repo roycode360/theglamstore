@@ -29,7 +29,7 @@ export class CreateAdminOrderInput {
   @Field() email!: string;
   @Field() firstName!: string;
   @Field() lastName!: string;
-  @Field({ nullable: true }) phone?: string;
+  @Field() phone!: string;
   @Field() address1!: string;
   @Field() city!: string;
   @Field() state!: string;

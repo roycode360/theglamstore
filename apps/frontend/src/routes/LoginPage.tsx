@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { loginBg } from 'src/assets/images';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export default function LoginPage() {
         {/* Visual side */}
         <div className="relative hidden md:block">
           <img
-            src="https://images.unsplash.com/photo-1543087903-1ac2ec7aa8c5?auto=format&fit=crop&q=80&w=2000&h=1333"
+            src={loginBg}
             className="object-cover object-center w-full h-full"
             alt="Fashion"
             loading="lazy"

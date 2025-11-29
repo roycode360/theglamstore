@@ -10,7 +10,7 @@ export type CheckoutInfo = {
   firstName: string;
   lastName: string;
   email: string;
-  phone?: string;
+  phone: string;
   address1: string;
   city: string;
   state: string;

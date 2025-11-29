@@ -31,6 +31,8 @@ export default function CartPage() {
   };
   const loading = isLoading;
 
+  const [errorByItem, setErrorByItem] = useState<Record<string, string>>({});
+
   const handleQuantityChange = async (
     cartItemId: string = '',
     newQuantity: number = 0,
@@ -48,6 +50,8 @@ export default function CartPage() {
 
     const productId = currentLine?.product?._id;
     const stock = Number((currentLine?.product as any)?.stockQuantity ?? 0);
+    const currentQty = currentLine?.quantity || 0;
+    const isIncrease = newQuantity > currentQty;
     if (productId && stock > 0) {
       const totalOther = itemsAll.reduce((sum, ci) => {
         if (ci?.product?._id !== productId) return sum;
@@ -58,21 +62,34 @@ export default function CartPage() {
       }, 0);
       const wouldBeTotal = totalOther + newQuantity;
       if (wouldBeTotal > stock) {
-        const remaining = Math.max(
-          0,
-          stock - (totalOther + (currentLine?.quantity || 0)),
-        );
-        showToast(
-          totalOther === 0 && (currentLine?.quantity || 0) === 0
+        const currentLineQty = currentLine?.quantity || 0;
+        const available = Math.max(0, stock - totalOther);
+        const errorMessage =
+          available <= 0
             ? `Only ${stock} in stock`
-            : remaining > 0
-              ? `Only ${remaining} more in stock`
-              : `Only ${stock} in stock`,
-          'warning',
-        );
+            : available < currentLineQty
+              ? `Only ${available} left. Adjusting to available quantity.`
+              : available === stock
+                ? `Only ${stock} in stock`
+                : `Only ${available} more in stock`;
+
+        setErrorByItem((prev) => ({ ...prev, [cartItemId]: errorMessage }));
+        showToast(errorMessage, 'warning');
+
+        if (available <= 0 || available < currentLineQty) {
+          await updateCartItem({ cartItemId, quantity: available });
+          return;
+        }
         return;
       }
     }
+
+    setErrorByItem((prev) => {
+      if (!prev[cartItemId]) return prev;
+      const next = { ...prev };
+      delete next[cartItemId];
+      return next;
+    });
 
     setUpdatingItems((prev) => new Set(prev).add(cartItemId || ''));
     try {
@@ -144,16 +161,16 @@ export default function CartPage() {
 
   if (cartItemsData?.getCartItems?.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="mb-4 text-6xl">🛒</div>
           <h1 className="mb-4 text-3xl font-bold">Your cart is empty</h1>
-          <p className="text-muted mb-8">
+          <p className="mb-8 text-muted">
             Looks like you haven't added any items to your cart yet.
           </p>
           <Link
             to="/products"
-            className="btn-primary rounded-lg px-8 py-3 text-lg"
+            className="px-8 py-3 text-lg rounded-lg btn-primary"
           >
             Start Shopping
           </Link>
@@ -168,14 +185,14 @@ export default function CartPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <div className="min-h-screen py-6 bg-gray-50 sm:py-8">
+        <div className="px-4 mx-auto max-w-7xl sm:px-6">
           {/* Header */}
           <div className="mb-8">
-            <div className="mb-4 flex items-center gap-4">
+            <div className="flex items-center gap-4 mb-4">
               <Link
                 to="/products"
-                className="text-brand hover:text-brand-700 flex items-center gap-2 transition-colors"
+                className="flex items-center gap-2 transition-colors text-brand hover:text-brand-700"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -183,7 +200,7 @@ export default function CartPage() {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
-                  className="h-5 w-5"
+                  className="w-5 h-5"
                 >
                   <path
                     strokeLinecap="round"
@@ -200,8 +217,8 @@ export default function CartPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Cart Items */}
             <div className="lg:col-span-2">
-              <div className="rounded-lg border bg-white px-2 py-4 shadow-sm sm:px-4 sm:py-6">
-                <div className="mb-6 flex items-center justify-between">
+              <div className="px-2 py-4 bg-white border rounded-lg shadow-sm sm:px-4 sm:py-6">
+                <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-semibold">
                     Cart Items ({cartItemCount})
                   </h2>
@@ -224,35 +241,35 @@ export default function CartPage() {
                       return (
                         <div
                           key={itemId}
-                          className="flex flex-col gap-3 rounded-lg border px-2 py-3 sm:flex-row sm:gap-4 sm:px-4 sm:py-4"
+                          className="flex flex-col gap-3 px-2 py-3 border rounded-lg sm:flex-row sm:gap-4 sm:px-4 sm:py-4"
                         >
                           {/* Product Image */}
-                          <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:h-24 sm:w-24">
+                          <div className="flex-shrink-0 w-20 h-20 overflow-hidden bg-gray-100 rounded-lg sm:h-24 sm:w-24">
                             {productImage && (
                               <img
                                 src={productImage}
                                 alt={item?.product?.name}
-                                className="h-full w-full object-cover"
+                                className="object-cover w-full h-full"
                               />
                             )}
                           </div>
 
                           {/* Product Details */}
-                          <div className="min-w-0 flex-1">
+                          <div className="flex-1 min-w-0">
                             <h3 className="mb-1 text-lg font-semibold">
                               <Link
                                 to={`/ProductDetails?id=${item?.product?._id ?? ''}`}
-                                className="hover:text-brand-700 transition-colors"
+                                className="transition-colors hover:text-brand-700"
                               >
                                 {item?.product?.name}
                               </Link>
                             </h3>
-                            <p className="text-muted mb-2 text-sm">
+                            <p className="mb-2 text-sm text-muted">
                               {item?.product?.brand}
                             </p>
 
                             {/* Size and Color Tags */}
-                            <div className="mb-3 flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2 mb-3">
                               <span className="bg-brand-100 text-brand-800 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium">
                                 Size: {item?.selectedSize}
                               </span>
@@ -298,7 +315,7 @@ export default function CartPage() {
                                   <span className="text-gray-700">
                                     {formatCurrency(item?.product?.salePrice)}
                                   </span>
-                                  <span className="text-muted ml-2 text-sm line-through">
+                                  <span className="ml-2 text-sm line-through text-muted">
                                     {formatCurrency(item?.product?.price)}
                                   </span>
                                 </>
@@ -309,13 +326,13 @@ export default function CartPage() {
                           </div>
 
                           {/* Quantity and Actions */}
-                          <div className="mt-1 flex w-full flex-row flex-wrap items-center justify-between gap-3 sm:mt-0 sm:w-auto sm:flex-col sm:items-end">
+                          <div className="flex flex-row flex-wrap items-center justify-between w-full gap-3 mt-1 sm:mt-0 sm:w-auto sm:flex-col sm:items-end">
                             {/* Quantity Selector */}
                             <div className="flex items-center gap-2">
-                              <span className="text-muted hidden text-sm sm:inline">
+                              <span className="hidden text-sm text-muted sm:inline">
                                 Qty:
                               </span>
-                              <div className="flex items-center rounded-md border">
+                              <div className="flex items-center border rounded-md">
                                 <button
                                   onClick={() =>
                                     handleQuantityChange(
@@ -399,6 +416,12 @@ export default function CartPage() {
                               </div>
                             </div>
 
+                            {errorByItem[itemId || ''] && (
+                              <p className="text-xs font-medium text-amber-600">
+                                {errorByItem[itemId || '']}
+                              </p>
+                            )}
+
                             {/* Total Price */}
                             <div className="text-base font-semibold sm:text-lg">
                               {formatCurrency(
@@ -420,7 +443,7 @@ export default function CartPage() {
                                 <Spinner
                                   label=""
                                   size={16}
-                                  className="h-5 w-5"
+                                  className="w-5 h-5"
                                 />
                               ) : (
                                 <svg
@@ -429,7 +452,7 @@ export default function CartPage() {
                                   fill="none"
                                   stroke="currentColor"
                                   strokeWidth="2"
-                                  className="h-5 w-5"
+                                  className="w-5 h-5"
                                 >
                                   <path
                                     strokeLinecap="round"
@@ -450,7 +473,7 @@ export default function CartPage() {
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="rounded-lg border bg-white p-4 shadow-sm sm:p-6 lg:sticky lg:top-8">
+              <div className="p-4 bg-white border rounded-lg shadow-sm sm:p-6 lg:sticky lg:top-8">
                 <h2 className="mb-4 text-xl font-semibold sm:mb-6 sm:text-2xl">
                   Order Summary
                 </h2>
@@ -464,7 +487,7 @@ export default function CartPage() {
                     </span>
                   </div>
 
-                  <div className="border-t pt-3">
+                  <div className="pt-3 border-t">
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
                       <span>{formatCurrency(total)}</span>
@@ -475,20 +498,20 @@ export default function CartPage() {
                 {/* Checkout Button */}
                 <Link
                   to="/checkout"
-                  className="bg-brand hover:bg-brand-700 mb-6 block w-full rounded-lg px-6 py-3 text-center font-semibold text-white transition-colors"
+                  className="block w-full px-6 py-3 mb-6 font-semibold text-center text-white transition-colors rounded-lg bg-brand hover:bg-brand-700"
                 >
                   Proceed to Checkout
                 </Link>
 
                 {/* Additional Info Cards */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 rounded-lg bg-gray-50 p-3">
-                    <div className="bg-brand-100 flex h-8 w-8 items-center justify-center rounded-full">
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-brand-100">
                       🛡️
                     </div>
                     <div>
                       <div className="font-medium">Secure Payment</div>
-                      <div className="text-muted text-sm">Bank transfer </div>
+                      <div className="text-sm text-muted">Bank transfer </div>
                     </div>
                   </div>
                 </div>
@@ -520,40 +543,40 @@ export default function CartPage() {
 function CartPageSkeleton() {
   const itemPlaceholders = Array.from({ length: 3 });
   return (
-    <div className="min-h-screen bg-gray-50 py-6 sm:py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+    <div className="min-h-screen py-6 bg-gray-50 sm:py-8">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6">
         <div className="mb-8">
-          <Skeleton className="mb-4 h-5 w-36 rounded-full" />
-          <Skeleton className="h-10 w-64 rounded-md" />
+          <Skeleton className="h-5 mb-4 rounded-full w-36" />
+          <Skeleton className="w-64 h-10 rounded-md" />
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <div className="rounded-lg border bg-white px-4 py-6 shadow-sm sm:px-6">
-              <div className="mb-6 flex items-center justify-between">
-                <Skeleton className="h-7 w-48 rounded-md" />
-                <Skeleton className="h-4 w-20 rounded-full" />
+            <div className="px-4 py-6 bg-white border rounded-lg shadow-sm sm:px-6">
+              <div className="flex items-center justify-between mb-6">
+                <Skeleton className="w-48 rounded-md h-7" />
+                <Skeleton className="w-20 h-4 rounded-full" />
               </div>
 
               <div className="space-y-6">
                 {itemPlaceholders.map((_, idx) => (
                   <div
                     key={idx}
-                    className="flex flex-col gap-4 rounded-lg border px-4 py-4 sm:flex-row sm:items-center"
+                    className="flex flex-col gap-4 px-4 py-4 border rounded-lg sm:flex-row sm:items-center"
                   >
-                    <Skeleton className="h-24 w-24 rounded-lg" />
+                    <Skeleton className="w-24 h-24 rounded-lg" />
                     <div className="flex-1 space-y-3">
-                      <Skeleton className="h-5 w-3/4 rounded-md" />
-                      <Skeleton className="h-4 w-1/3 rounded-full" />
+                      <Skeleton className="w-3/4 h-5 rounded-md" />
+                      <Skeleton className="w-1/3 h-4 rounded-full" />
                       <div className="flex gap-2">
-                        <Skeleton className="h-5 w-24 rounded-full" />
-                        <Skeleton className="h-5 w-32 rounded-full" />
+                        <Skeleton className="w-24 h-5 rounded-full" />
+                        <Skeleton className="w-32 h-5 rounded-full" />
                       </div>
-                      <Skeleton className="h-6 w-24 rounded-md" />
+                      <Skeleton className="w-24 h-6 rounded-md" />
                     </div>
                     <div className="flex flex-col items-end gap-3">
-                      <Skeleton className="h-10 w-28 rounded-md" />
-                      <Skeleton className="h-4 w-16 rounded-full" />
+                      <Skeleton className="h-10 rounded-md w-28" />
+                      <Skeleton className="w-16 h-4 rounded-full" />
                     </div>
                   </div>
                 ))}
@@ -562,23 +585,23 @@ function CartPageSkeleton() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
-              <Skeleton className="mb-4 h-5 w-24 rounded-md" />
+            <div className="p-6 bg-white border rounded-lg shadow-sm">
+              <Skeleton className="w-24 h-5 mb-4 rounded-md" />
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-20 rounded-full" />
-                  <Skeleton className="h-5 w-24 rounded-md" />
+                  <Skeleton className="w-20 h-4 rounded-full" />
+                  <Skeleton className="w-24 h-5 rounded-md" />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Skeleton className="h-4 w-28 rounded-full" />
-                  <Skeleton className="h-5 w-24 rounded-md" />
+                  <Skeleton className="h-4 rounded-full w-28" />
+                  <Skeleton className="w-24 h-5 rounded-md" />
                 </div>
               </div>
-              <Skeleton className="mt-5 h-11 w-full rounded-md" />
+              <Skeleton className="w-full mt-5 rounded-md h-11" />
             </div>
-            <div className="rounded-lg border bg-white p-5 shadow-sm">
-              <Skeleton className="h-5 w-32 rounded-md" />
-              <Skeleton className="mt-3 h-10 w-full rounded-md" />
+            <div className="p-5 bg-white border rounded-lg shadow-sm">
+              <Skeleton className="w-32 h-5 rounded-md" />
+              <Skeleton className="w-full h-10 mt-3 rounded-md" />
             </div>
           </div>
         </div>

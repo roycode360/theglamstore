@@ -126,7 +126,7 @@ input CreateAdminOrderInput {
   lastName: String!
   notes: String
   paymentReference: String
-  phone: String
+  phone: String!
   state: String!
   transferProofUrl: String
 }
@@ -317,7 +317,7 @@ type Order {
   orderNumber: String
   paymentMethod: String!
   paymentReference: String
-  phone: String
+  phone: String!
   source: String
   state: String!
   status: String!

@@ -41,8 +41,8 @@ export class Order {
   @Field()
   lastName!: string;
 
-  @Field({ nullable: true })
-  phone?: string;
+  @Field()
+  phone!: string;
 
   @Field()
   address1!: string;

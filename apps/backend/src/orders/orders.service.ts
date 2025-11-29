@@ -26,7 +26,7 @@ export type OrderDTO = {
   email: string;
   firstName: string;
   lastName: string;
-  phone?: string;
+  phone: string;
   address1: string;
   city: string;
   state: string;

@@ -8,7 +8,7 @@ export class OrderModel {
   @Prop({ required: true }) email!: string;
   @Prop({ required: true }) firstName!: string;
   @Prop({ required: true }) lastName!: string;
-  @Prop() phone?: string;
+  @Prop({ required: true }) phone!: string;
   @Prop({ required: true }) address1!: string;
   @Prop({ required: true }) city!: string;
   @Prop({ required: true }) state!: string;

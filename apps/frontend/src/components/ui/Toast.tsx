@@ -191,7 +191,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
       {children}
       <div className="pointer-events-none fixed bottom-5 right-5 z-[80] flex max-h-[calc(100vh-2.5rem)] w-auto max-w-[92vw] flex-col gap-3 overflow-y-auto">
         {toasts.map((toast) => (
-          <div key={toast.id} className="pointer-events-auto">
+          <div key={toast.id} className="pointer-events-none">
             <Toast
               message={toast.message}
               type={toast.type}

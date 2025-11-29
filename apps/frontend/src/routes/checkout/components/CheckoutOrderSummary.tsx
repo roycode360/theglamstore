@@ -1,8 +1,7 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { formatCurrency } from '../../../utils/currency';
 import { TCartItem } from 'src/types';
 import { LocalCartItem } from '../../../utils/localCart';
-import Select from '../../../components/ui/Select';
 import { getOptimizedImageUrl } from '../../../utils/cloudinary';
 
 interface CheckoutOrderSummaryProps {
@@ -17,11 +16,11 @@ interface CheckoutOrderSummaryProps {
   applyingCoupon: boolean;
   discountAmount: number;
   // Delivery props
-  deliveries: Array<{ _id: string; name: string; price: number }>;
-  selectedDeliveryId: string;
-  onChangeDelivery: (id: string) => void;
   deliveryFee: number;
   notes?: string;
+  className?: string;
+  onContinue: () => void;
+  canContinue: boolean;
 }
 
 export default function CheckoutOrderSummary({
@@ -35,23 +34,19 @@ export default function CheckoutOrderSummary({
   onRemoveCoupon,
   applyingCoupon,
   discountAmount,
-  deliveries,
-  selectedDeliveryId,
-  onChangeDelivery,
   deliveryFee,
   notes,
+  className,
+  onContinue,
+  canContinue,
 }: CheckoutOrderSummaryProps) {
-  const deliveryOptions = useMemo(
-    () =>
-      deliveries.map((d) => ({
-        value: d._id,
-        label: `${d.name} - ${formatCurrency(d.price)}`,
-      })),
-    [deliveries],
-  );
+  const containerClassName = ['lg:col-span-1', className]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
 
   return (
-    <aside className="lg:col-span-1">
+    <aside className={containerClassName}>
       <div className="p-4 bg-white border rounded-lg shadow-sm sm:p-6 lg:sticky lg:top-8">
         <h2 className="mb-4 text-xl font-semibold">Order Summary</h2>
         <div className="mb-4 space-y-4">
@@ -156,18 +151,6 @@ export default function CheckoutOrderSummary({
               ) : null}
             </div>
           </div>
-          <div className="space-y-2 pb-4 pt-6 !text-sm">
-            <label className="block text-sm font-medium">
-              Delivery Location
-            </label>
-            <Select
-              value={selectedDeliveryId}
-              onChange={onChangeDelivery}
-              options={deliveryOptions}
-              placeholder="Select delivery location"
-              disabled={deliveries.length === 0}
-            />
-          </div>
           <div className="flex justify-between text-sm">
             <span>Delivery</span>
             <span className="font-medium text-gray-700">
@@ -187,6 +170,19 @@ export default function CheckoutOrderSummary({
               <span>{formatCurrency(payableTotal)}</span>
             </div>
           </div>
+          <button
+            type="button"
+            aria-disabled={!canContinue}
+            className={`btn-primary mt-4 h-11 w-full rounded-md ${
+              canContinue ? '' : 'cursor-not-allowed opacity-60'
+            }`}
+            onClick={(e) => {
+              e.preventDefault();
+              onContinue();
+            }}
+          >
+            Continue to Payment
+          </button>
           {notes && notes.trim().length > 0 ? (
             <div className="pt-4 mt-4 border-t">
               <div className="text-xs font-semibold tracking-wide text-gray-500 uppercase">

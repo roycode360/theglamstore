@@ -47,6 +47,7 @@ export const GET_ORDER = gql`
       amountRefunded
       balanceDue
       paymentReference
+      deliveryLocationName
       notes
       items {
         productId
